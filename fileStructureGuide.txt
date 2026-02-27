@@ -1,0 +1,60 @@
+mcc-frontend/
+│
+├── public/
+│
+├── src/
+│   ├── components/
+│   │
+│   │   ├── ui/                       # 🔥 shadcn (auto-generated)
+│   │   │   ├── button.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── table.tsx
+│   │   │   └── ...
+│   │   │
+│   │   ├── layout/
+│   │   │   ├── Layout.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   └── Navbar.tsx
+│   │   │
+│   │   ├── satellites/
+│   │   │   ├── VisibilityZone.tsx
+│   │   │   ├── SatelliteCard.tsx
+│   │   │   ├── SatelliteHistory.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   └── command/
+│   │       ├── CreateCommandForm.tsx
+│   │       ├── CommandHistory.tsx
+│   │       └── index.ts
+│   │
+│   ├── pages/
+│   │   └── Dashboard.tsx
+│   │
+│   ├── store/
+│   │   └── mccStore.ts                # visible satellite + history
+│   │
+│   ├── services/
+│   │   ├── satellite.service.ts
+│   │   └── command.service.ts
+│   │
+│   ├── hooks/
+│   │   └── useVisibilityRotation.ts   # change satellite every X seconds
+│   │
+│   ├── lib/
+│   │   ├── axios.ts
+│   │   └── utils.ts
+│   │
+│   ├── types/
+│   │   └── satellite.ts
+│   │
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+│
+├── components.json                    # shadcn config
+├── tailwind.config.ts
+├── vite.config.ts
+└── package.json
