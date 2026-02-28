@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import Dashboard from "@/pages/Dashboard";
+import CreateCommand from "@/components/command/createCommand";
 
 export default function AppRoutes() {
   return (
@@ -8,10 +9,11 @@ export default function AppRoutes() {
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
 
+        {/* Command Center */}
+        <Route path="/commands/create" element={<CreateCommand />} />
+
         {/* Future routes */}
-        {/* <Route path="/telemetry" element={<TelemetryMonitoring />} /> */}
-        {/* <Route path="/mission-planning" element={<MissionPlanning />} /> */}
-        {/* <Route path="/commands/create" element={<CreateCommand />} /> */}
+
         {/* <Route path="/commands/scheduled" element={<ScheduledCommands />} /> */}
         {/* <Route path="/commands/history" element={<CommandHistory />} /> */}
         {/* <Route path="/commands/templates" element={<CommandTemplates />} /> */}

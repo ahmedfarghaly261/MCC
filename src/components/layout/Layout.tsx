@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
-import Sidebar from "./Sidebar";
+import Sidebar from "@/components/layout/Sidebar";
+import NavBar from "@/components/layout/navBar";
 
 export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -16,6 +17,7 @@ export default function Layout() {
           collapsed ? "ml-[72px]" : "ml-64"
         }`}
       >
+        <NavBar />
         <Outlet />
       </main>
     </div>
