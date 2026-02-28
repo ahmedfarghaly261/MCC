@@ -1,7 +1,7 @@
 import { FileText } from "lucide-react";
-import SatelliteHistoryPanel from "./components/SatelliteHistoryPanel";
-import CommandForm from "./components/commandForm";
-import CommandValidationPanel from "./components/CommandValidationPanel";
+import SatelliteHistoryPanel from "./composables/SatelliteHistoryPanel";
+import CommandForm from "./composables/commandForm";
+import CommandValidationPanel from "./composables/CommandValidationPanel";
 
 export default function CreateCommand() {
   return (
@@ -30,7 +30,6 @@ export default function CreateCommand() {
             priority="high"
           />
         </div>
-
         <br />
         <SatelliteHistoryPanel
           satelliteName="EGSA Satellite-02"
