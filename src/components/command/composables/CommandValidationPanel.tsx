@@ -60,7 +60,7 @@ const PriorityBadge = ({
 };
 
 const Card = ({ children }: { children: React.ReactNode }) => (
-  <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-6 shadow-lg">
+  <div className="bg-card rounded-2xl border border-white/10 p-6 shadow-lg">
     {children}
   </div>
 );

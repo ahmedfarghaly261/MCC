@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   TerminalIcon,
   SatelliteDish,
+  FileText,
 } from "lucide-react";
 
 interface NavItem {
@@ -69,6 +70,11 @@ const navItems: NavItem[] = [
     label: "Faults & Diagnostics",
     path: "/faults",
     icon: <AlertTriangle size={20} />,
+  },
+  {
+    label: "Logs",
+    path: "/logs",
+    icon: <FileText size={20} />,
   },
 ];
 

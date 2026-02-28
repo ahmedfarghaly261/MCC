@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import Dashboard from "@/pages/Dashboard";
 import CreateCommand from "@/components/command/createCommand";
+import LogPage from "@/pages/logPage/logpage";
 
 export default function AppRoutes() {
   return (
@@ -11,6 +12,7 @@ export default function AppRoutes() {
 
         {/* Command Center */}
         <Route path="/commands/create" element={<CreateCommand />} />
+        <Route path="/logs" element={<LogPage />} />
 
         {/* Future routes */}
 

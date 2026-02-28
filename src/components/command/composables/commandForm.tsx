@@ -25,7 +25,7 @@ import { InputGroup, InputGroupTextarea } from "@/components/ui/input-group";
 import { FileText, CheckCircle, Send } from "lucide-react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { commandSchema, type CommandSchema } from "@/types/forms/commandSchema";
+import { commandSchema, type CommandSchema } from "@/types/command/commandSchema";
 import { toast } from "sonner";
 import SatCard from "./satCard";
 

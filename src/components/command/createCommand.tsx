@@ -24,10 +24,10 @@ export default function CreateCommand() {
           <CommandForm />
           <CommandValidationPanel
             validationState="valid"
-            satellite="EGSA Satellite-06"
+            satellite="EGSA Satellite-02"
             type="Telemetry"
             command="TELEMETRY_COLLECT"
-            priority="high"
+            priority="normal"
           />
         </div>
         <br />
