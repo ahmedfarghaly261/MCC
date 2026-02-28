@@ -23,7 +23,7 @@ import {
 import { InputGroup, InputGroupTextarea } from "@/components/ui/input-group";
 
 import { FileText, CheckCircle, Send } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { commandSchema, type CommandSchema } from "@/types/forms/commandSchema";
 import { toast } from "sonner";
@@ -51,19 +51,12 @@ function CommandForm() {
       priority: "normal",
       parameters: "",
     },
+  });const onsubmit: SubmitHandler<CommandSchema> = (data) => {
+  // console.log(data);
+  toast.success("Command sent successfully!", {
+    position: "bottom-right",
   });
-
-  function onSubmit(data: CommandSchema) {
-    toast("Command sent successfully!", {
-      description: (
-        <pre className="mt-2 w-[320px] overflow-x-auto rounded-md bg-[#0B1220] p-4 text-sm text-gray-300">
-          <code>{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-      position: "bottom-right",
-    });
-  }
-
+};
   function onValidate() {
     form.trigger().then((isValid: boolean) => {
       if (isValid) {
@@ -88,14 +81,15 @@ function CommandForm() {
           <CardContent>
             <form
               id="create-command-form"
-              onSubmit={form.handleSubmit(onSubmit)}
+              onSubmit={form.handleSubmit(onsubmit)}
             >
+              
               <FieldGroup>
                 {/* Target Satellite (Auto-Linked) — static info card */}
                 <SatCard />
 
                 {/* Command Type */}
-                <Controller<CommandSchema, "commandType">
+                <Controller
                   name="commandType"
                   control={form.control}
                   render={({ field, fieldState }) => (
@@ -130,7 +124,7 @@ function CommandForm() {
                 />
 
                 {/* Priority */}
-                <Controller<CommandSchema, "priority">
+                <Controller
                   name="priority"
                   control={form.control}
                   render={({ field, fieldState }) => (
@@ -165,7 +159,7 @@ function CommandForm() {
                 />
 
                 {/* Parameters */}
-                <Controller<CommandSchema, "parameters">
+                <Controller
                   name="parameters"
                   control={form.control}
                   render={({ field, fieldState }) => (

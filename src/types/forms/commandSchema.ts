@@ -6,7 +6,7 @@ export const commandSchema = z.object({
     .min(1, "Command type is required."),
   priority: z
     .string()
-    .default("normal"),
+    .optional(),
   parameters: z
     .string()
     .optional(),
