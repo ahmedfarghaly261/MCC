@@ -1,53 +1,9 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { commandSchema, type CommandSchema } from "@/types/forms/commandSchema";
-
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { InputGroup, InputGroupTextarea } from "@/components/ui/input-group";
-
-import { FileText, CheckCircle, Send } from "lucide-react";
-import SatCard from "./components/satCard";
+import { FileText } from "lucide-react";
 import SatelliteHistoryPanel from "./components/SatelliteHistoryPanel";
 import CommandForm from "./components/commandForm";
-
-const COMMAND_TYPES = [
-  { value: "telemetry_request", label: "Telemetry Request" },
-  { value: "telemetry_command", label: "Tele Command" },
-  { value: "payload_control", label: "Payload Control" },
-];
-
-const PRIORITIES = [
-  { value: "low", label: "Low" },
-  { value: "normal", label: "Normal" },
-  { value: "high", label: "High" },
-  { value: "critical", label: "Critical" },
-];
+import CommandValidationPanel from "./components/CommandValidationPanel";
 
 export default function CreateCommand() {
-  
-
   return (
     <div className="min-h-screen bg-background text-white">
       <div className="px-8 py-10">
@@ -63,7 +19,18 @@ export default function CreateCommand() {
             </p>
           </div>
         </div>
-        <CommandForm />
+        {/* Form + Validation side by side */}
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 mt-8 items-start">
+          <CommandForm />
+          <CommandValidationPanel
+            validationState="valid"
+            satellite="EGSA Satellite-06"
+            type="Telemetry"
+            command="TELEMETRY_COLLECT"
+            priority="high"
+          />
+        </div>
+
         <br />
         <SatelliteHistoryPanel
           satelliteName="EGSA Satellite-02"

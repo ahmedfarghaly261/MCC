@@ -1,13 +1,11 @@
 import React from "react";
 import {
-  Battery,
-  Thermometer,
-  Signal,
   CheckCircle2,
   AlertCircle,
   Image as ImageIcon,
   FileText,
 } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 type TelemetryItem = {
   time: string;
@@ -62,9 +60,9 @@ const SatelliteHistoryPanel: React.FC<SatelliteHistoryPanelProps> = ({
   commands,
 }) => {
   return (
-    <div className="bg-card text-white p-6 rounded-2xl border border-white/10 shadow-xl w-full max-w-3xl">
+    <Card className="bg-card text-white p-6 rounded-2xl border border-white/10 shadow-xl w-full max-w-3xl">
       {/* Header */}
-      <div className="mb-6">
+      <Card className="mb-6">
         <h2 className="text-xl font-semibold">
           History of Current Visible Satellite
         </h2>
@@ -72,10 +70,10 @@ const SatelliteHistoryPanel: React.FC<SatelliteHistoryPanelProps> = ({
           Viewing history for:
           <span className="text-blue-400 ml-1">{satelliteName}</span>
         </p>
-      </div>
+      </Card>
 
       {/* Telemetry */}
-      <div className="mb-6">
+      <Card className="mb-6">
         <div className="flex items-center gap-2 mb-3 text-gray-300">
           <FileText size={18} />
           <h3 className="text-sm font-medium">Recent Telemetry Logs</h3>
@@ -100,10 +98,10 @@ const SatelliteHistoryPanel: React.FC<SatelliteHistoryPanelProps> = ({
             </RowContainer>
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* Commands */}
-      <div className="mb-6">
+      <Card className="mb-6">
         <h3 className="text-sm font-medium text-gray-300 mb-3">
           Last Commands Sent
         </h3>
@@ -126,10 +124,10 @@ const SatelliteHistoryPanel: React.FC<SatelliteHistoryPanelProps> = ({
             </RowContainer>
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* Faults */}
-      <div className="mb-6">
+      <Card className="mb-6">
         <h3 className="text-sm font-medium text-gray-300 mb-3">
           Recent Faults
         </h3>
@@ -146,10 +144,10 @@ const SatelliteHistoryPanel: React.FC<SatelliteHistoryPanelProps> = ({
             <StatusBadge variant="blue">Low</StatusBadge>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Last Image */}
-      <div>
+      <Card>
         <div className="flex items-center gap-2 mb-3 text-gray-300">
           <ImageIcon size={18} />
           <h3 className="text-sm font-medium">Last Image Received</h3>
@@ -169,8 +167,8 @@ const SatelliteHistoryPanel: React.FC<SatelliteHistoryPanelProps> = ({
             <span>12.5 MB</span>
           </div>
         </div>
-      </div>
-    </div>
+      </Card>
+    </Card>
   );
 };
 

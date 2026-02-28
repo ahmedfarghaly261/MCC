@@ -201,7 +201,7 @@ function CommandForm() {
             <Button
               type="button"
               variant="outline"
-              className="flex-1 h-11 border-teal-500/40 bg-teal-500/10 text-teal-400 hover:bg-teal-500/20 hover:text-teal-300"
+              className="flex-1 h-11 border border-blue-500/40 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300"
               onClick={onValidate}
             >
               <CheckCircle className="w-4 h-4 mr-2" />
