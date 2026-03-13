@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('telemetry_parameters', function (Blueprint $table) {
             $table->id();
             $table->unsignedTinyInteger('subsystem_id');
-            $table->unsignedSmallInteger('parameter_index');
+            $table->unsignedTinyInteger('parameter_index');
             $table->string('parameter_name');
             $table->text('description')->nullable();
             $table->string('unit')->nullable(); 
