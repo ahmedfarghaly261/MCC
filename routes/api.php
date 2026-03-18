@@ -9,8 +9,8 @@ use App\Http\Controllers\TelemetryParameterController;
 |--------------------------------------------------------------------------
 */
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
 
 Route::apiResource('telemetry-parameters', TelemetryParameterController::class);
