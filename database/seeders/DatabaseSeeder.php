@@ -23,7 +23,9 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
-        SatelliteSeeder::class,
-    ]);
+            SatelliteSeeder::class,
+            SatelliteSubsystemSeeder::class,
+            TelemetryParameterSeeder::class,
+        ]);
     }
 }

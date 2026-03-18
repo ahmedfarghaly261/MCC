@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('satellite_tles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('satellite_id')->constrained('satellites')->onDelete('cascade');
+            // $table->foreignId('satellite_id')->constrained('satellites')->onDelete('cascade');
             $table->integer('norad_id')->index();
             $table->string('satellite_name');
             $table->text('line1');

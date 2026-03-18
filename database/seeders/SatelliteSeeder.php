@@ -13,7 +13,7 @@ class SatelliteSeeder extends Seeder
     public function run(): void
     {
         Satellite::updateOrCreate(
-            ['norad_id' => 39444], // Search by this unique ID
+            ['norad_id' => 39444], 
             [
                 'name'          => 'FUNcube-1 (AO-73)',
                 'cospar_id'     => '2013-066B',
@@ -24,6 +24,20 @@ class SatelliteSeeder extends Seeder
             ]
         );
 
+        Satellite::updateOrCreate(
+            ['norad_id' => 39222], 
+            [
+                'name'          => 'EGSACUB-ED',
+                'cospar_id'     => '2013-066C',
+                'owner_country' => 'United Kingdom',
+                'status'        => 'active',
+                'launch_date'   => '2025-11-21',
+                'description'   => 'A Graduation project CubeSat',
+            ]
+        );
+
+    
         $this->command->info('Satellite 39444 (FUNcube-1) seeded successfully.');
+        $this->command->info('Satellite 39222 (EGSACUB-ED) seeded successfully.');
     }
 }

@@ -13,6 +13,5 @@ class SatelliteTle extends Model
         'line2',
         'source',
         'fetched_at'
-    ];
-    
+    ]; 
 }

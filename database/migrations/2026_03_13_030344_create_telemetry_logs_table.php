@@ -13,11 +13,14 @@ return new class extends Migration
     {
         Schema::create('telemetry_logs', function (Blueprint $table) {
             $table->id();
-            $table->unsignedTinyInteger('subsystem_id'); 
+            $table->foreignId('satellite_id')
+                ->constrained('satellites')
+                ->onDelete('cascade');
+            $table->unsignedTinyInteger('subsystem_id')->references('id')->on('satellite_subsystems')->onDelete('cascade');;
             $table->unsignedTinyInteger('subsystem_address');
             $table->unsignedTinyInteger('subsystem_mode');
-            $table->unsignedBigInteger('subsystem_time'); 
-            $table->unsignedInteger('subsystem_rtc');
+            $table->unsignedBigInteger('subsystem_time')->nullable();
+            $table->unsignedInteger('subsystem_rtc')->nullable();
             // The specific field from the ICD Tables (e.g., Index 10 for VBAT)
             // $table->unsignedSmallInteger('parameter_index');
             //parmter name  as fk from tel param table
@@ -26,15 +29,15 @@ return new class extends Migration
                 ->onDelete('cascade');
 
             $table->integer('raw_value'); // The raw bytes from the CSSP frame
-            $table->float('converted_value', 10, 4); 
+            $table->float('converted_value', 10, 4);
             $table->string('unit')->nullable();
 
             // Timestamp of when the satellite sampled the data
             $table->timestamp('sampled_at')->useCurrent();
-            
+
             // Metadata for audit 
             $table->timestamp('created_at')->useCurrent();
-            
+
             $table->index(['subsystem_id', 'sampled_at']);
             $table->index('parameter_id');
         });
@@ -48,5 +51,3 @@ return new class extends Migration
         Schema::dropIfExists('telemetry_logs');
     }
 };
-
-

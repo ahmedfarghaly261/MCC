@@ -9,6 +9,7 @@ use App\Models\TelemetryParameter;
 class TelemetryLog extends Model 
 {
     protected $fillable = [
+        'satellite_id',
         'subsystem_id', 'parameter_index', 'parameter_id', 
         'subsystem_address', 'subsystem_mode', 'subsystem_time', 'subsystem_rtc',
         'raw_value', 'converted_value', 'unit', 'sampled_at'
@@ -39,5 +40,15 @@ class TelemetryLog extends Model
     public function parameter()
     {
         return $this->belongsTo(TelemetryParameter::class, 'parameter_id');
+    }
+
+    public function satellite()
+    {
+        return $this->belongsTo(Satellite::class, 'satellite_id');
+    }
+
+    public function subsystem() 
+    {
+        return $this->belongsTo(SatelliteSubsystem::class, 'subsystem_id');
     }
 }

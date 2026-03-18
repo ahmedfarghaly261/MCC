@@ -8,7 +8,7 @@ class TelemetryParameter extends Model
 {
     
         protected $fillable = [
-            'subsystem_id', 'parameter_index', 'parameter_name', 
+           'satellite_id', 'subsystem_id', 'parameter_index', 'parameter_name', 
             'description', 'unit'
         ];
     
@@ -18,5 +18,15 @@ class TelemetryParameter extends Model
         public function telemetryLogs()
         {
             return $this->hasMany(TelemetryLog::class, 'parameter_id');
+        }
+
+        public function subsystem()
+        {
+            return $this->belongsTo(SatelliteSubsystem::class, 'subsystem_id');
+        }
+        
+        public function satellite()
+        {
+            return $this->belongsTo(Satellite::class, 'satellite_id');
         }
 }
