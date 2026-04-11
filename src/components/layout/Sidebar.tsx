@@ -2,7 +2,6 @@ import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Home,
-  CalendarRange,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -29,11 +28,6 @@ const navItems: NavItem[] = [
     label: "Home",
     path: "/",
     icon: <Home size={20} />,
-  },
-  {
-    label: "Mission Planning",
-    path: "/mission-planning",
-    icon: <CalendarRange size={20} />,
   },
   {
     label: "Command Center",
@@ -129,8 +123,8 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   return (
     <aside
-      className={`fixed top-0 left-0 z-40 flex h-screen flex-col border-r border-white/5 bg-[#0a0f1e] transition-all duration-300 ease-in-out ${
-        collapsed ? "w-[72px] overflow-visible" : "w-64"
+      className={`bg-[#1a2333] fixed top-0 left-0 z-40 flex h-screen flex-col border-r border-white/5 transition-all duration-300 ease-in-out ${
+        collapsed ? "w-18 overflow-visible" : "w-64"
       }`}
     >
       {/* Logo  */}
