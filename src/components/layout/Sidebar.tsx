@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import Tooltip from "../shared/Tooltip";
 import {
   Home,
   ChevronDown,
@@ -112,14 +113,6 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     "text-slate-400 hover:text-white hover:bg-white/5";
   const subLinkActiveClasses =
     "text-white bg-primary/20 border border-primary/30 shadow-[0_0_12px_rgba(59,130,246,0.15)]";
-
-  // Tooltip component
-  const Tooltip = ({ label }: { label: string }) => (
-    <div className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg shadow-xl border border-white/10 whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
-      {label}
-      <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-800 border-l border-b border-white/10 rotate-45" />
-    </div>
-  );
 
   return (
     <aside

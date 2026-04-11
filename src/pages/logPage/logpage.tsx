@@ -1,4 +1,4 @@
-import { FileText, ScrollText } from "lucide-react";
+import { ScrollText } from "lucide-react";
 import LogsTable from "./composables/LogsTable";
 
 function LogPage() {

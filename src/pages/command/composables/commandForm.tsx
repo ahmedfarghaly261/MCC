@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { InputGroup, InputGroupTextarea } from "@/components/ui/input-group";
 
-import { FileText, CheckCircle, Send } from "lucide-react";
+import { CheckCircle, Send } from "lucide-react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -78,7 +78,7 @@ function CommandForm() {
   return (
     <>
       {/* Main Form Card */}
-      <Card className="bg-card border border-gray-700 rounded-xl mt-8 max-w-3xl">
+      <Card className="bg-card border border-gray-700 rounded-xl w-full">
         <CardHeader className="pb-4">
           <CardTitle className="text-lg font-semibold text-white">
             Command Details

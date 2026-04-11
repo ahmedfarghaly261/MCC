@@ -88,7 +88,7 @@ const CommandValidationPanel: React.FC<
   };
 
   return (
-    <div className="space-y-6 w-full max-w-3xl text-white py-9">
+    <div className="space-y-6 w-full text-white">
       <Card>
         <h2 className="text-lg font-semibold mb-6">
           Validation Status
