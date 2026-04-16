@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             SatelliteSeeder::class,
             SatelliteSubsystemSeeder::class,
             TelemetryParameterSeeder::class,
+            CommandSeeder::class,
         ]);
     }
 }

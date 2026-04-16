@@ -1,7 +1,7 @@
 <?php
+
 namespace Database\Seeders;
 
-use App\Models\Satellite;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -12,40 +12,79 @@ class SatelliteSubsystemSeeder extends Seeder
      */
     public function run(): void
     {
-        // Fetch all seeded satellites to ensure we attach subsystems to each
-        $satellites = Satellite::all();
+        $satelliteId = 1; 
 
-        if ($satellites->isEmpty()) {
-            $this->command->error('No satellites found. Please run SatelliteSeeder first!');
-            return;
-        }
-
-        // Subsystem definitions with their official EgSA/FUNcube hex addresses
         $subsystems = [
-            ['name' => 'On-Board Computer',            'code' => 'OBC',    'hex' => '0xA1'],
-            ['name' => 'Electrical Power System',      'code' => 'EPS',    'hex' => '0xA2'],
-            ['name' => 'Attitude Determination & Control', 'code' => 'ADCS', 'hex' => '0xA3'],
-            ['name' => 'Payload (MSE Experiment)',     'code' => 'PL',     'hex' => '0xA4'],
-            ['name' => 'S-Band Transceiver',           'code' => 'S_BAND', 'hex' => '0xA5'],
-            ['name' => 'UHF Transceiver',              'code' => 'UHF',    'hex' => '0xA6'],
+            [
+                'satellite_id'   => $satelliteId,
+                'name' => 'EPS', // Matches Decoder Key
+                'description'    => 'Electrical Power System',
+                'hex_code'       => '0xA2',
+                'status'         => 'active',
+            ],
+            [
+                'satellite_id'   => $satelliteId,
+                'name' => 'ASIB', // Matches Decoder Key
+                'description'    => 'Interface Board / Sensors',
+                'hex_code'       => '0xA4', 
+                'status'         => 'active',
+            ],
+            [
+                'satellite_id'   => $satelliteId,
+                'name' => 'RF', // Matches Decoder Key
+                'description'    => 'Radio Frequency Module',
+                'hex_code'       => '0xA5',
+                'status'         => 'active',
+            ],
+            [
+                'satellite_id'   => $satelliteId,
+                'name' => 'PA', // Matches Decoder Key
+                'description'    => 'Power Amplifier',
+                'hex_code'       => '0xA5', // Often shares address with RF or sub-addressed
+                'status'         => 'active',
+            ],
+            [
+                'satellite_id'   => $satelliteId,
+                'name' => 'ANTS', // Matches Decoder Key
+                'description'    => 'Antenna Deployment System',
+                'hex_code'       => '0xA6', 
+                'status'         => 'active',
+            ],
+            [
+                'satellite_id'   => $satelliteId,
+                'name' => 'SW', // Matches Decoder Key
+                'description'    => 'Software/System Status',
+                'hex_code'       => '0xA1', 
+                'status'         => 'active',
+            ],
+            [
+                'satellite_id'   => $satelliteId,
+                'name' => 'GCS', 
+                'description'    => 'Ground Control Station',
+                'hex_code'       => '0xB0', 
+                'status'         => 'active',
+            ],
+            [
+                'satellite_id'   => $satelliteId,
+                'name' => 'Broadcast', 
+                'description'    => 'Broadcast Address',
+                'hex_code'       => '0xFF',
+                'status'         => 'system',
+            ],
         ];
 
-        foreach ($satellites as $satellite) {
-            foreach ($subsystems as $sub) {
-                DB::table('satellite_subsystems')->updateOrInsert(
-                    [
-                        'satellite_id'   => $satellite->id, 
-                        'subsystem_name' => $sub['code']
-                    ], 
-                    [
-                        'status'     => 'unknown',
-                        'hex_code'   => $sub['hex'], 
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]
-                );
-            }
-            $this->command->info("Subsystems seeded for: {$satellite->name}");
+        foreach ($subsystems as $subsystem) {
+            // We use subsystem_name as the unique key to match the Decoder
+            DB::table('satellite_subsystems')->updateOrInsert(
+                [
+                    'satellite_id'   => $subsystem['satellite_id'], 
+                    'name' => $subsystem['name']
+                ],
+                array_merge($subsystem, [
+                    'created_at' => now(), 
+                    'updated_at' => now()
+                ])
+            );
         }
     }
 }

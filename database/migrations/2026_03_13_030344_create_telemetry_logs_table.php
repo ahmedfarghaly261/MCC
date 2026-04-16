@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('satellite_id')
                 ->constrained('satellites')
                 ->onDelete('cascade');
-            $table->unsignedTinyInteger('subsystem_id')->references('id')->on('satellite_subsystems')->onDelete('cascade');;
+            $table->unsignedTinyInteger('subsystem_id')->references('id')->on('satellite_subsystems')->onDelete('cascade');
             $table->unsignedTinyInteger('subsystem_address');
             $table->unsignedTinyInteger('subsystem_mode');
             $table->unsignedBigInteger('subsystem_time')->nullable();

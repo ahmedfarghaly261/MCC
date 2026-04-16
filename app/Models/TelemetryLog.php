@@ -9,8 +9,8 @@ use App\Models\TelemetryParameter;
 class TelemetryLog extends Model 
 {
     protected $fillable = [
-        'satellite_id',
-        'subsystem_id', 'parameter_index', 'parameter_id', 
+        'satellite_id', 'command_log_id',
+        'subsystem_id', 'parameter_id', 
         'subsystem_address', 'subsystem_mode', 'subsystem_time', 'subsystem_rtc',
         'raw_value', 'converted_value', 'unit', 'sampled_at'
     ];

@@ -13,11 +13,13 @@ return new class extends Migration
     {
         Schema::create('satellite_subsystems', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
             $table->foreignId('satellite_id')
                 ->constrained('satellites')
                 ->onDelete('cascade');
             $table->string('hex_code', 100)->nullable();
-            $table->string('subsystem_name');
+            $table->string('description');
+           
             $table->string('status')->default('unknown');
             $table->timestamps();
         });
