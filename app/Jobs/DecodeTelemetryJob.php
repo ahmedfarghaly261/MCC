@@ -31,7 +31,7 @@ class DecodeTelemetryJob implements ShouldQueue
     {
         Log::info("Starting telemetry decoding for command log ID: {$this->commandLogId}, raw data: {$this->rawHex}");
         try {
-            $response = Http::timeout(30)->post('http://127.0.0.1:8082/decode', [
+            $response = Http::timeout(30)->post('http://host.docker.internal:8082/decode', [
                 'hex_frame' => $this->rawHex,
                 'satellite_id' => $this->satelliteId
             ]);

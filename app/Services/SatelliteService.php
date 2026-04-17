@@ -9,7 +9,7 @@ class SatelliteService
 
     public function __construct()
     {
-        $this->baseUrl = config('services.satellite.url', 'http://127.0.0.1:8000');
+        $this->baseUrl = config('services.satellite.url', 'http://host.docker.internal:8000');
     }
 
     public function getLatestPosition(int $noradId = 39444)

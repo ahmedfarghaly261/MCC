@@ -134,7 +134,7 @@ class CommandService
     private function sendToGateway(string $binary, string $commandName)
     {
         Log::info("MCC SENDING CSSP FRAME: " . bin2hex($binary));
-        $url = "ws://127.0.0.1:8081/ws/radio";
+        $url = "ws://host.docker.internal:8081/ws/radio";
 
         try {
             $client = new Client($url, ['timeout' => 5]);
