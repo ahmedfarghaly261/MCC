@@ -171,4 +171,19 @@ class CommandService
             return null;
         }
     }
+
+    public function getAllCommands()
+    {
+        return Command::all();
+    }   
+
+    public function getCommandById($id) 
+    {
+        $command = Command::where('id', $id)->first();
+        if (!$command) {
+            throw new \Exception("Command with ID $id not found.");
+        }
+        return $command;    
+        
+    }
 }

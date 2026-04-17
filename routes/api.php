@@ -21,4 +21,6 @@ Route::prefix('mcc/command')->group(function () {
     Route::post('/send', [CommandController::class, 'send']);
     Route::get('/status/{id}', [CommandController::class, 'getCommandStatus']);
     Route::get('/replies/{id}', [CommandController::class, 'getReplies']);
+    Route::get('/', [CommandController::class, 'index']);
+    Route::get('/{id}', [CommandController::class, 'show']);
 });

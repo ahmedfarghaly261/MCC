@@ -19,6 +19,36 @@ class CommandController extends Controller
     }
 
     /**
+     * Endpoint to get all commands
+     */
+    public function index(): JsonResponse
+    {
+        try {
+            $commands = $this->commandService->getAllCommands();
+            return response()->json($commands);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to fetch commands: ' . $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Endpoint to get a command
+     */
+    public function show($id): JsonResponse
+    {
+        try {
+            $command = $this->commandService->getCommandById($id);
+            return response()->json($command);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Failed to fetch command: ' . $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
      * Endpoint to send a command
      */
     public function send(Request $request): JsonResponse
