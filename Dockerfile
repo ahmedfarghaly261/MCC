@@ -26,7 +26,6 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction
 
 # Copy application
 COPY . .
@@ -44,8 +43,11 @@ RUN chown -R www-data:www-data /var/www/html \
  && chmod -R 755 /var/www/html/storage \
  && chmod -R 755 /var/www/html/bootstrap/cache
 
+COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/app.ini
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 EXPOSE 9000
-CMD ["php-fpm"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
