@@ -4,7 +4,7 @@ import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { formSchema, type FormSchema } from "@/types/forms/formSchema";
+import { formSchema, type FormSchema } from "@/models/forms/formSchema";
 
 import { Button } from "@/components/ui/button";
 import {

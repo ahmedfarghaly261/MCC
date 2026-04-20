@@ -24,7 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   commandSchema,
   type CommandSchema,
-} from "@/types/command/commandSchema";
+} from "@/models/command/commandSchema";
 import { toast } from "sonner";
 import SatCard from "./satCard";
 import type { SatelliteData } from "./satCard";
@@ -33,13 +33,6 @@ const COMMAND_TYPES = [
   { value: "telemetry_request", label: "Telemetry Request" },
   { value: "telemetry_command", label: "Tele Command" },
   { value: "payload_control", label: "Payload Control" },
-];
-
-const PRIORITIES = [
-  { value: "low", label: "Low" },
-  { value: "normal", label: "Normal" },
-  { value: "high", label: "High" },
-  { value: "critical", label: "Critical" },
 ];
 
 const defaultSatellite: SatelliteData = {
@@ -55,7 +48,6 @@ function CommandForm() {
     resolver: zodResolver(commandSchema),
     defaultValues: {
       commandType: "",
-      priority: "normal",
       parameters: "",
     },
   });
@@ -124,36 +116,6 @@ function CommandForm() {
               />
 
               {/* Priority */}
-              <Controller
-                name="priority"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel className="text-sm font-semibold text-gray-300">
-                      Priority
-                    </FieldLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="w-full bg-[#0B1220] border-gray-600 text-gray-300 h-10">
-                        <SelectValue placeholder="Select priority..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1A2333] border-gray-600">
-                        {PRIORITIES.map((p) => (
-                          <SelectItem
-                            key={p.value}
-                            value={p.value}
-                            className="text-gray-300 focus:bg-blue-500/20 focus:text-white"
-                          >
-                            {p.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
 
               {/* Parameters */}
               <Controller
