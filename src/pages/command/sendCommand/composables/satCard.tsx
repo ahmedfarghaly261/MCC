@@ -16,9 +16,6 @@ interface SatCardProps {
 }
 
 export default function SatCard({ satellite }: SatCardProps) {
-  const isVisible = satellite.visibilityStatus === "IN VISIBILITY ZONE"
-  const isActive = satellite.communicationStatus === "active"
-
   return (
     <>
     <Field>
