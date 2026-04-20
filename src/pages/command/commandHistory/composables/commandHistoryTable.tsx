@@ -44,29 +44,35 @@ export default function CommandHistoryTable({ records, loading }: CommandHistory
 	};
 
 	return (
-		<div className="rounded-xl border border-slate-800 overflow-hidden bg-card">
+		<div className="overflow-hidden rounded-2xl border border-slate-700/60 bg-linear-to-b from-[#0A1426] to-[#070E1B] shadow-lg">
 			<Table>
-				<TableHeader>
-					<TableRow className="border-slate-800">
-						<TableHead className="w-12" />
-						<TableHead>Name</TableHead>
-						<TableHead>Status</TableHead>
-						<TableHead>Sent At</TableHead>
+				<TableHeader className="bg-card backdrop-blur-sm">
+					<TableRow className="border-slate-700/70 hover:bg-transparent">
+						<TableHead className="w-12 px-4" />
+						<TableHead className="h-12 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-300">
+							Name
+						</TableHead>
+						<TableHead className="h-12 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-300">
+							Status
+						</TableHead>
+						<TableHead className="h-12 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-300">
+							Sent At
+						</TableHead>
 					</TableRow>
 				</TableHeader>
 
 				<TableBody>
 					{loading && (
-						<TableRow className="border-slate-800">
-							<TableCell className="text-muted-foreground" colSpan={4}>
+						<TableRow className="border-slate-800/70">
+							<TableCell className="px-4 py-10 text-center text-muted-foreground" colSpan={4}>
 								Loading command history...
 							</TableCell>
 						</TableRow>
 					)}
 
 					{!loading && records.length === 0 && (
-						<TableRow className="border-slate-800">
-							<TableCell className="text-muted-foreground" colSpan={4}>
+						<TableRow className="border-slate-800/70">
+							<TableCell className="px-4 py-10 text-center text-muted-foreground" colSpan={4}>
 								No command history found.
 							</TableCell>
 						</TableRow>
@@ -78,39 +84,51 @@ export default function CommandHistoryTable({ records, loading }: CommandHistory
 
 							return (
 								<Fragment key={record.id}>
-									<TableRow className="border-slate-800 transition hover:bg-background">
-										<TableCell>
-											<button
-												type="button"
-												onClick={() => toggleRow(record.id)}
-												className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-300 hover:bg-slate-800"
-												aria-label={isExpanded ? "Collapse row" : "Expand row"}
+									<TableRow
+										className={`group border-slate-800/70 transition-colors duration-200 cursor-pointer hover:bg-slate-900/60 focus-visible:bg-slate-900/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
+											isExpanded ? "bg-slate-900/50" : ""
+										}`}
+										onClick={() => toggleRow(record.id)}
+										onKeyDown={(event) => {
+											if (event.key === "Enter" || event.key === " ") {
+												event.preventDefault();
+												toggleRow(record.id);
+											}
+										}}
+										role="button"
+										tabIndex={0}
+										aria-expanded={isExpanded}
+									>
+										<TableCell className="px-4 py-3">
+											<span
+												className="inline-flex items-center justify-center rounded-md border border-slate-700/70 bg-slate-900/70 p-1.5 text-slate-300 transition-colors group-hover:bg-slate-800"
+												aria-hidden="true"
 											>
 												{isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-											</button>
+											</span>
 										</TableCell>
-										<TableCell>
+										<TableCell className="px-4 py-3">
 											<div className="flex items-center gap-2">
-												<Badge variant="outline" className="border-purple-500/40 text-purple-300 bg-purple-500/10">
+												<Badge variant="outline" className="border-purple-500/40 bg-purple-500/10 px-2.5 text-[11px] text-purple-300">
 													#{record.id}
 												</Badge>
-												<span className="font-medium text-white">{getCommandName(record)}</span>
+												<span className="font-medium text-slate-100">{getCommandName(record)}</span>
 											</div>
 										</TableCell>
-										<TableCell>
+										<TableCell className="px-4 py-3">
 											<Badge variant="outline" className={getStatusColor(record.status)}>
 												{formatStatusLabel(record.status)}
 											</Badge>
 										</TableCell>
-										<TableCell className="text-muted-foreground">{formatDateTime(record.sent_at)}</TableCell>
+										<TableCell className="px-4 py-3 text-slate-300">{formatDateTime(record.sent_at)}</TableCell>
 									</TableRow>
 
 									{isExpanded && (
-										<TableRow className="border-slate-800 bg-[#050C18]">
-											<TableCell colSpan={4} className="p-4">
-												<div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4">
+										<TableRow className="border-slate-800/70 bg-[#050C18]/80">
+											<TableCell colSpan={4} className="px-5 py-5 md:px-6 md:py-6">
+												<div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr]">
 													<div className="space-y-4">
-														<div className="rounded-xl border border-slate-800 bg-[#040B18] p-4">
+														<div className="rounded-xl border border-slate-700/70 bg-[#040B18] p-5">
 															<p className="text-xs uppercase tracking-wide text-gray-400 mb-4">Command Execution</p>
 															<div className="space-y-3 text-sm">
 																<div className="flex items-center justify-between gap-4">
@@ -142,7 +160,7 @@ export default function CommandHistoryTable({ records, loading }: CommandHistory
 															</div>
 														</div>
 
-														<div className="rounded-xl border border-slate-800 bg-[#040B18] p-4">
+														<div className="rounded-xl border border-slate-700/70 bg-[#040B18] p-5">
 															<p className="text-xs uppercase tracking-wide text-gray-400 mb-3">Raw Binary</p>
 															<p className="font-mono text-sm text-green-400 break-all">
 																{record.raw_binary_sent || "N/A"}
@@ -151,7 +169,7 @@ export default function CommandHistoryTable({ records, loading }: CommandHistory
 													</div>
 
 													<div className="space-y-4">
-														<div className="rounded-xl border border-slate-800 bg-[#040B18] p-4">
+														<div className="rounded-xl border border-slate-700/70 bg-[#040B18] p-5">
 															<p className="text-xs uppercase tracking-wide text-gray-400 mb-4">Command Definition</p>
 															<div className="space-y-3 text-sm">
 																<div className="flex items-center justify-between gap-4">
@@ -177,7 +195,7 @@ export default function CommandHistoryTable({ records, loading }: CommandHistory
 															</div>
 														</div>
 
-														<div className="rounded-xl border border-slate-800 bg-[#040B18] p-4">
+														<div className="rounded-xl border border-slate-700/70 bg-[#040B18] p-5">
 															<p className="text-xs uppercase tracking-wide text-gray-400 mb-4">Timestamps</p>
 															<div className="space-y-3 text-sm">
 																<div className="flex items-center justify-between gap-4">
