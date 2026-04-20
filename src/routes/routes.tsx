@@ -3,6 +3,8 @@ import Layout from "@/components/layout/Layout";
 import Dashboard from "@/pages/Dashboard";
 import CreateCommand from "@/pages/command/createCommand";
 import LogPage from "@/pages/logPage/logpage";
+import CommandDictionary from "@/pages/command/CommandDictionary";
+import CommandResponses from "@/pages/command/commandResponses";
 
 export default function AppRoutes() {
   return (
@@ -13,6 +15,9 @@ export default function AppRoutes() {
         {/* Command Center */}
         <Route path="/commands/create" element={<CreateCommand />} />
         <Route path="/logs" element={<LogPage />} />
+        <Route path="/commands/dictionary" element={<CommandDictionary />} />
+        <Route path="/commands/responses" element={<CommandResponses />} />
+
 
         {/* Future routes */}
 

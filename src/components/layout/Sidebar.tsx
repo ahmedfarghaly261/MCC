@@ -54,6 +54,16 @@ const navItems: NavItem[] = [
         path: "/commands/templates",
         icon: <LayoutTemplate size={18} />,
       },
+      {
+        label: "Command Dictionary",
+        path: "/commands/dictionary",
+        icon: <LayoutTemplate size={18} />,
+      }
+      , {
+        label: "Command Responses",
+        path: "/commands/responses",
+        icon: <FileText size={18} />,
+      }
     ],
   },
   {
