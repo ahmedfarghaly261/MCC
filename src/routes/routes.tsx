@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import Dashboard from "@/pages/Dashboard";
-import CreateCommand from "@/pages/command/createCommand";
+import CreateCommand from "@/pages/command/sendCommand/createCommand";
 import LogPage from "@/pages/logPage/logpage";
 
 export default function AppRoutes() {
