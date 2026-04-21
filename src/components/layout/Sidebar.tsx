@@ -15,6 +15,7 @@ import {
   TerminalIcon,
   SatelliteDish,
   FileText,
+  Activity,
 } from "lucide-react";
 
 interface NavItem {
@@ -67,6 +68,16 @@ const navItems: NavItem[] = [
     ],
   },
   {
+   label: "Telemetry Center",
+    icon: <Activity size={20} />,
+    children: [
+      {
+        label: "Telemetry Replies",
+        path: "/telemetry/replies",
+        icon: <FilePlus size={18} />,
+      },]
+  },
+  {
     label: "AI Insights",
     path: "/ai-insights",
     icon: <BrainCircuit size={20} />,
@@ -91,16 +102,21 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const location = useLocation();
 
-  const commandCenterItem = navItems.find((item) => item.children);
-  const isCommandChildActive = commandCenterItem?.children?.some(
-    (child) => child.path && location.pathname.startsWith(child.path),
-  );
-
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
-  >({
-    "Command Center": isCommandChildActive ?? false,
-  });
+  >(() =>
+    navItems.reduce<Record<string, boolean>>((acc, item) => {
+      if (!item.children) {
+        return acc;
+      }
+
+      acc[item.label] = item.children.some(
+        (child) => child.path && location.pathname.startsWith(child.path),
+      );
+
+      return acc;
+    }, {}),
+  );
 
   const toggleSection = (label: string) => {
     if (collapsed) return; 
@@ -132,7 +148,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     >
       {/* Logo  */}
       <div className="flex items-center gap-3 px-4 py-6 border-b border-white/5">
-        <div className="flex h-10 w-10 min-w-[40px] items-center justify-center rounded-xl bg-primary/20 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+        <div className="flex h-10 w-10 min-w-10 items-center justify-center rounded-xl bg-primary/20 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
           <SatelliteDish  className="text-primary" size={22} />
         </div>
         <div
@@ -176,7 +192,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   <span
                     className={`flex items-center ${collapsed ? "" : "gap-3"}`}
                   >
-                    <span className="min-w-[20px] flex justify-center">
+                    <span className="min-w-5 flex justify-center">
                       {item.icon}
                     </span>
                     <span
@@ -241,7 +257,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 } ${isActive ? linkActiveClasses : linkInactiveClasses}`
               }
             >
-              <span className="min-w-[20px] flex justify-center">
+              <span className="min-w-5 flex justify-center">
                 {item.icon}
               </span>
               <span
@@ -268,7 +284,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </button>
       </div>
 
-      <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+      <div className="h-px bg-linear-to-r from-transparent via-primary/30 to-transparent" />
     </aside>
   );
 }

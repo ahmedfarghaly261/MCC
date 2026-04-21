@@ -6,6 +6,7 @@ import LogPage from "@/pages/logPage/logpage";
 import CommandDictionary from "@/pages/command/commandDictionary/CommandDictionary";
 import CommandResponses from "@/pages/command/commandResponses/CommandResponses";
 import CommandHistoryView from "@/pages/command/commandHistory/commandHistoryView";
+import TelemetryRepliesView from "@/pages/telemetry/telemetryReplies/telemetryRepliesView";
 
 export default function AppRoutes() {
   return (
@@ -19,6 +20,7 @@ export default function AppRoutes() {
         <Route path="/logs" element={<LogPage />} />
         <Route path="/commands/dictionary" element={<CommandDictionary />} />
         <Route path="/commands/responses" element={<CommandResponses />} />
+        <Route path="/telemetry/replies" element={<TelemetryRepliesView />} />
 
 
         {/* Future routes */}
