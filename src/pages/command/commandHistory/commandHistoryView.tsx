@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { History, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLayoutLoading } from "@/components/layout/layoutLoadingContext";
 import CommandHistoryFillters from "./composables/commandHistoryFillters";
 import CommandHistoryStats from "./composables/commandHistoryStats";
 import CommandHistoryTable from "./composables/commandHistoryTable";
@@ -18,6 +19,7 @@ const INITIAL_FILTERS: CommandHistoryFilters = {
 };
 
 export default function CommandHistoryView() {
+	const { setGlobalLoading } = useLayoutLoading();
 	const [records, setRecords] = useState<CommandHistoryRecord[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -25,6 +27,7 @@ export default function CommandHistoryView() {
 
 	const loadHistory = async () => {
 		setLoading(true);
+		setGlobalLoading(true);
 		setErrorMessage(null);
 
 		try {
@@ -46,11 +49,16 @@ export default function CommandHistoryView() {
 			setErrorMessage("Failed to load command history.");
 		} finally {
 			setLoading(false);
+			setGlobalLoading(false);
 		}
 	};
 
 	useEffect(() => {
 		void loadHistory();
+
+		return () => {
+			setGlobalLoading(false);
+		};
 	}, []);
 
 	const filteredRecords = useMemo(() => {

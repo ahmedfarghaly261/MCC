@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo, useEffect, useMemo, useState } from "react";
+import React, { memo, useMemo } from "react";
 import {
   Satellite,
   CheckCircle2,
