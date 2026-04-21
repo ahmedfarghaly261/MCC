@@ -110,15 +110,14 @@ class TelemetryService
         }
     }
 
-    public function getByCommandLog(CommandLog $commandLog): array
+    public function getTelemetryByCommandLog(CommandLog $commandLog, int $satelliteId): array
     {
-        $satelliteId = $commandLog->telemetryLogs()->value('satellite_id');
-
-        $this->loadSubsystems($satelliteId); 
-
-        $commandLog->load(['telemetryLogs.parameter']);
-        $firstLog = $commandLog->telemetryLogs->first();
         try {
+            $this->loadSubsystems($satelliteId);
+
+            $commandLog->load(['telemetryLogs.parameter']);
+            $firstLog = $commandLog->telemetryLogs->first();
+
             return [
                 'command_log_id'   => $commandLog->id,
                 'command_id'       => $commandLog->command_id,

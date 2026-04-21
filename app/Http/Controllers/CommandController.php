@@ -115,6 +115,11 @@ class CommandController extends Controller
     {
         try {
             $replies = CommandReply::where('command_log_id', $id)->get();
+            if ($replies->isEmpty()) {
+                return response()->json([
+                    'message' => 'No replies found for this command log.',
+                ], 404);
+            }
             return response()->json($replies);
         } catch (Exception $e) {
             return response()->json([
