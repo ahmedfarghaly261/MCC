@@ -45,8 +45,12 @@ class CommandService
             ]);
 
             // 4. Send to Gateway
-            // response will be a single string (ACK/NACK) or an array of strings (for GSTLM)
+            // response will be a single string (ACK/NACK) or an array of strings (for GSTLM) and no responce for Hi cmd
             $response = $this->sendToGateway($binaryFrame, $command->name);
+            if ($response=="Hi Sent Successfully") {
+                $log->update(['status' => 'sent']);
+                return $response;
+            }
 
             if ($response) {
                 // Normalize response to an array so we can use the same logic for all commands
@@ -55,7 +59,7 @@ class CommandService
                 // 5. Update Log with the primary response (usually the first frame/ACK)
                 $primaryResponseHex = bin2hex($responseFrames[0]);
                 $log->update([
-                    'status'     => 'telemetry_received', // will update this to 'ack'/'nack' after decoding
+                    'status'     => 'received',
                     'replied_at' => now(),
                 ]);
 
@@ -72,7 +76,7 @@ class CommandService
 
                     if (strlen($frameHex) <= 18) {
                         $decoded = $this->decode($frameHex);
-                        
+
                         if ($decoded) {
                             $log->update([
                                 'status' => $decoded['is_ack'] ? 'ack' : 'nack',
@@ -84,8 +88,10 @@ class CommandService
                     // 7. Dispatch decoding job for each frame
                     Log::info("Dispatching DecodeTelemetryJob for command log ID: {$log->id}, frame index: {$index}, data: {$frameHex}");
                     DecodeTelemetryJob::dispatch($frameHex, $satelliteId, $log->id);
+                    $log->update([
+                        'status'     => 'telemetry_received',
+                    ]);
                 }
-
                 return ["log" => $log, "responses" => $responseFrames];
             }
 
@@ -197,7 +203,7 @@ class CommandService
 
             if ($commandName == 'Hi') {
                 $client->close();
-                return null;
+                return "Hi Sent Successfully";
             }
 
             // 1. Receive the ACK/NACK first
