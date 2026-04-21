@@ -13,8 +13,11 @@ use Exception;
 
 class CommandService
 {
-    private const FLAG = 0xC0;
+    const FLAG = 0xC0;
     private const SRC_GCS = 0xB0;
+    const TYPE_ACK = 0x02;
+    const TYPE_NACK = 0x03;
+    const TYPE_TLM = 0x47;
 
     /**
      * Entry point to dispatch a command
@@ -67,6 +70,17 @@ class CommandService
                         'reply_data'     => $frameHex,
                     ]);
 
+                    if (strlen($frameHex) <= 18) {
+                        $decoded = $this->decode($frameHex);
+                        
+                        if ($decoded) {
+                            $log->update([
+                                'status' => $decoded['is_ack'] ? 'ack' : 'nack',
+                            ]);
+                        }
+                        continue;
+                    }
+
                     // 7. Dispatch decoding job for each frame
                     Log::info("Dispatching DecodeTelemetryJob for command log ID: {$log->id}, frame index: {$index}, data: {$frameHex}");
                     DecodeTelemetryJob::dispatch($frameHex, $satelliteId, $log->id);
@@ -106,6 +120,47 @@ class CommandService
 
         // Field 1 & 9: Flags 
         return pack('C', self::FLAG) . $headerAndData . pack('CCC', $crc0, $crc1, self::FLAG);
+    }
+
+    public function decode(string $hex): ?array
+    {
+        $binary = hex2bin(str_replace(' ', '', $hex));
+        $bytes = array_values(unpack('C*', $binary));
+
+        // 1. Minimum check: Flag + Dest + Src + Type + Len + Data + CRC + CRC + Flag = 9 bytes
+        if (count($bytes) < 9 || $bytes[0] !== 0xC0) {
+            return null;
+        }
+
+        $type = $bytes[3]; // Byte 4 is the Identifier
+
+        // 2. Strict Filter: If it's not ACK (02) or NACK (03), ignore it
+        if ($type !== self::TYPE_ACK && $type !== self::TYPE_NACK) {
+            return null;
+        }
+
+        return [
+            'is_ack'     => ($type === self::TYPE_ACK),
+            'command_id' => $bytes[5],
+            'source'     => sprintf('0x%02x', $bytes[1]),
+            'destination' => sprintf('0x%02x', $bytes[2]),
+            'is_valid'   => $this->validateCRC($binary)
+        ];
+    }
+
+    private function validateCRC(string $binary): bool
+    {
+        $len = strlen($binary);
+        $payload = substr($binary, 1, 5);
+
+        $calculated = $this->calculateCRC16($payload);
+
+        // Per your ICD: CRC_0 is LSB, CRC_1 is MSB
+        $lsb = ord($binary[$len - 3]);
+        $msb = ord($binary[$len - 2]);
+        $received = ($msb << 8) | $lsb;
+
+        return $calculated === $received;
     }
 
     /**
@@ -175,15 +230,14 @@ class CommandService
     public function getAllCommands()
     {
         return Command::all();
-    }   
+    }
 
-    public function getCommandById($id) 
+    public function getCommandById($id)
     {
         $command = Command::where('id', $id)->first();
         if (!$command) {
             throw new \Exception("Command with ID $id not found.");
         }
-        return $command;    
-        
+        return $command;
     }
 }

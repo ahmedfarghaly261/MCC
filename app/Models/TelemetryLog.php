@@ -33,6 +33,10 @@ class TelemetryLog extends Model
             default => 'Unknown',
         };
     }
+    protected $casts = [
+        'sampled_at' => 'datetime', 
+        'created_at' => 'datetime',
+    ];
 
     /**
      * The telemetry parameter this log refers to.
@@ -50,5 +54,10 @@ class TelemetryLog extends Model
     public function subsystem() 
     {
         return $this->belongsTo(SatelliteSubsystem::class, 'subsystem_id');
+    }
+
+    public function commandLog()
+    {
+        return $this->belongsTo(CommandLog::class, 'command_log_id');
     }
 }

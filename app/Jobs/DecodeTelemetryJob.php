@@ -59,8 +59,8 @@ class DecodeTelemetryJob implements ShouldQueue
             Log::info("Decoded telemetry data received for command log ID: {$this->commandLogId}, data: " . json_encode($decodedData));
 
             // 2. Store decoded telemetry in the database
-            $telemetryService = new TelemetryService($this->satelliteId, $this->commandLogId);
-            $telemetryService->storeDecodedFrame($decodedData);
+            $telemetryService = new TelemetryService();
+            $telemetryService->storeDecodedFrame($decodedData, $this->satelliteId, $this->commandLogId);
             Log::info("Telemetry decoding and storage completed for command log ID: {$this->commandLogId}");
 
         } catch (\Exception $e) {

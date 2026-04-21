@@ -26,4 +26,14 @@ class CommandLog extends Model
     {
         return $this->hasMany(CommandReply::class, 'command_log_id');
     }
+
+    public function Reply()
+    {
+        return $this->hasOne(CommandReply::class, 'command_log_id');
+    }
+
+    public function telemetryLogs()
+    {
+        return $this->hasMany(TelemetryLog::class, 'command_log_id');
+    }
 }

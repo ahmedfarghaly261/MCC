@@ -19,7 +19,7 @@ class CommandController extends Controller
     }
 
     /**
-     * Endpoint to get all commands
+     * Get Command List
      */
     public function index(): JsonResponse
     {
@@ -34,7 +34,7 @@ class CommandController extends Controller
     }
 
     /**
-     * Endpoint to get a command
+     *  Get a command by ID
      */
     public function show($id): JsonResponse
     {
@@ -49,7 +49,7 @@ class CommandController extends Controller
     }
 
     /**
-     * Endpoint to send a command
+     *  Send a command
      */
     public function send(Request $request): JsonResponse
     {
@@ -76,23 +76,23 @@ class CommandController extends Controller
     }
 
     /**
-     * Endpoint to show  a command status by log ID
+     *  Show command log 
      */
-    public function getCommandStatus($id): JsonResponse
+    public function getCommandLog($id): JsonResponse
     {
         try {
             $log = CommandLog::with('commandDefinition')->findOrFail($id);
             return response()->json($log);
         } catch (Exception $e) {
             return response()->json([
-                'message' => 'Failed to fetch command status: ' . $e->getMessage(),
+                'message' => 'Failed to fetch command log: ' . $e->getMessage(),
             ], 400);
         }
     }
 
 
     /**
-     * Get Command History for the Dashboard
+     * Get Command History 
      */
     public function history(): JsonResponse
     {
@@ -121,5 +121,5 @@ class CommandController extends Controller
                 'message' => 'Failed to fetch command replies: ' . $e->getMessage(),
             ], 400);
         }
-    }
+    } 
 }
