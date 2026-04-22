@@ -67,6 +67,7 @@ class CommandController extends Controller
             );
             return response()->json([
                 'message' => 'Command dispatched successfully',
+                'log_id' => $log->id,
             ], 200);
         } catch (Exception $e) {
             return response()->json([
