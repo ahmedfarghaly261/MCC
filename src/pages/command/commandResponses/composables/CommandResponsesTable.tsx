@@ -2,6 +2,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { type CommandReply} from "../types/CommandResponses.types";
+import {
+  formatDateTime,
+  formatReplyDataForDisplay,
+  formatStatusLabel,
+  getStatusBadgeClass,
+} from "../Utils/commandResponses.util";
 
 interface Props {
   data: CommandReply[];
@@ -16,27 +22,6 @@ export default function CommandResponsesTable({
   expandedRow,
   setExpandedRow,
 }: Props) {
-  const formatTime = (date: string | null) => {
-    if (!date) return "-";
-    return new Date(date).toLocaleString();
-  };
-
-  const getReplyStatus = (reply: CommandReply) => {
-    if (!reply.reply_data || reply.reply_data.length === 0) {
-      return (
-        <Badge className="bg-yellow-500/20 text-yellow-400">
-          EMPTY
-        </Badge>
-      );
-    }
-
-    return (
-      <Badge className="bg-green-500/20 text-green-400">
-        RECEIVED
-      </Badge>
-    );
-  };
-
   return (
     <Card className="bg-[#1A2333] border border-gray-700">
       <CardContent className="p-0 overflow-x-auto">
@@ -98,23 +83,21 @@ export default function CommandResponsesTable({
                     </td>
 
                     <td className="p-4">
-                      {getReplyStatus(reply)}
+                      <Badge className={getStatusBadgeClass(reply.command_log?.status)}>
+                        {formatStatusLabel(reply.command_log?.status)}
+                      </Badge>
                     </td>
 
                     <td className="p-4 text-gray-400">
-                      {formatTime(reply.created_at)}
+                      {formatDateTime(reply.created_at)}
                     </td>
                   </tr>
 
                   {expandedRow === reply.id && (
                     <tr className="bg-[#0B1220]">
                       <td colSpan={5} className="p-6">
-                        <pre className="bg-black/40 border border-gray-800 rounded-lg p-4 text-xs overflow-x-auto">
-                          {JSON.stringify(
-                            reply.reply_data,
-                            null,
-                            2
-                          )}
+                        <pre className="bg-black/40 border border-gray-800 rounded-lg p-4 text-xs whitespace-pre-wrap break-all">
+                          {formatReplyDataForDisplay(reply.reply_data)}
                         </pre>
                       </td>
                     </tr>
