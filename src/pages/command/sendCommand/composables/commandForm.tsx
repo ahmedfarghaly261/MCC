@@ -11,8 +11,16 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupTextarea } from "@/components/ui/input-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { CheckCircle, Send } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isAxiosError } from "axios";
@@ -23,7 +31,13 @@ import {
 import { toast } from "sonner";
 import SatCard from "./satCard";
 import type { SatelliteData } from "./satCard";
+import { getDestinationOptions, formatAsHex } from "../Utils/commandCatalog.util";
+import { getCommandCatalog } from "../services/commandCatalogService";
 import { sendCommand } from "../services/sendCommandService";
+import type {
+  CommandCatalogItem,
+  DestinationOption,
+} from "../types/commandCatalog.types";
 import type { SendCommandPayload } from "../types/command.types";
 
 const defaultSatellite: SatelliteData = {
@@ -51,6 +65,9 @@ function toPayload(values: CommandSchema): SendCommandPayload {
 }
 
 function CommandForm() {
+  const [commands, setCommands] = useState<CommandCatalogItem[]>([]);
+  const [commandsLoading, setCommandsLoading] = useState(true);
+
   const form = useForm<CommandSchema>({
     resolver: zodResolver(commandSchema),
     defaultValues: {
@@ -59,6 +76,50 @@ function CommandForm() {
       data: "",
     },
   });
+
+  const selectedCommandId = form.watch("commandId");
+  const selectedDestAddress = form.watch("destAddress");
+
+  const selectedCommand = useMemo(
+    () => commands.find((command) => String(command.cmd_id) === selectedCommandId),
+    [commands, selectedCommandId],
+  );
+
+  const destinationOptions = useMemo<DestinationOption[]>(
+    () => getDestinationOptions(selectedCommand),
+    [selectedCommand],
+  );
+
+  useEffect(() => {
+    const fetchCommands = async () => {
+      try {
+        setCommandsLoading(true);
+        const result = await getCommandCatalog();
+        setCommands(result);
+      } finally {
+        setCommandsLoading(false);
+      }
+    };
+
+    void fetchCommands();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedDestAddress) {
+      return;
+    }
+
+    const isAllowed = destinationOptions.some(
+      (option) => String(option.value) === selectedDestAddress,
+    );
+
+    if (!isAllowed) {
+      form.setValue("destAddress", "", {
+        shouldValidate: true,
+      });
+    }
+  }, [destinationOptions, form, selectedDestAddress]);
+
   const onsubmit: SubmitHandler<CommandSchema> = async (values) => {
     try {
       const payload = toPayload(values);
@@ -132,14 +193,35 @@ function CommandForm() {
                     <FieldLabel className="text-sm font-semibold text-gray-300">
                       Command ID <span className="text-red-400">*</span>
                     </FieldLabel>
-                    <Input
-                      {...field}
+                    <Select
                       value={field.value ?? ""}
-                      id="create-command-id"
-                      type="number"
-                      placeholder="Enter command ID"
-                      className="w-full bg-[#0B1220] border-gray-600 text-gray-300"
-                    />
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue("destAddress", "", { shouldValidate: true });
+                      }}
+                      disabled={commandsLoading || commands.length === 0}
+                    >
+                      <SelectTrigger
+                        id="create-command-id"
+                        className="w-full h-11 bg-[#0B1220] border-blue-500/60 text-white"
+                      >
+                        <SelectValue
+                          placeholder={commandsLoading ? "Loading commands..." : "Select command"}
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#0B1220] border-blue-500/40 text-white">
+                        {commands.map((command) => (
+                          <SelectItem key={command.id} value={String(command.cmd_id)}>
+                            {`${formatAsHex(command.cmd_id)} - ${command.name}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {!commandsLoading && commands.length === 0 && (
+                      <FieldDescription className="text-red-300 text-xs">
+                        No commands available from Command Dictionary API.
+                      </FieldDescription>
+                    )}
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -156,13 +238,48 @@ function CommandForm() {
                     <FieldLabel className="text-sm font-semibold text-gray-300">
                       Destination Address <span className="text-red-400">*</span>
                     </FieldLabel>
+
+                    <div className="flex flex-wrap gap-3">
+                      {destinationOptions.map((destination) => {
+                        const isSelected = String(destination.value) === field.value;
+
+                        return (
+                          <Button
+                            key={destination.key}
+                            type="button"
+                            variant="outline"
+                            className={`h-12 min-w-28 rounded-xl border font-mono text-base tracking-wide ${
+                              isSelected
+                                ? "border-blue-400 bg-blue-500/20 text-white ring-2 ring-white/30"
+                                : "border-gray-600 bg-[#0B1220] text-gray-200 hover:border-blue-400/70 hover:bg-blue-500/10"
+                            }`}
+                            onClick={() => field.onChange(String(destination.value))}
+                          >
+                            {destination.code}
+                          </Button>
+                        );
+                      })}
+                    </div>
+
+                    {!selectedCommandId && (
+                      <FieldDescription className="text-gray-500 text-xs">
+                        Select a command first to show valid destinations.
+                      </FieldDescription>
+                    )}
+
+                    {selectedCommandId && destinationOptions.length === 0 && (
+                      <FieldDescription className="text-yellow-300 text-xs">
+                        No allowed destinations were provided for this command.
+                      </FieldDescription>
+                    )}
+
                     <Input
                       {...field}
-                      value={field.value ?? ""}
+                      value={selectedDestAddress ?? ""}
+                      readOnly
+                      tabIndex={-1}
                       id="create-command-dest-address"
-                      type="number"
-                      placeholder="Enter destination address"
-                      className="w-full bg-[#0B1220] border-gray-600 text-gray-300"
+                      className="sr-only"
                     />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
