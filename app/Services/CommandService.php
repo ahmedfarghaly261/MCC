@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Command;
 use App\Models\CommandLog;
 use App\Models\CommandReply;
+use App\Models\SatelliteSubsystem;
 use Illuminate\Support\Facades\Log;
 use WebSocket\Client;
 use App\Jobs\DecodeTelemetryJob;
@@ -238,6 +239,22 @@ class CommandService
         return Command::all();
     }
 
+    public function getAllCommandsWithSubsystems()
+    {
+        $commands = $this->getAllCommands();
+        // Load subsystems from allowed destinations and get subsystem name only
+        $allDestinations = $commands->pluck('allowed_destinations')->flatten()->unique()->filter();
+        $subsystems = SatelliteSubsystem::whereIn('hex_code', $allDestinations)->get(['hex_code', 'name']);
+        $subsystemMap = $subsystems->keyBy('hex_code');
+        $commands->transform(function ($command) use ($subsystemMap) {
+            $command->subsystems = collect($command->allowed_destinations)->map(function ($id) use ($subsystemMap) {
+                return $subsystemMap->get($id)?->only(['hex_code', 'name']);
+            })->filter()->values();
+            return $command;
+        });
+        return $commands;
+    }
+
     public function getCommandById($id)
     {
         $command = Command::where('id', $id)->first();
@@ -245,5 +262,14 @@ class CommandService
             throw new \Exception("Command with ID $id not found.");
         }
         return $command;
+    }
+
+
+    public function getAllReplies()
+    {
+        return CommandReply::with(['commandLog.command:id,name', 'commandLog'])
+            ->whereHas('commandLog.command')
+            ->orderBy('created_at', 'desc')
+            ->paginate(30);
     }
 }

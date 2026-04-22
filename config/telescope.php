@@ -115,6 +115,7 @@ return [
     'ignore_paths' => [
         'livewire*',
         'nova-api*',
+        'wpad.dat',
         'pulse*',
         '_boost*',
         '.well-known*',

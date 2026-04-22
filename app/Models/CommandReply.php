@@ -16,6 +16,8 @@ class CommandReply extends Model
         'reply_data' => 'array',
     ];
 
+    protected $hidden = ['updated_at'];
+
     public function commandLog()
     {
         return $this->belongsTo(CommandLog::class, 'command_log_id');

@@ -24,7 +24,7 @@ class CommandController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $commands = $this->commandService->getAllCommands();
+            $commands = $this->commandService->getAllCommandsWithSubsystems();
             return response()->json($commands);
         } catch (Exception $e) {
             return response()->json([
@@ -81,7 +81,7 @@ class CommandController extends Controller
     public function getCommandLog($id): JsonResponse
     {
         try {
-            $log = CommandLog::with('commandDefinition')->findOrFail($id);
+            $log = CommandLog::with('command')->findOrFail($id);
             return response()->json($log);
         } catch (Exception $e) {
             return response()->json([
@@ -97,7 +97,7 @@ class CommandController extends Controller
     public function history(): JsonResponse
     {
         try {
-            $history = CommandLog::with('commandDefinition')
+            $history = CommandLog::with('command')
                 ->orderBy('sent_at', 'desc')
                 ->paginate(20);
             return response()->json($history);
@@ -109,17 +109,12 @@ class CommandController extends Controller
     }
 
     /**
-     * Get command replies for a specific command log
+     * Get all command replies 
      */
-    public function getReplies($id): JsonResponse
+    public function getReplies(): JsonResponse
     {
         try {
-            $replies = CommandReply::where('command_log_id', $id)->get();
-            if ($replies->isEmpty()) {
-                return response()->json([
-                    'message' => 'No replies found for this command log.',
-                ], 404);
-            }
+            $replies = $this->commandService->getAllReplies();
             return response()->json($replies);
         } catch (Exception $e) {
             return response()->json([

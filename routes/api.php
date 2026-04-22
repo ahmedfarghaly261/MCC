@@ -21,7 +21,7 @@ Route::prefix('mcc/command')->group(function () {
     Route::get('/history', [CommandController::class, 'history']);
     Route::post('/send', [CommandController::class, 'send']);
     Route::get('/log/{id}', [CommandController::class, 'getCommandLog']);
-    Route::get('/replies/{id}', [CommandController::class, 'getReplies']);
+    Route::get('/replies', [CommandController::class, 'getReplies']);
     Route::get('/', [CommandController::class, 'index']);
     Route::get('/{id}', [CommandController::class, 'show']);
 });

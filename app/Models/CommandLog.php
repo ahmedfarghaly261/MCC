@@ -18,7 +18,7 @@ class CommandLog extends Model
         'response_time_ms' => 'float',
     ];
 
-    public function commandDefinition(): BelongsTo
+    public function command(): BelongsTo
     {
         return $this->belongsTo(Command::class, 'command_id');
     }
