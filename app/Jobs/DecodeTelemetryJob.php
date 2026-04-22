@@ -61,11 +61,14 @@ class DecodeTelemetryJob implements ShouldQueue
             // 2. Store decoded telemetry in the database
             $telemetryService = new TelemetryService();
             $telemetryService->storeDecodedFrame($decodedData, $this->satelliteId, $this->commandLogId);
+            
+            CommandLog::where('id', $this->commandLogId)->update(['status' => 'telemetry_decoded']);
+
             Log::info("Telemetry decoding and storage completed for command log ID: {$this->commandLogId}");
 
         } catch (\Exception $e) {
             Log::error("Telemetry Decoding Failed: " . $e->getMessage());
-            CommandLog::where('id', $this->commandLogId)->update(['status' => 'nacked']);
+            CommandLog::where('id', $this->commandLogId)->update(['status' => 'decoding_error']);
             $this->fail($e);
         }
     }
