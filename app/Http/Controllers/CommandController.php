@@ -83,6 +83,13 @@ class CommandController extends Controller
     {
         try {
             $log = CommandLog::with('command')->findOrFail($id);
+            $log->makeHidden('updated_at');
+            $log->command->makeHidden([
+                'allowed_sources',
+                'allowed_destinations',
+                'created_at',
+                'updated_at',
+            ]);
             return response()->json($log);
         } catch (Exception $e) {
             return response()->json([
@@ -122,5 +129,5 @@ class CommandController extends Controller
                 'message' => 'Failed to fetch command replies: ' . $e->getMessage(),
             ], 400);
         }
-    } 
+    }
 }
