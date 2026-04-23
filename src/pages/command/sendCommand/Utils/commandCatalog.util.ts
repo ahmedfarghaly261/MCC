@@ -87,6 +87,16 @@ export function getDestinationOptions(
 
   const uniqueByValue = new Map<number, DestinationOption>();
 
+  const subsystemMap = new Map<number, string>();
+  if (Array.isArray(command.subsystems)) {
+    command.subsystems.forEach((sub) => {
+      const parsedHex = parseDestinationValue(sub.hex_code);
+      if (parsedHex !== null) {
+        subsystemMap.set(parsedHex, sub.name);
+      }
+    });
+  }
+
   command.allowed_destinations.forEach((rawValue, index) => {
     const parsedValue = parseDestinationValue(rawValue);
 
@@ -99,6 +109,7 @@ export function getDestinationOptions(
         key: `${command.id}-${parsedValue}-${index}`,
         value: parsedValue,
         code: formatAsHex(parsedValue),
+        label: subsystemMap.get(parsedValue) ?? `Address ${formatAsHex(parsedValue)}`,
       });
     }
   });

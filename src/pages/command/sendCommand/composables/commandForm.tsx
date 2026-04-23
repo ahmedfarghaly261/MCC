@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import SatCard from "./satCard";
 import type { SatelliteData } from "./satCard";
 import { getDestinationOptions, formatAsHex } from "../Utils/commandCatalog.util";
+import { getDestinationButtonClass } from "../Utils/destinationStyles.util";
 import { getCommandCatalog } from "../services/commandCatalogService";
 import { sendCommand } from "../services/sendCommandService";
 import type {
@@ -248,14 +249,14 @@ function CommandForm() {
                             key={destination.key}
                             type="button"
                             variant="outline"
-                            className={`h-12 min-w-28 rounded-xl border font-mono text-base tracking-wide ${
+                            className={`h-11 rounded-xl border text-base tracking-wide ${getDestinationButtonClass(
+                              destination.label,
                               isSelected
-                                ? "border-blue-400 bg-blue-500/20 text-white ring-2 ring-white/30"
-                                : "border-gray-600 bg-[#0B1220] text-gray-200 hover:border-blue-400/70 hover:bg-blue-500/10"
-                            }`}
+                            )}`}
                             onClick={() => field.onChange(String(destination.value))}
                           >
-                            {destination.code}
+                            <span className="font-semibold">{destination.label}</span>
+                            <span className="text-sm font-mono opacity-80">{destination.code}</span>
                           </Button>
                         );
                       })}
