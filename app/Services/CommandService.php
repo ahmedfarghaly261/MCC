@@ -50,7 +50,7 @@ class CommandService
             $response = $this->sendToGateway($binaryFrame, $command->name);
             if ($response=="Hi Sent Successfully") {
                 $log->update(['status' => 'sent']);
-                return $response;
+                return $log;
             }
 
             if ($response) {
@@ -93,7 +93,7 @@ class CommandService
                         'status'     => 'telemetry_received',
                     ]);
                 }
-                return ["log" => $log, "responses" => $responseFrames];
+                return $log;
             }
 
             return $log;

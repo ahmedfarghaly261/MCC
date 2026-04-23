@@ -65,6 +65,7 @@ class CommandController extends Controller
                 $request->input('dest_address'),
                 $request->input('data', [])
             );
+            $log = is_array($log) ? $log['log'] : $log;
             return response()->json([
                 'message' => 'Command dispatched successfully',
                 'log_id' => $log->id,
