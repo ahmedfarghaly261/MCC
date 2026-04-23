@@ -21,6 +21,7 @@ export default function AppRoutes() {
         <Route path="/commands/dictionary" element={<CommandDictionary />} />
         <Route path="/commands/responses" element={<CommandResponses />} />
         <Route path="/telemetry/replies" element={<TelemetryRepliesView />} />
+        <Route path="/telemetry-replies/:commandLogId" element={<TelemetryRepliesView />} />
 
 
         {/* Future routes */}

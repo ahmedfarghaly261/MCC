@@ -11,9 +11,16 @@ export interface CommandDefinition {
   updated_at: string;
 }
 
-export type CommandStatus = 'pending' | 'ack' | 'nack' | 'timeout' | 'error';
-
-export type CommandStatusFilter = CommandStatus | 'all';
+export type CommandStatus =
+  | 'pending'
+  | 'ack'
+  | 'nack'
+  | 'timeout'
+  | 'error'
+  | 'telemetry_received';
+export type CommandStatusFilter =
+  | CommandStatus
+  | 'all';
 
 export interface CommandHistoryRecord {
   id: number;

@@ -9,6 +9,8 @@ import TelemetryRepliesTable from "./composables/telemetryRepliesTable";
 import { formatDateTime, getTelemetryStatusColor } from "./Utils/telemetryReplies.util";
 import { getTelemetryByCommandLog } from "./services/telemetryReplies.service";
 import type { TelemetryResponse } from "./types/telemetryReplies.types";
+import { useParams } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function TelemetryRepliesView() {
 	const { setGlobalLoading } = useLayoutLoading();
@@ -16,49 +18,70 @@ export default function TelemetryRepliesView() {
 	const [response, setResponse] = useState<TelemetryResponse | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const { commandLogId: routeCommandLogId } =
+  useParams();
+ 
 
-	const loadTelemetry = async () => {
-		const parsedId = Number(commandLogId.trim());
+useEffect(() => {
+  if (routeCommandLogId) {
+    setCommandLogId(routeCommandLogId);
 
-		if (!Number.isInteger(parsedId) || parsedId <= 0) {
-			setErrorMessage("Please enter a valid command log ID.");
-			setResponse(null);
-			return;
-		}
+    void loadTelemetryById(
+      Number(routeCommandLogId)
+    );
+  }
+}, [routeCommandLogId]);
+const loadTelemetryById = async (
+  id: number
+) => {
+  setLoading(true);
+  setGlobalLoading(true);
+  setErrorMessage(null);
 
-		setLoading(true);
-		setGlobalLoading(true);
-		setErrorMessage(null);
+  try {
+    const telemetryResponse =
+      await getTelemetryByCommandLog(id);
 
-		try {
-			const telemetryResponse = await getTelemetryByCommandLog(parsedId);
-			setResponse(telemetryResponse);
-		} catch (error) {
-			if (isAxiosError(error)) {
-				console.error("Telemetry replies API error", {
-					status: error.response?.status,
-					statusText: error.response?.statusText,
-					url: error.config?.url,
-					method: error.config?.method,
-					response: error.response?.data,
-				});
+    setResponse(telemetryResponse);
+  } catch (error) {
+    if (isAxiosError(error)) {
+      if (error.response?.status === 404) {
+        setErrorMessage(
+          `No telemetry data found for command log ID: ${id}.`
+        );
+      } else {
+        setErrorMessage(
+          "Failed to load telemetry replies."
+        );
+      }
+    } else {
+      setErrorMessage(
+        "Failed to load telemetry replies."
+      );
+    }
 
-				if (error.response?.status === 404) {
-					setErrorMessage(`No telemetry data found for command log ID: ${parsedId}.`);
-				} else {
-					setErrorMessage("Failed to load telemetry replies.");
-				}
-			} else {
-				console.error("Telemetry replies unexpected error", error);
-				setErrorMessage("Failed to load telemetry replies.");
-			}
+    setResponse(null);
+  } finally {
+    setLoading(false);
+    setGlobalLoading(false);
+  }
+};
 
-			setResponse(null);
-		} finally {
-			setLoading(false);
-			setGlobalLoading(false);
-		}
-	};
+const loadTelemetry = async () => {
+  const parsedId = Number(
+    commandLogId.trim()
+  );
+
+  if (!Number.isInteger(parsedId) || parsedId <= 0) {
+    setErrorMessage(
+      "Please enter a valid command log ID."
+    );
+    setResponse(null);
+    return;
+  }
+
+  await loadTelemetryById(parsedId);
+};
 
 	return (
 		<div className="min-h-screen bg-background p-4 text-white md:p-6">
