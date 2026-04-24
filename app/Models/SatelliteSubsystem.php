@@ -9,7 +9,8 @@ class SatelliteSubsystem extends Model
     protected $fillable = [
         'satellite_id',
         'hex_code',
-        'subsystem_name',
+        'name',
+        'description',
         'status',
     ];
 

@@ -9,82 +9,71 @@ class SatelliteSubsystemSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     * * Based on EGSACUBE-ED SYSTEM ICD DOCUMENT Ver 3.2
      */
     public function run(): void
     {
-        $satelliteId = 1; 
+        // Assuming a satellite with ID 1 already exists in the 'satellites' table
+        $satelliteId = 1;
 
         $subsystems = [
             [
-                'satellite_id'   => $satelliteId,
-                'name' => 'EPS', // Matches Decoder Key
-                'description'    => 'Electrical Power System',
-                'hex_code'       => '0xA2',
-                'status'         => 'active',
+                'name' => 'OBC',
+                'satellite_id' => $satelliteId,
+                'hex_code' => '0xA1',
+                'description' => 'Core subsystem responsible for supervising the collection, processing, storage, and routing of data within the platform.',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'satellite_id'   => $satelliteId,
-                'name' => 'ASIB', // Matches Decoder Key
-                'description'    => 'Interface Board / Sensors',
-                'hex_code'       => '0xA4', 
-                'status'         => 'active',
+                'name' => 'EPS',
+                'satellite_id' => $satelliteId,
+                'hex_code' => '0xA2',
+                'description' => 'Responsible for generating, storing, regulating, and distributing electrical power to all satellite subsystems.',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'satellite_id'   => $satelliteId,
-                'name' => 'RF', // Matches Decoder Key
-                'description'    => 'Radio Frequency Module',
-                'hex_code'       => '0xA5',
-                'status'         => 'active',
+                'name' => 'ADCS',
+                'satellite_id' => $satelliteId,
+                'hex_code' => '0xA3',
+                'description' => 'Determines satellite orientation and provides corrective control torques and orbital stabilization.',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'satellite_id'   => $satelliteId,
-                'name' => 'PA', // Matches Decoder Key
-                'description'    => 'Power Amplifier',
-                'hex_code'       => '0xA5', // Often shares address with RF or sub-addressed
-                'status'         => 'active',
+                'name' => 'PL',
+                'satellite_id' => $satelliteId,
+                'hex_code' => '0xA4',
+                'description' => 'Mission-oriented part of the satellite responsible for performing the primary operational tasks (sensors/instruments).',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'satellite_id'   => $satelliteId,
-                'name' => 'ANTS', // Matches Decoder Key
-                'description'    => 'Antenna Deployment System',
-                'hex_code'       => '0xA6', 
-                'status'         => 'active',
+                'name' => 'S-Band Communication',
+                'satellite_id' => $satelliteId,
+                'hex_code' => '0xA5',
+                'description' => 'External communication interface used for high-speed data downlink and telemetry.',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'satellite_id'   => $satelliteId,
-                'name' => 'SW', // Matches Decoder Key
-                'description'    => 'Software/System Status',
-                'hex_code'       => '0xA1', 
-                'status'         => 'active',
+                'name' => 'COMM',
+                'satellite_id' => $satelliteId,
+                'hex_code' => '0xA6',
+                'description' => 'Primary communication link for receiving ground commands (uplink) and transmitting health telemetry.',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
-            [
-                'satellite_id'   => $satelliteId,
-                'name' => 'GCS', 
-                'description'    => 'Ground Control Station',
-                'hex_code'       => '0xB0', 
-                'status'         => 'active',
-            ],
-            [
-                'satellite_id'   => $satelliteId,
-                'name' => 'Broadcast', 
-                'description'    => 'Broadcast Address',
-                'hex_code'       => '0xFF',
-                'status'         => 'system',
-            ],
+           
         ];
 
-        foreach ($subsystems as $subsystem) {
-            // We use subsystem_name as the unique key to match the Decoder
-            DB::table('satellite_subsystems')->updateOrInsert(
-                [
-                    'satellite_id'   => $subsystem['satellite_id'], 
-                    'name' => $subsystem['name']
-                ],
-                array_merge($subsystem, [
-                    'created_at' => now(), 
-                    'updated_at' => now()
-                ])
-            );
-        }
+        DB::table('satellite_subsystems')->insert($subsystems);
     }
 }

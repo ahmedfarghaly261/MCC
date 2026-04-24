@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::table('command_logs', function (Blueprint $table) {
 
+            $table->integer('decoding_retry_count')->default(0);
+            $table->timestamp('last_decoding_retry_at')->nullable();
+            $table->float('anomaly_score')->nullable();
+            $table->boolean('is_anomaly')->default(false);
             $table->timestamp('processed_at')->nullable();
         });
     }
@@ -23,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('command_logs', function (Blueprint $table) {
-          $table->dropColumn('processed_at');
+          $table->dropColumn(['decoding_retry_count', 'last_decoding_retry_at', 'anomaly_score', 'is_anomaly']);
         });
     }
 };

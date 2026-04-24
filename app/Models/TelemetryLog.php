@@ -12,10 +12,11 @@ class TelemetryLog extends Model
         'satellite_id', 'command_log_id',
         'subsystem_id', 'parameter_id', 
         'subsystem_address', 'subsystem_mode', 'subsystem_time', 'subsystem_rtc',
-        'raw_value', 'converted_value', 'unit', 'sampled_at'
+        'raw_value', 'converted_value', 'unit', 'sampled_at',
+        'is_anomaly', 'anomaly_score'
     ];
 
-    public $timestamps = false; // We use sampled_at instead
+    public $timestamps = false; 
 
     // Helper to get Subsystem Name from Hex ID (ICD Spec)
     public function getSubsystemNameAttribute()
@@ -36,6 +37,8 @@ class TelemetryLog extends Model
     protected $casts = [
         'sampled_at' => 'datetime', 
         'created_at' => 'datetime',
+        'is_anomaly' => 'boolean',
+        'anomaly_score' => 'float',
     ];
 
     /**

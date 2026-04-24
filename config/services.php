@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'anomaly_api' => [
+    'url'     => env('ANOMALY_API_URL', 'http://host.docker.internal:8000'),
+    'key'     => env('ANOMALY_API_KEY', 'change-me-in-production'),
+    'timeout' => env('ANOMALY_API_TIMEOUT', 15),
+],
+
 ];

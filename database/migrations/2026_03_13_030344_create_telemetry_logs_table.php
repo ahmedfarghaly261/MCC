@@ -28,7 +28,7 @@ return new class extends Migration
                 ->constrained('telemetry_parameters')
                 ->onDelete('cascade');
 
-            $table->integer('raw_value'); 
+            $table->string('raw_value'); 
             $table->float('converted_value', 10, 4);
             $table->string('unit')->nullable();
 

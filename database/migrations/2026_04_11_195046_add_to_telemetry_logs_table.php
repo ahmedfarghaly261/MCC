@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::table('telemetry_logs', function (Blueprint $table) {
             $table->foreignId('command_log_id')->nullable()->constrained('command_logs');
+            $table->boolean('is_anomaly')->default(false)->after('converted_value');
+            $table->float('anomaly_score', 8, 5)->nullable()->after('is_anomaly');
         });
     }
 
@@ -24,6 +26,7 @@ return new class extends Migration
         Schema::table('telemetry_logs', function (Blueprint $table) {
             $table->dropForeign(['command_log_id']);
             $table->dropColumn('command_log_id');
+            $table->dropColumn(['is_anomaly', 'anomaly_score']);
         });
     }
 };

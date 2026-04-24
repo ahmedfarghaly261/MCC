@@ -6,6 +6,7 @@ use App\Models\TelemetryLog;
 use App\Models\TelemetryParameter;
 use App\Models\SatelliteSubsystem;
 use App\Models\CommandLog;
+use Carbon\Carbon;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -38,75 +39,119 @@ class TelemetryService
     {
         $this->satelliteId  = $satelliteId;
         $this->commandLogId = $commandLogId;
+
+        // Pre-load subsystems into memory to reduce DB hits
         $this->loadSubsystems($satelliteId);
 
         try {
-            // 1. Identify which JSON keys are NOT subsystems
-            $metaKeys = ['status', 'captured_at', 'station', 'raw_hex', 'meta'];
+            // 1. Define keys that are NOT subsystems
+            $metaKeys = ['status', 'captured_at', 'station', 'raw_hex', 'meta', 'SW'];
 
-            $meta = $decoded['meta'] ?? [];
+            // 2. Extract Global Metadata Fallbacks
+            $meta      = $decoded['meta'] ?? [];
             $frameType = $meta['frame_type'] ?? 0;
             $satTime   = $meta['subsystem_time'] ?? null;
             $rtc       = $meta['subsystem_rtc'] ?? null;
 
-            // 2. Loop through every key in the decoded JSON
+            // Use the 'captured_at' from response, otherwise use server time
+            $timestamp = isset($decoded['captured_at']) ? Carbon::parse($decoded['captured_at']) : now();
+            // 3. Loop through every key in the decoded JSON (Subsystems)
             foreach ($decoded as $key => $boardData) {
-                // Skip top-level metadata keys
+
+                // Skip top-level metadata or non-subsystem entries
                 if (in_array($key, $metaKeys) || !is_array($boardData)) {
                     continue;
                 }
 
+                // 4. Retrieve or create the Subsystem
+                // Attempt to find the specific address (e.g., "EPS_Address")
+                $detectedHex = $boardData[$key . '_Address'] ?? '0x00';
+
                 $subsystem = SatelliteSubsystem::firstOrCreate(
                     [
-                        'satellite_id'   => $this->satelliteId,
-                        'name' => $key
+                        'satellite_id' => $this->satelliteId,
+                        'name'         => (string)$key
                     ],
                     [
-                        'hex_code' => '0x00', // Default placeholder
+                        'hex_code' => $detectedHex,
                         'status'   => 'active'
                     ]
                 );
 
+                // Extract subsystem-level metadata if it exists inside the board data
+                $currentMode = $boardData[$key . '_Mode'] ?? $frameType;
+                $currentTime = $boardData[$key . '_Time'] ?? $satTime;
+                $currentRTC  = $boardData[$key . '_RTC']  ?? $rtc;
+
                 Log::info("Processing Subsystem: {$key} (DB ID: {$subsystem->id})");
 
+                // 5. Loop through parameters within the board
                 foreach ($boardData as $paramName => $data) {
-                    // Normalize data: handling cases where data is an array or a single value
-                    $rawValue       = is_array($data) ? ($data['raw'] ?? 0) : $data; //put 0 if null  
-                    $convertedValue = is_array($data) ? ($data['converted'] ?? $rawValue) : $rawValue;
-                    $unit           = is_array($data) ? ($data['unit'] ?? null) : null;
 
+                    // Skip redundant/internal fields that aren't telemetry values
+                    if (str_ends_with($paramName, '_Address') || str_ends_with($paramName, '_Frame') || str_ends_with($paramName, '_Name')) {
+                        continue;
+                    }
+
+                    // Normalize data structure (handle array objects or flat values)
+                    if (is_array($data)) {
+                        $rawValue       = $data['raw'] ?? '0';
+                        $convertedValue = $data['converted'] ?? 0;
+                        $unit           = $data['unit'] ?? null;
+                    } else {
+                        $rawValue       = $data ?? '0';
+                        $convertedValue = $data ?? 0;
+                        $unit           = null;
+                    }
+
+                    // Format raw_value as string (handles hex strings, booleans, and nulls)
+                    if (is_bool($rawValue)) {
+                        $finalRaw = $rawValue ? '1' : '0';
+                    } elseif (is_null($rawValue) || $rawValue === '') {
+                        $finalRaw = '0';
+                    } else {
+                        $finalRaw = (string)$rawValue;
+                    }
+
+                    // Ensure converted value is a float
+                    $finalConverted = is_numeric($convertedValue) ? (float)$convertedValue : 0;
+
+                    // 6. Find or Create the Parameter definition
                     $parameter = TelemetryParameter::firstOrCreate(
                         [
                             'satellite_id'   => $this->satelliteId,
                             'subsystem_id'   => $subsystem->id,
-                            'parameter_name' => $paramName
+                            'parameter_name' => (string)$paramName
                         ],
                         ['unit' => $unit]
                     );
 
-                    // 5. SAVE TELEMETRY LOG
+                    // 7. SAVE TELEMETRY LOG
                     TelemetryLog::create([
                         'satellite_id'      => $this->satelliteId,
                         'command_log_id'    => $this->commandLogId,
                         'subsystem_id'      => $subsystem->id,
                         'subsystem_address' => hexdec($subsystem->hex_code ?? '0x00'),
-                        'subsystem_mode'    => $frameType,
-                        'subsystem_time'    => $satTime,
-                        'subsystem_rtc'     => $rtc,
+                        'subsystem_mode'    => $currentMode,
+                        'subsystem_time'    => $currentTime,
+                        'subsystem_rtc'     => $currentRTC,
                         'parameter_id'      => $parameter->id,
-                        'raw_value'         => is_bool($rawValue) ? (int)$rawValue : $rawValue,
-                        'converted_value'   => (float)$convertedValue,
+                        'raw_value'         => $finalRaw,
+                        'converted_value'   => $finalConverted,
                         'unit'              => $unit,
-                        'sampled_at'        => now(),
+                        'sampled_at'        => $timestamp,
                     ]);
                 }
-                Log::info("Saved " . count($boardData) . " parameters for {$key}");
             }
 
+            // 8. Clear cache so the dashboard sees the new parameters/subsystems immediately
             Cache::forget("sat_{$this->satelliteId}_subsystems");
             Cache::forget("sat_{$this->satelliteId}_params");
         } catch (\Exception $e) {
-            Log::error("CRITICAL TELEMETRY ERROR: " . $e->getMessage());
+            Log::error("CRITICAL TELEMETRY ERROR: " . $e->getMessage(), [
+                'satellite_id' => $satelliteId,
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
 
