@@ -14,3 +14,6 @@ Artisan::command('inspire', function () {
 Schedule::job(new RetryDecodingErrorsJob())
     ->everyMinute() 
     ->withoutOverlapping();
+
+Schedule::command('satellite:get-tle')->everyMinute();
+Schedule::command('satellite:get-tle 39444')->everyMinute();
