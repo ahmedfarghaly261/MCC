@@ -172,7 +172,8 @@ class TelemetryService
                 'sent_at'          => $commandLog->sent_at?->toIso8601String(),
                 'replied_at'       => $commandLog->replied_at?->toIso8601String(),
                 'response_time_ms' => $commandLog->response_time_ms,
-
+                'is_anomaly'       => $commandLog->is_anomaly,
+                'anomaly_score'    => $commandLog->anomaly_score,
                 'subsystem_id'      => $firstLog?->subsystem_id,
                 'subsystem_address' => $firstLog?->subsystem_address,
                 'subsystem_mode'    => $firstLog?->subsystem_mode,

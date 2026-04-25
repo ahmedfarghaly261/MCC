@@ -17,6 +17,11 @@ class CommandLog extends Model
         'sent_at' => 'datetime',
         'replied_at' => 'datetime',
         'response_time_ms' => 'float',
+        'is_anomaly' => 'boolean',
+        'last_decoding_retry_at' => 'datetime',
+        'processed_at' => 'datetime',
+        'decoding_retry_count' => 'integer',
+        'anomaly_score' => 'float',
     ];
 
     public function command(): BelongsTo
