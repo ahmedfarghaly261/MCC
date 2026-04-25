@@ -31,6 +31,12 @@ export function getStatusColor(status: CommandStatus): string {
     case "timeout":
     case "error":
       return "bg-red-500/20 text-red-400 border-red-500/50";
+      case "telemetry_received":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/50";
+        case "telemetry_decoded":
+          return "bg-blue-500/20 text-blue-400 border-blue-500/50";
+        case "sent":
+          return "bg-purple-500/20 text-purple-400 border-purple-500/50";
     default:
       return "bg-gray-500/20 text-gray-400 border-gray-500/50";
   }

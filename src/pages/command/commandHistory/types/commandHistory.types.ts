@@ -17,7 +17,10 @@ export type CommandStatus =
   | 'nack'
   | 'timeout'
   | 'error'
-  | 'telemetry_received';
+  | 'telemetry_received'
+  | 'telemetry_decoded'
+  | 'sent';
+
 export type CommandStatusFilter =
   | CommandStatus
   | 'all';
