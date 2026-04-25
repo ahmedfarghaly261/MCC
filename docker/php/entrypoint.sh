@@ -7,8 +7,5 @@ fi
 # Run database migrations
 php artisan migrate --force
 
-# Run database seeders
-php artisan db:seed --force
-
 # Start PHP-FPM
 exec php-fpm

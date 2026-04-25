@@ -191,6 +191,8 @@ class TelemetryService
                     'raw_value'       => $log->raw_value,
                     'converted_value' => $log->converted_value,
                     'unit'            => $log->unit,
+                    'is_anomaly'      => $log->is_anomaly,
+                    'anomaly_score'   => $log->anomaly_score,
                     'sampled_at'      => $log->sampled_at?->toIso8601String(),
                 ])->values()->all(),
             ];
