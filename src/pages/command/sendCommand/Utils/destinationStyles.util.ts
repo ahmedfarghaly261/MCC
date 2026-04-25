@@ -8,6 +8,18 @@ export function getDestinationButtonClass(label: string, isSelected: boolean): s
       baseClass = "border-orange-500/60 bg-orange-500/10 text-white hover:bg-orange-500/20";
       if (isSelected) baseClass += " ring-2 ring-orange-500/50 bg-orange-500/20";
       break;
+      case "ADCS":
+      baseClass = "border-green-500/60 bg-green-500/10 text-white hover:bg-green-500/20";
+      if (isSelected) baseClass += " ring-2 ring-green-500/50 bg-green-500/20";
+      break;
+      case "PL":
+      baseClass = "border-yellow-500/60 bg-yellow-500/10 text-white hover:bg-yellow-500/20";
+      if (isSelected) baseClass += " ring-2 ring-yellow-500/50 bg-yellow-500/20";
+      break;
+      case "OBC":
+      baseClass = "border-red-500/60 bg-red-500/10 text-white hover:bg-red-500/20";
+      if (isSelected) baseClass += " ring-2 ring-red-500/50 bg-red-500/20";
+      break;
     case "ASIB":
       baseClass = "border-violet-500/60 bg-violet-500/10 text-white hover:bg-violet-500/20";
       if (isSelected) baseClass += " ring-2 ring-violet-500/50 bg-violet-500/20";
