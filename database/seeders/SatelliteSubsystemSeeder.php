@@ -61,6 +61,14 @@ class SatelliteSubsystemSeeder extends Seeder
                 'status' => 'active',
                 'created_at' => now(),
                 'updated_at' => now(),
+            ],  [
+                'name' => 'Broadcast',
+                'satellite_id' => $satelliteId,
+                'hex_code' => '0xFF',
+                'description' => 'Broadcast subsystem',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'name' => 'COMM',
