@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
-import { formatDateTime } from "../Utils/telemetryReplies.util";
+import { formatDateTime, getAnomalyBadgeStyle, getAnomalyCardStyle } from "../Utils/telemetryReplies.util";
 import type { TelemetryResponse } from "../types/telemetryReplies.types";
 
 interface TelemetryRepliesTableProps {
@@ -49,7 +49,7 @@ export default function TelemetryRepliesTable({
 				{response.telemetry.map((reading) => (
 					<div
 						key={`${reading.id}-${reading.parameter.id}`}
-						className="rounded-md border border-slate-700/50 bg-linear-to-br from-[#0E1C2C] to-[#0A1523] p-3 transition-colors hover:border-cyan-500/40"
+						className={getAnomalyCardStyle(reading.is_anomaly)}
 					>
 						<div className="mb-2 flex items-start justify-between gap-2">
 							<div className="min-w-0">
@@ -71,6 +71,20 @@ export default function TelemetryRepliesTable({
 							<div className="flex items-center justify-between">
 								<span className="text-slate-400">Converted</span>
 								<span className="font-mono text-base font-semibold text-emerald-400">{reading.converted_value}</span>
+							</div>
+							<div className="flex items-center justify-between">
+								<span className="text-slate-400">Anomaly</span>
+								<span className="font-mono text-base font-semibold">
+									<Badge variant="outline" className={getAnomalyBadgeStyle(reading.is_anomaly)}>
+										{reading.is_anomaly ? "Yes" : "No"}
+									</Badge>
+								</span>
+							</div>
+							<div className="flex items-center justify-between">
+								<span className="text-slate-400">Anomaly Score</span>
+								<span className="font-mono text-base font-semibold text-pink-400">
+									{reading.anomaly_score !== null ? reading.anomaly_score.toFixed(2) : "-"}
+								</span>
 							</div>
 						</div>
 

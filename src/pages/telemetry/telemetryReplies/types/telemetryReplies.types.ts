@@ -11,6 +11,8 @@ export interface TelemetryReading {
 	converted_value: number;
 	unit: string | null;
 	sampled_at: string;
+	is_anomaly: boolean;
+	anomaly_score: number | null;
 }
 
 export type TelemetryStatus =
