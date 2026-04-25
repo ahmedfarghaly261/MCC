@@ -45,7 +45,7 @@ export function getAnomalyBadgeStyle(isAnomaly: boolean): string {
 
 export function getAnomalyCardStyle(isAnomaly: boolean): string {
 	if (isAnomaly) {
-		return "rounded-md border border-red-500/50 bg-red-500/10 p-3 transition-colors hover:border-red-400/80";
+		return "rounded-md border border-red-800/90 bg-red-900/20 p-3 transition-colors hover:border-red-400/80";
 	}
 	return "rounded-md border border-slate-700/50 bg-linear-to-br from-[#0E1C2C] to-[#0A1523] p-3 transition-colors hover:border-cyan-500/40";
 }
