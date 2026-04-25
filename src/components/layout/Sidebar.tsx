@@ -119,7 +119,14 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   );
 
   const toggleSection = (label: string) => {
-    if (collapsed) return; 
+    if (collapsed) {
+      onToggle();
+      setExpandedSections((prev) => ({
+        ...prev,
+        [label]: true,
+      }));
+      return; 
+    }
     setExpandedSections((prev) => ({
       ...prev,
       [label]: !prev[label],
@@ -127,39 +134,39 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   };
 
   const linkBaseClasses =
-    "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 relative group";
+    "flex items-center gap-3 px-3 py-3 rounded-xl text-[14px] font-medium transition-all duration-300 relative group border border-transparent";
   const linkInactiveClasses =
-    "text-slate-400 hover:text-white hover:bg-white/5";
+    "text-slate-400 hover:text-slate-100 hover:border-slate-800/60 hover:bg-slate-800/40";
   const linkActiveClasses =
-    "text-white bg-primary/20 border border-primary/30 shadow-[0_0_12px_rgba(59,130,246,0.15)]";
+    "text-blue-400 bg-blue-500/10 border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.1)]";
 
   const subLinkBaseClasses =
-    "flex items-center gap-3 pl-11 pr-4 py-2.5 rounded-lg text-sm transition-all duration-200";
+    "flex items-center gap-3 pl-11 pr-4 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 border border-transparent";
   const subLinkInactiveClasses =
-    "text-slate-400 hover:text-white hover:bg-white/5";
+    "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40";
   const subLinkActiveClasses =
-    "text-white bg-primary/20 border border-primary/30 shadow-[0_0_12px_rgba(59,130,246,0.15)]";
+    "text-cyan-400 bg-cyan-500/10 border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.1)]";
 
   return (
     <aside
-      className={`bg-[#1a2333] fixed top-0 left-0 z-40 flex h-screen flex-col border-r border-white/5 transition-all duration-300 ease-in-out ${
-        collapsed ? "w-18 overflow-visible" : "w-64"
+      className={`bg-card fixed top-0 left-0 z-40 flex h-screen flex-col border-r border-slate-800/80 shadow-2xl transition-all duration-300 ease-in-out ${
+        collapsed ? "w-20 overflow-visible" : "w-65"
       }`}
     >
       {/* Logo  */}
-      <div className="flex items-center gap-3 px-4 py-6 border-b border-white/5">
-        <div className="flex h-10 w-10 min-w-10 items-center justify-center rounded-xl bg-primary/20 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
-          <SatelliteDish  className="text-primary" size={22} />
+      <div className="flex items-center gap-3 px-5 py-6 border-b border-slate-800/80 bg-slate-900/20">
+        <div className="flex h-10 w-10 min-w-10 items-center justify-center rounded-xl bg-blue-500/10 border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-transform hover:scale-105">
+          <SatelliteDish className="text-blue-400" size={22} />
         </div>
         <div
-          className={`overflow-hidden transition-all duration-300 ${
+          className={`flex flex-col justify-center overflow-hidden transition-all duration-300 ${
             collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
           }`}
         >
-          <h1 className="text-base font-bold tracking-wide text-white whitespace-nowrap">
+          <h1 className="text-base font-bold tracking-wider text-slate-100 whitespace-nowrap leading-tight">
             MCCS
           </h1>
-          <p className="text-xs text-slate-400 whitespace-nowrap">
+          <p className="text-[11px] font-medium text-slate-400 uppercase tracking-widest whitespace-nowrap">
             Mission Control
           </p>
         </div>
@@ -167,7 +174,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       {/* Navigation */}
       <nav
-        className={`flex-1 px-3 py-4 space-y-1 scrollbar-thin scrollbar-thumb-white/10 ${collapsed ? "overflow-visible" : "overflow-y-auto overflow-x-hidden"}`}
+        className={`flex-1 px-4 py-5 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-800/80 hover:scrollbar-thumb-slate-700 ${collapsed ? "overflow-visible" : "overflow-y-auto overflow-x-hidden"}`}
       >
         {navItems.map((item) => {
           if (item.children) {
@@ -185,18 +192,22 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     collapsed ? "justify-center px-0" : "justify-between"
                   } ${
                     hasActiveChild
-                      ? "text-white"
-                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                      ? linkActiveClasses
+                      : linkInactiveClasses
                   }`}
                 >
+                  {/* Left border indicator for active link */}
+                  {hasActiveChild && (
+                    <span className="absolute left-0 top-1/2 -mt-4 h-8 w-1 rounded-r-lg bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
+                  )}
                   <span
                     className={`flex items-center ${collapsed ? "" : "gap-3"}`}
                   >
-                    <span className="min-w-5 flex justify-center">
+                    <span className={`min-w-5 flex justify-center transition-colors ${hasActiveChild ? "text-blue-400" : ""}`}>
                       {item.icon}
                     </span>
                     <span
-                      className={`overflow-hidden transition-all duration-300 whitespace-nowrap ${
+                      className={`overflow-hidden transition-all duration-300 font-medium whitespace-nowrap ${
                         collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
                       }`}
                     >
@@ -218,26 +229,38 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-in-out ${
                     isExpanded
-                      ? "max-h-96 opacity-100 mt-1"
+                      ? "max-h-96 opacity-100 mt-2"
                       : "max-h-0 opacity-0"
                   }`}
                 >
-                  <div className="space-y-0.5 ml-1 border-l border-white/10 pl-2">
+                  <div className="space-y-1 ml-4 border-l-2 border-slate-800 py-1 pl-3">
                     {item.children.map((child) => (
                       <NavLink
-                        key={child.label}
-                        to={child.path!}
-                        className={({ isActive }) =>
-                          `${subLinkBaseClasses} ${
-                            isActive
-                              ? subLinkActiveClasses
-                              : subLinkInactiveClasses
-                          }`
-                        }
-                      >
-                        {child.icon}
-                        {child.label}
-                      </NavLink>
+                         key={child.label}
+                         to={child.path!}
+                         className={({ isActive }) =>
+                           `${subLinkBaseClasses} relative ${
+                             isActive
+                               ? subLinkActiveClasses
+                               : subLinkInactiveClasses
+                           }`
+                         }
+                       >
+                         {({ isActive }) => (
+                           <>
+                             {/* Indicator dot for active link */}
+                             <span
+                               className={`absolute -left-3.5 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full transition-all duration-300 ${
+                                 isActive ? "bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] opacity-100 scale-100" : "opacity-0 scale-0"
+                               }`}
+                             />
+                             <span className="min-w-4 flex justify-center text-slate-500">
+                                {child.icon}
+                             </span>
+                             {child.label}
+                           </>
+                         )}
+                       </NavLink>
                     ))}
                   </div>
                 </div>
@@ -257,34 +280,50 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 } ${isActive ? linkActiveClasses : linkInactiveClasses}`
               }
             >
-              <span className="min-w-5 flex justify-center">
-                {item.icon}
-              </span>
-              <span
-                className={`overflow-hidden transition-all duration-300 whitespace-nowrap ${
-                  collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
-                }`}
-              >
-                {item.label}
-              </span>
-              {collapsed && <Tooltip label={item.label} />}
+              {({ isActive }) => (
+                <>
+                  {/* Left border indicator for active link */}
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -mt-4 h-8 w-1 rounded-r-lg bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
+                  )}
+                  <span className={`min-w-5 flex justify-center transition-colors ${isActive ? "text-blue-400" : ""}`}>
+                    {item.icon}
+                  </span>
+                  <span
+                    className={`overflow-hidden transition-all duration-300 font-medium whitespace-nowrap ${
+                      collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                  {collapsed && <Tooltip label={item.label} />}
+                </>
+              )}
             </NavLink>
           );
         })}
       </nav>
 
       {/* Collapse Toggle Button */}
-      <div className="border-t border-white/5 p-3">
+      <div className="p-4 bg-slate-900/10 backdrop-blur-sm border-t border-slate-800/80">
         <button
           onClick={onToggle}
-          className="flex w-full items-center justify-center rounded-lg py-2.5 text-slate-400 hover:text-white hover:bg-white/5 transition-all duration-200"
+          className="group flex w-full items-center justify-center rounded-xl p-3 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 border border-transparent hover:border-cyan-500/20 transition-all duration-300"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+          {collapsed ? (
+             <ChevronRight size={20} className="transition-transform group-hover:scale-125 group-hover:translate-x-1" />
+          ) : (
+             <div className="flex items-center gap-3">
+               <ChevronLeft size={20} className="transition-transform group-hover:scale-125 group-hover:-translate-x-1" />
+               <span className="text-[13px] font-semibold tracking-wide uppercase">Collapse</span>
+             </div>
+          )}
         </button>
       </div>
 
-      <div className="h-px bg-linear-to-r from-transparent via-primary/30 to-transparent" />
+      {/* Subtle bottom gradient line */}
+      <div className="h-0.5 bg-linear-to-r from-transparent via-blue-500/30 to-transparent" />
     </aside>
   );
 }
