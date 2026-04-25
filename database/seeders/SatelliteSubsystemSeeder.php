@@ -79,6 +79,15 @@ class SatelliteSubsystemSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+             [
+                'name' => 'GCS',
+                'satellite_id' => $satelliteId,
+                'hex_code' => '0xA6',
+                'description' => 'Ground Control Station communication link.',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
            
         ];
 
