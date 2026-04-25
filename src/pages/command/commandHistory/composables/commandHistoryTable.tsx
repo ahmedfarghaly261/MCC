@@ -29,7 +29,7 @@ function getCommandName(
   record: CommandHistoryRecord
 ): string {
   return (
-    record.command_definition?.name ??
+    record.command?.name ??
     `CMD-${record.command_id}`
   );
 }
@@ -366,7 +366,7 @@ export default function CommandHistoryTable({
                                       CMD ID
                                     </span>
                                     <span className="text-green-400">
-                                      {record.command_definition?.cmd_id ??
+                                      {record.command?.cmd_id ??
                                         record.command_id}
                                     </span>
                                   </div>
@@ -377,7 +377,7 @@ export default function CommandHistoryTable({
                                     </span>
 
                                     <p className="text-white/90">
-                                      {record.command_definition?.description ??
+                                      {record.command?.description ??
                                         "N/A"}
                                     </p>
                                   </div>
@@ -392,7 +392,7 @@ export default function CommandHistoryTable({
                                       className="border-slate-700 text-slate-300 bg-slate-800/60"
                                     >
                                       {formatAck(
-                                        record.command_definition?.requires_ack
+                                        record.command?.requires_ack
                                       )}
                                     </Badge>
                                   </div>

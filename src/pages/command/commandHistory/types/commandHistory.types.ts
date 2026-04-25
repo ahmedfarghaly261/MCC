@@ -1,4 +1,4 @@
-export interface CommandDefinition {
+export interface Command {
   id: number;
   name: string;
   cmd_id: number;
@@ -34,7 +34,7 @@ export interface CommandHistoryRecord {
   response_time_ms: number | null;
   created_at: string;
   updated_at: string;
-  command_definition?: CommandDefinition;
+  command?: Command;
 }
 
 export interface CommandHistoryFilters {
