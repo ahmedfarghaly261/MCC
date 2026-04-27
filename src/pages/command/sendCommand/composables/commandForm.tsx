@@ -9,6 +9,11 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import {
+  getCommandLogById,
+  type CommandLog,
+} from "../services/commandLogService";
+
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupTextarea } from "@/components/ui/input-group";
 import {
@@ -41,6 +46,11 @@ import type {
 } from "../types/commandCatalog.types";
 import type { SendCommandPayload } from "../types/command.types";
 
+interface SendCommandResponse {
+  log_id: string;
+  message: string;
+}
+
 const defaultSatellite: SatelliteData = {
   name: "EGSA Satellite-02",
   code: "EGSA-SAT-02",
@@ -65,7 +75,13 @@ function toPayload(values: CommandSchema): SendCommandPayload {
   };
 }
 
-function CommandForm() {
+interface Props {
+  onCommandSent: (log: CommandLog) => void;
+}
+
+export default function CommandForm({
+  onCommandSent,
+}: Props) {
   const [commands, setCommands] = useState<CommandCatalogItem[]>([]);
   const [commandsLoading, setCommandsLoading] = useState(true);
 
@@ -82,11 +98,17 @@ function CommandForm() {
   const selectedDestAddress = form.watch("destAddress");
 
   const selectedCommand = useMemo(
-    () => commands.find((command) => String(command.cmd_id) === selectedCommandId),
+    () =>
+      commands.find(
+        (command) =>
+          String(command.cmd_id) === selectedCommandId,
+      ),
     [commands, selectedCommandId],
   );
 
-  const destinationOptions = useMemo<DestinationOption[]>(
+  const destinationOptions = useMemo<
+    DestinationOption[]
+  >(
     () => getDestinationOptions(selectedCommand),
     [selectedCommand],
   );
@@ -95,7 +117,8 @@ function CommandForm() {
     const fetchCommands = async () => {
       try {
         setCommandsLoading(true);
-        const result = await getCommandCatalog();
+        const result =
+          await getCommandCatalog();
         setCommands(result);
       } finally {
         setCommandsLoading(false);
@@ -110,46 +133,89 @@ function CommandForm() {
       return;
     }
 
-    const isAllowed = destinationOptions.some(
-      (option) => String(option.value) === selectedDestAddress,
-    );
+    const isAllowed =
+      destinationOptions.some(
+        (option) =>
+          String(option.value) ===
+          selectedDestAddress,
+      );
 
     if (!isAllowed) {
-      form.setValue("destAddress", "", {
-        shouldValidate: true,
-      });
+      form.setValue(
+        "destAddress",
+        "",
+        {
+          shouldValidate: true,
+        },
+      );
     }
-  }, [destinationOptions, form, selectedDestAddress]);
+  }, [
+    destinationOptions,
+    form,
+    selectedDestAddress,
+  ]);
 
-  const onsubmit: SubmitHandler<CommandSchema> = async (values) => {
+  const onsubmit: SubmitHandler<
+    CommandSchema
+  > = async (values) => {
     try {
-      const payload = toPayload(values);
-      await sendCommand(payload);
+      const payload =
+        toPayload(values);
 
-      toast.success("Command dispatched successfully!", {
-        position: "bottom-right",
-      });
+      const response =
+        (await sendCommand(
+          payload,
+        )) as SendCommandResponse;
+
+      const log =
+        await getCommandLogById(
+          response.log_id,
+        );
+
+      onCommandSent(log);
+
+      toast.success(
+        "Command dispatched successfully!",
+        {
+          position: "bottom-right",
+        },
+      );
 
       form.reset();
     } catch (error) {
       if (isAxiosError(error)) {
-        console.error("Send command API error", {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          url: error.config?.url,
-          method: error.config?.method,
-          response: error.response?.data,
-        });
+        console.error(
+          "Send command API error",
+          {
+            status:
+              error.response?.status,
+            statusText:
+              error.response
+                ?.statusText,
+            url:
+              error.config?.url,
+            method:
+              error.config?.method,
+            response:
+              error.response
+                ?.data,
+          },
+        );
       } else {
-        console.error("Send command unexpected error", error);
+        console.error(
+          "Send command unexpected error",
+          error,
+        );
       }
 
       const message =
         isAxiosError(error)
-          ? (error.response?.data?.message ?? error.message)
+          ? error.response?.data
+              ?.message ??
+            error.message
           : error instanceof Error
-            ? error.message
-            : "Failed to send command. Please try again.";
+          ? error.message
+          : "Failed to send command. Please try again.";
 
       toast.error(message, {
         position: "bottom-right",
@@ -157,21 +223,27 @@ function CommandForm() {
     }
   };
 
-  const isSubmitting = form.formState.isSubmitting;
+  const isSubmitting =
+    form.formState.isSubmitting;
 
   function onValidate() {
-    form.trigger().then((isValid: boolean) => {
-      if (isValid) {
-        toast.success("Command validated successfully! Simulation passed.", {
-          position: "bottom-right",
-        });
-      }
-    });
+    form
+      .trigger()
+      .then((isValid: boolean) => {
+        if (isValid) {
+          toast.success(
+            "Command validated successfully! Simulation passed.",
+            {
+              position:
+                "bottom-right",
+            },
+          );
+        }
+      });
   }
 
   return (
     <>
-      {/* Main Form Card */}
       <Card className="bg-card border border-gray-700 rounded-xl w-full">
         <CardHeader className="pb-4">
           <CardTitle className="text-lg font-semibold text-white">
@@ -180,51 +252,115 @@ function CommandForm() {
         </CardHeader>
 
         <CardContent>
-          <form id="create-command-form" onSubmit={form.handleSubmit(onsubmit)}>
+          <form
+            id="create-command-form"
+            onSubmit={form.handleSubmit(
+              onsubmit,
+            )}
+          >
             <FieldGroup>
-              {/* Target Satellite (Auto-Linked) — static info card */}
-              <SatCard satellite={defaultSatellite} />
+
+              <SatCard
+                satellite={
+                  defaultSatellite
+                }
+              />
 
               {/* Command ID */}
               <Controller
                 name="commandId"
                 control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
+                render={({
+                  field,
+                  fieldState,
+                }) => (
+                  <Field
+                    data-invalid={
+                      fieldState.invalid
+                    }
+                  >
                     <FieldLabel className="text-sm font-semibold text-gray-300">
-                      Command ID <span className="text-red-400">*</span>
+                      Command ID{" "}
+                      <span className="text-red-400">
+                        *
+                      </span>
                     </FieldLabel>
+
                     <Select
-                      value={field.value ?? ""}
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        form.setValue("destAddress", "", { shouldValidate: true });
+                      value={
+                        field.value ?? ""
+                      }
+                      onValueChange={(
+                        value,
+                      ) => {
+                        field.onChange(
+                          value,
+                        );
+
+                        form.setValue(
+                          "destAddress",
+                          "",
+                          {
+                            shouldValidate:
+                              true,
+                          },
+                        );
                       }}
-                      disabled={commandsLoading || commands.length === 0}
+                      disabled={
+                        commandsLoading ||
+                        commands.length ===
+                          0
+                      }
                     >
                       <SelectTrigger
                         id="create-command-id"
                         className="w-full h-11 bg-[#0B1220] border-blue-500/60 text-white"
                       >
                         <SelectValue
-                          placeholder={commandsLoading ? "Loading commands..." : "Select command"}
+                          placeholder={
+                            commandsLoading
+                              ? "Loading commands..."
+                              : "Select command"
+                          }
                         />
                       </SelectTrigger>
+
                       <SelectContent className="bg-[#0B1220] border-blue-500/40 text-white">
-                        {commands.map((command) => (
-                          <SelectItem key={command.id} value={String(command.cmd_id)}>
-                            {`${formatAsHex(command.cmd_id)} - ${command.name}`}
-                          </SelectItem>
-                        ))}
+                        {commands.map(
+                          (
+                            command,
+                          ) => (
+                            <SelectItem
+                              key={
+                                command.id
+                              }
+                              value={String(
+                                command.cmd_id,
+                              )}
+                            >
+                              {`${formatAsHex(
+                                command.cmd_id,
+                              )} - ${command.name}`}
+                            </SelectItem>
+                          ),
+                        )}
                       </SelectContent>
                     </Select>
-                    {!commandsLoading && commands.length === 0 && (
-                      <FieldDescription className="text-red-300 text-xs">
-                        No commands available from Command Dictionary API.
-                      </FieldDescription>
-                    )}
+
+                    {!commandsLoading &&
+                      commands.length ===
+                        0 && (
+                        <FieldDescription className="text-red-300 text-xs">
+                          No commands available from Command Dictionary API.
+                        </FieldDescription>
+                      )}
+
                     {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
+                      <FieldError
+                        errors={[
+                          fieldState.error,
+                        ]}
+                      />
                     )}
                   </Field>
                 )}
@@ -234,32 +370,66 @@ function CommandForm() {
               <Controller
                 name="destAddress"
                 control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
+                render={({
+                  field,
+                  fieldState,
+                }) => (
+                  <Field
+                    data-invalid={
+                      fieldState.invalid
+                    }
+                  >
                     <FieldLabel className="text-sm font-semibold text-gray-300">
-                      Destination Address <span className="text-red-400">*</span>
+                      Destination Address{" "}
+                      <span className="text-red-400">
+                        *
+                      </span>
                     </FieldLabel>
 
                     <div className="flex flex-wrap gap-3">
-                      {destinationOptions.map((destination) => {
-                        const isSelected = String(destination.value) === field.value;
+                      {destinationOptions.map(
+                        (
+                          destination,
+                        ) => {
+                          const isSelected =
+                            String(
+                              destination.value,
+                            ) ===
+                            field.value;
 
-                        return (
-                          <Button
-                            key={destination.key}
-                            type="button"
-                            variant="outline"
-                            className={`h-11 rounded-xl border text-base tracking-wide ${getDestinationButtonClass(
-                              destination.label,
-                              isSelected
-                            )}`}
-                            onClick={() => field.onChange(String(destination.value))}
-                          >
-                            <span className="font-semibold">{destination.label}</span>
-                            <span className="text-sm font-mono opacity-80">{destination.code}</span>
-                          </Button>
-                        );
-                      })}
+                          return (
+                            <Button
+                              key={
+                                destination.key
+                              }
+                              type="button"
+                              variant="outline"
+                              className={`h-11 rounded-xl border text-base tracking-wide ${getDestinationButtonClass(
+                                destination.label,
+                                isSelected,
+                              )}`}
+                              onClick={() =>
+                                field.onChange(
+                                  String(
+                                    destination.value,
+                                  ),
+                                )
+                              }
+                            >
+                              <span className="font-semibold">
+                                {
+                                  destination.label
+                                }
+                              </span>
+                              <span className="text-sm font-mono opacity-80">
+                                {
+                                  destination.code
+                                }
+                              </span>
+                            </Button>
+                          );
+                        },
+                      )}
                     </div>
 
                     {!selectedCommandId && (
@@ -268,22 +438,32 @@ function CommandForm() {
                       </FieldDescription>
                     )}
 
-                    {selectedCommandId && destinationOptions.length === 0 && (
-                      <FieldDescription className="text-yellow-300 text-xs">
-                        No allowed destinations were provided for this command.
-                      </FieldDescription>
-                    )}
+                    {selectedCommandId &&
+                      destinationOptions.length ===
+                        0 && (
+                        <FieldDescription className="text-yellow-300 text-xs">
+                          No allowed destinations were provided for this command.
+                        </FieldDescription>
+                      )}
 
                     <Input
                       {...field}
-                      value={selectedDestAddress ?? ""}
+                      value={
+                        selectedDestAddress ??
+                        ""
+                      }
                       readOnly
                       tabIndex={-1}
                       id="create-command-dest-address"
                       className="sr-only"
                     />
+
                     {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
+                      <FieldError
+                        errors={[
+                          fieldState.error,
+                        ]}
+                      />
                     )}
                   </Field>
                 )}
@@ -293,30 +473,48 @@ function CommandForm() {
               <Controller
                 name="data"
                 control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
+                render={({
+                  field,
+                  fieldState,
+                }) => (
+                  <Field
+                    data-invalid={
+                      fieldState.invalid
+                    }
+                  >
                     <FieldLabel className="text-sm font-semibold text-gray-300">
                       Data (Optional)
                     </FieldLabel>
+
                     <InputGroup>
                       <InputGroupTextarea
                         {...field}
-                        value={field.value ?? ""}
+                        value={
+                          field.value ??
+                          ""
+                        }
                         id="create-command-data"
                         placeholder="1, 2, 3"
                         rows={3}
                         className="min-h-24 resize-none bg-[#0B1220] border-gray-600 text-gray-300 placeholder:text-gray-500"
                       />
                     </InputGroup>
+
                     <FieldDescription className="text-gray-500 text-xs">
                       Enter comma-separated integers, e.g. 0 or 1, 2, 3. Leave empty to send an empty array.
                     </FieldDescription>
+
                     {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
+                      <FieldError
+                        errors={[
+                          fieldState.error,
+                        ]}
+                      />
                     )}
                   </Field>
                 )}
               />
+
             </FieldGroup>
           </form>
         </CardContent>
@@ -332,6 +530,7 @@ function CommandForm() {
             <CheckCircle className="w-4 h-4 mr-2" />
             Validate & Simulate
           </Button>
+
           <Button
             type="submit"
             form="create-command-form"
@@ -339,12 +538,12 @@ function CommandForm() {
             disabled={isSubmitting}
           >
             <Send className="w-4 h-4 mr-2" />
-            {isSubmitting ? "Sending..." : "Send Command"}
+            {isSubmitting
+              ? "Sending..."
+              : "Send Command"}
           </Button>
         </CardFooter>
       </Card>
     </>
   );
 }
-
-export default CommandForm;

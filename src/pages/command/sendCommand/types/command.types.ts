@@ -3,3 +3,8 @@ export interface SendCommandPayload {
   dest_address: number;
   data: number[];
 }
+
+export interface SendCommandResponse {
+  message: string;
+  log_id: string;
+}
