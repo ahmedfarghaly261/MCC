@@ -1,7 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import { type CommandReply} from "../types/CommandResponses.types";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronRight, Copy } from "lucide-react";
+import { toast } from "sonner";
+import { type CommandReply } from "../types/CommandResponses.types";
 import {
   formatDateTime,
   formatReplyDataForDisplay,
@@ -22,6 +24,21 @@ export default function CommandResponsesTable({
   expandedRow,
   setExpandedRow,
 }: Props) {
+  const handleCopy = async (replyData: string | null | undefined) => {
+    if (!replyData) {
+      toast.error("No reply data to copy.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(replyData.trim());
+      toast.success("Reply data copied.");
+    } catch (error) {
+      console.error("Failed to copy reply data", error);
+      toast.error("Failed to copy reply data.");
+    }
+  };
+
   return (
     <Card className="bg-[#1A2333] border border-gray-700">
       <CardContent className="p-0 overflow-x-auto">
@@ -33,19 +50,20 @@ export default function CommandResponsesTable({
               <th className="text-left p-4">Command Log ID</th>
               <th className="text-left p-4">Status</th>
               <th className="text-left p-4">Created Time</th>
+              <th className="text-left p-4">Copy</th>
             </tr>
           </thead>
 
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="p-6 text-center">
+                <td colSpan={6} className="p-6 text-center">
                   Loading...
                 </td>
               </tr>
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={5} className="p-6 text-center">
+                <td colSpan={6} className="p-6 text-center">
                   No replies found
                 </td>
               </tr>
@@ -91,11 +109,24 @@ export default function CommandResponsesTable({
                     <td className="p-4 text-gray-400">
                       {formatDateTime(reply.created_at)}
                     </td>
+
+                    <td className="p-4">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="text-gray-300 hover:text-white"
+                        onClick={() => void handleCopy(reply.reply_data)}
+                        aria-label={`Copy reply ${reply.id}`}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </td>
                   </tr>
 
                   {expandedRow === reply.id && (
                     <tr className="bg-[#0B1220]">
-                      <td colSpan={5} className="p-6">
+                      <td colSpan={6} className="p-6">
                         <pre className="bg-black/40 border border-gray-800 rounded-lg p-4 text-xs whitespace-pre-wrap break-all">
                           {formatReplyDataForDisplay(reply.reply_data)}
                         </pre>
