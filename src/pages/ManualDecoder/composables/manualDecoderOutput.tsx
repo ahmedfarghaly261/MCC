@@ -100,11 +100,34 @@ function renderValueCell(value: unknown) {
   return renderKeyValueTable(value as Record<string, unknown>);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
 function splitFrameSections(record: Record<string, unknown>) {
   const overview: Record<string, unknown> = {};
   const sections: Array<{ key: string; value: unknown }> = [];
+  const containerKeys = new Set([
+    "decoded",
+    "payload",
+    "result",
+    "data",
+    "frame",
+    "decoded_frame",
+  ]);
 
   Object.entries(record).forEach(([key, value]) => {
+    if (isRecord(value) && containerKeys.has(key)) {
+      Object.entries(value).forEach(([nestedKey, nestedValue]) => {
+        if (nestedValue && typeof nestedValue === "object") {
+          sections.push({ key: nestedKey, value: nestedValue });
+        } else {
+          overview[nestedKey] = nestedValue;
+        }
+      });
+      return;
+    }
+
     if (value && typeof value === "object") {
       sections.push({ key, value });
     } else {
@@ -115,42 +138,77 @@ function splitFrameSections(record: Record<string, unknown>) {
   return { overview, sections };
 }
 
+function normalizeRecord(value: unknown): Record<string, unknown> {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+
+  return { value } as Record<string, unknown>;
+}
+
+function extractFramesFromPayload(decodedData: ManualDecoderResponse) {
+  if (Array.isArray(decodedData)) {
+    return {
+      frames: decodedData.map((item) => normalizeRecord(item)),
+      batchOverview: null as Record<string, unknown> | null,
+    };
+  }
+
+  const record = normalizeRecord(decodedData);
+  const framesValue = record.frames;
+
+  if (Array.isArray(framesValue)) {
+    const { ...overview } = record as Record<string, unknown> & {
+      frames?: unknown;
+    };
+
+    delete overview.frames;
+
+    return {
+      frames: framesValue.map((item) => normalizeRecord(item)),
+      batchOverview: Object.keys(overview).length > 0 ? overview : null,
+    };
+  }
+
+  return {
+    frames: [record],
+    batchOverview: null as Record<string, unknown> | null,
+  };
+}
+
 export default function ManualDecoderOutput({
   mode,
   decodedData,
   loading,
 }: ManualDecoderOutputProps) {
-  const frames = useMemo(() => {
+  const frameData = useMemo(() => {
     if (!decodedData || typeof decodedData === "string") {
-      return [] as Array<{
-        id: string;
-        title: string;
-        overview: Record<string, unknown>;
-        sections: Array<{ key: string; value: unknown }>;
-      }>;
+      return {
+        batchOverview: null as Record<string, unknown> | null,
+        frames: [] as Array<{
+          id: string;
+          title: string;
+          overview: Record<string, unknown>;
+          sections: Array<{ key: string; value: unknown }>;
+        }>,
+      };
     }
 
-    const items = Array.isArray(decodedData)
-      ? decodedData
-      : [decodedData];
+    const { frames, batchOverview } = extractFramesFromPayload(decodedData);
 
-    return items.map((item, index) => {
-      const record =
-        item && typeof item === "object" && !Array.isArray(item)
-          ? (item as Record<string, unknown>)
-          : null;
+    return {
+      batchOverview,
+      frames: frames.map((record, index) => {
+        const { overview, sections } = splitFrameSections(record);
 
-      const { overview, sections } = record
-        ? splitFrameSections(record)
-        : { overview: {}, sections: [] };
-
-      return {
-        id: `decoded-${index}`,
-        title: Array.isArray(decodedData) ? `Frame ${index + 1}` : "Decoded Frame",
-        overview,
-        sections,
-      };
-    });
+        return {
+          id: `decoded-${index}`,
+          title: frames.length > 1 ? `Frame ${index + 1}` : "Decoded Frame",
+          overview,
+          sections,
+        };
+      }),
+    };
   }, [decodedData]);
 
   return (
@@ -181,9 +239,21 @@ export default function ManualDecoderOutput({
         ) : (
           <div className="max-h-150 overflow-y-auto pr-1">
             <div className="space-y-6">
-              {frames.map((frame) => (
+              {frameData.batchOverview && (
+                <div className="rounded-lg border border-slate-700/60 bg-[#1B2A3C] p-4 md:p-5">
+                  <div className="mb-4 flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-cyan-400" />
+                    <h3 className="text-sm font-semibold text-slate-100">
+                      Batch Overview
+                    </h3>
+                  </div>
+                  {renderKeyValueTable(frameData.batchOverview)}
+                </div>
+              )}
+
+              {frameData.frames.map((frame) => (
                 <div key={frame.id} className="space-y-4">
-                  {frames.length > 1 && (
+                  {frameData.frames.length > 1 && (
                     <div className="rounded-lg border border-slate-700/60 bg-[#121C2B] px-4 py-3">
                       <p className="text-sm font-semibold text-slate-100">
                         {frame.title}
