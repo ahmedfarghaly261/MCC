@@ -16,6 +16,7 @@ import {
   SatelliteDish,
   FileText,
   Activity,
+  Code,
 } from "lucide-react";
 
 interface NavItem {
@@ -75,8 +76,14 @@ const navItems: NavItem[] = [
         label: "Telemetry Replies",
         path: "/telemetry/replies",
         icon: <FilePlus size={18} />,
-      },]
+      },
+    ]
   },
+      {
+        label: "Manual Decoder",
+        path: "/manual-decoder",
+        icon: <Code size={18} />,
+      },
   {
     label: "AI Insights",
     path: "/ai-insights",
