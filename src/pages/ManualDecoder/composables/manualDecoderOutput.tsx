@@ -9,21 +9,110 @@ interface ManualDecoderOutputProps {
   loading: boolean;
 }
 
-function formatDecodedPayload(payload: ManualDecoderResponse | null): string {
-  if (!payload) {
-    return "";
+function formatKeyLabel(key: string): string {
+  return key.replace(/_/g, " ");
+}
+
+function renderPrimitive(value: unknown): string {
+  if (value === null || value === undefined) {
+    return "-";
   }
 
-  if (typeof payload === "string") {
-    return payload;
+  if (typeof value === "boolean") {
+    return value ? "True" : "False";
   }
 
-  try {
-    return JSON.stringify(payload, null, 2);
-  } catch (error) {
-    console.error("Failed to format manual decoder payload", error);
-    return String(payload);
+  return String(value);
+}
+
+function renderKeyValueTable(record: Record<string, unknown>) {
+  const entries = Object.entries(record);
+
+  if (entries.length === 0) {
+    return <p className="text-sm text-slate-500">No data available.</p>;
   }
+
+  return (
+    <div className="overflow-auto">
+      <table className="w-full text-sm">
+        <tbody>
+          {entries.map(([key, value]) => (
+            <tr key={key} className="border-b border-slate-700/40">
+              <td className="px-3 py-2 text-slate-400 w-48 align-top">
+                {formatKeyLabel(key)}
+              </td>
+              <td className="px-3 py-2 text-slate-100">
+                {renderValueCell(value)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function renderValueCell(value: unknown) {
+  if (value === null || value === undefined) {
+    return <span className="text-slate-500">-</span>;
+  }
+
+  if (typeof value !== "object") {
+    return <span className="font-mono text-slate-200">{renderPrimitive(value)}</span>;
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return <span className="text-slate-500">-</span>;
+    }
+
+    const hasObjects = value.some(
+      (item) => item !== null && typeof item === "object"
+    );
+
+    if (!hasObjects) {
+      return (
+        <span className="font-mono text-slate-200">
+          {value.map(renderPrimitive).join(", ")}
+        </span>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        {value.map((item, index) => (
+          <div
+            key={`item-${index}`}
+            className="rounded-md border border-slate-700/50 bg-[#0B1120] p-3"
+          >
+            <p className="text-xs uppercase tracking-wide text-slate-500 mb-2">
+              Item {index + 1}
+            </p>
+            {item && typeof item === "object" && !Array.isArray(item)
+              ? renderKeyValueTable(item as Record<string, unknown>)
+              : renderPrimitive(item)}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return renderKeyValueTable(value as Record<string, unknown>);
+}
+
+function splitFrameSections(record: Record<string, unknown>) {
+  const overview: Record<string, unknown> = {};
+  const sections: Array<{ key: string; value: unknown }> = [];
+
+  Object.entries(record).forEach(([key, value]) => {
+    if (value && typeof value === "object") {
+      sections.push({ key, value });
+    } else {
+      overview[key] = value;
+    }
+  });
+
+  return { overview, sections };
 }
 
 export default function ManualDecoderOutput({
@@ -31,10 +120,38 @@ export default function ManualDecoderOutput({
   decodedData,
   loading,
 }: ManualDecoderOutputProps) {
-  const formattedOutput = useMemo(
-    () => formatDecodedPayload(decodedData),
-    [decodedData]
-  );
+  const frames = useMemo(() => {
+    if (!decodedData || typeof decodedData === "string") {
+      return [] as Array<{
+        id: string;
+        title: string;
+        overview: Record<string, unknown>;
+        sections: Array<{ key: string; value: unknown }>;
+      }>;
+    }
+
+    const items = Array.isArray(decodedData)
+      ? decodedData
+      : [decodedData];
+
+    return items.map((item, index) => {
+      const record =
+        item && typeof item === "object" && !Array.isArray(item)
+          ? (item as Record<string, unknown>)
+          : null;
+
+      const { overview, sections } = record
+        ? splitFrameSections(record)
+        : { overview: {}, sections: [] };
+
+      return {
+        id: `decoded-${index}`,
+        title: Array.isArray(decodedData) ? `Frame ${index + 1}` : "Decoded Frame",
+        overview,
+        sections,
+      };
+    });
+  }, [decodedData]);
 
   return (
     <div className="bg-[#1F2937] border border-gray-700/50 rounded-lg p-6 space-y-4">
@@ -55,11 +172,62 @@ export default function ManualDecoderOutput({
           Decoding telemetry data...
         </div>
       ) : decodedData ? (
-        <div className="bg-black/50 rounded-lg border border-gray-700/30 p-6 overflow-auto max-h-150">
-          <pre className="text-green-400 font-mono text-sm leading-relaxed whitespace-pre-wrap">
-            {formattedOutput}
-          </pre>
-        </div>
+        typeof decodedData === "string" ? (
+          <div className="bg-black/50 rounded-lg border border-gray-700/30 p-6 overflow-auto max-h-150">
+            <pre className="text-green-400 font-mono text-sm leading-relaxed whitespace-pre-wrap">
+              {decodedData}
+            </pre>
+          </div>
+        ) : (
+          <div className="max-h-150 overflow-y-auto pr-1">
+            <div className="space-y-6">
+              {frames.map((frame) => (
+                <div key={frame.id} className="space-y-4">
+                  {frames.length > 1 && (
+                    <div className="rounded-lg border border-slate-700/60 bg-[#121C2B] px-4 py-3">
+                      <p className="text-sm font-semibold text-slate-100">
+                        {frame.title}
+                      </p>
+                    </div>
+                  )}
+
+                  {Object.keys(frame.overview).length > 0 && (
+                    <div className="rounded-lg border border-slate-700/60 bg-[#1B2A3C] p-4 md:p-5">
+                      <div className="mb-4 flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-cyan-400" />
+                        <h3 className="text-sm font-semibold text-slate-100">
+                          Overview
+                        </h3>
+                      </div>
+                      {renderKeyValueTable(frame.overview)}
+                    </div>
+                  )}
+
+                  {frame.sections.map((section) => (
+                    <div
+                      key={`${frame.id}-${section.key}`}
+                      className="rounded-lg border border-slate-700/60 bg-[#1B2A3C] p-4 md:p-5"
+                    >
+                      <div className="mb-4 flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-purple-400" />
+                        <h3 className="text-sm font-semibold text-slate-100">
+                          {formatKeyLabel(section.key)}
+                        </h3>
+                      </div>
+                      {section.value && typeof section.value === "object" && !Array.isArray(section.value)
+                        ? renderKeyValueTable(section.value as Record<string, unknown>)
+                        : (
+                          <div className="text-sm text-slate-100">
+                            {renderValueCell(section.value)}
+                          </div>
+                        )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )
       ) : (
         <div className="bg-black/30 rounded-lg border border-gray-700/30 p-12 text-center">
           {mode === "normal" ? (
