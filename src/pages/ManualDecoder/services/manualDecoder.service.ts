@@ -1,5 +1,6 @@
 import { apiClient } from "@/services/api";
 import type {
+  ManualDecodeBatchRequest,
   ManualDecodeRequest,
   ManualDecoderRecord,
   ManualDecoderResponse,
@@ -71,7 +72,7 @@ export async function decodeManualFrame(
 }
 
 export async function decodeManualBatch(
-  payload: ManualDecodeRequest
+  payload: ManualDecodeBatchRequest
 ): Promise<ManualDecoderResponse> {
   const response = await apiClient.post(
     "mcc/telemetry/decode/batch",

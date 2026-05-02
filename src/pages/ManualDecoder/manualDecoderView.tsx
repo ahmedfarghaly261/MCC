@@ -12,6 +12,7 @@ import {
 } from "./services/manualDecoder.service";
 import type {
   DecoderMode,
+  ManualDecodeBatchRequest,
   ManualDecodeRequest,
   ManualDecoderResponse,
 } from "./types/manualDecoder.types";
@@ -94,11 +95,19 @@ export default function ManualDecoder() {
     };
   };
 
+  const buildBatchRequest = (frames: string[]): ManualDecodeBatchRequest => ({
+    frames: frames.map((frame, index) => ({
+      hex_frame: frame,
+      frame_index: frameIndex + index,
+    })),
+  });
+
   const handleDecode = async () => {
     setErrorMessage(null);
     setDecodedData(null);
 
-    let request: ManualDecodeRequest | null = null;
+    let frameRequest: ManualDecodeRequest | null = null;
+    let batchRequest: ManualDecodeBatchRequest | null = null;
 
     if (mode === "normal") {
       if (!hexFrame.trim()) {
@@ -131,7 +140,7 @@ export default function ManualDecoder() {
         return;
       }
 
-      request = buildRequest(cleanHex);
+      frameRequest = buildRequest(cleanHex);
     } else {
       if (!batchFrames.trim()) {
         setErrorMessage("Batch frames are required.");
@@ -150,6 +159,11 @@ export default function ManualDecoder() {
 
       if (frames.length > 500) {
         setErrorMessage("Maximum 500 frames allowed per batch.");
+        return;
+      }
+
+      if (!Number.isInteger(frameIndex) || frameIndex < 0) {
+        setErrorMessage("Frame index must be 0 or greater.");
         return;
       }
 
@@ -177,10 +191,14 @@ export default function ManualDecoder() {
         cleanedFrames.push(cleanHex);
       }
 
-      request = buildRequest(cleanedFrames.join("\n"));
+      batchRequest = buildBatchRequest(cleanedFrames);
     }
 
-    if (!request) {
+    if (mode === "normal" && !frameRequest) {
+      return;
+    }
+
+    if (mode === "batch" && !batchRequest) {
       return;
     }
 
@@ -190,8 +208,8 @@ export default function ManualDecoder() {
     try {
       const decoded =
         mode === "normal"
-          ? await decodeManualFrame(request)
-          : await decodeManualBatch(request);
+          ? await decodeManualFrame(frameRequest as ManualDecodeRequest)
+          : await decodeManualBatch(batchRequest as ManualDecodeBatchRequest);
 
       setDecodedData(decoded);
     } catch (error) {

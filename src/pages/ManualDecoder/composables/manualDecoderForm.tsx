@@ -68,38 +68,20 @@ export default function ManualDecoderForm({
 
       <div className="space-y-4">
         {mode === "normal" ? (
-          <>
-            <div>
-              <label className="text-gray-300 text-sm mb-2 block">
-                Hex Frame <span className="text-red-400">*</span>
-              </label>
-              <Textarea
-                placeholder="Enter hexadecimal frame data (e.g., C0A1B00700ABCD...)"
-                value={hexFrame}
-                onChange={(event) => onHexFrameChange(event.target.value)}
-                className="bg-[#0B1120] border-gray-600 text-white font-mono text-sm min-h-30"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {hexCharCount} characters ({Math.floor(hexCharCount / 2)} bytes)
-              </p>
-            </div>
-
-            <div>
-              <label className="text-gray-300 text-sm mb-2 block">
-                Frame Index <span className="text-red-400">*</span>
-              </label>
-              <Input
-                type="number"
-                min={0}
-                placeholder="0"
-                value={frameIndex}
-                onChange={(event) =>
-                  onFrameIndexChange(Number.parseInt(event.target.value, 10) || 0)
-                }
-                className="bg-[#0B1120] border-gray-600 text-white"
-              />
-            </div>
-          </>
+          <div>
+            <label className="text-gray-300 text-sm mb-2 block">
+              Hex Frame <span className="text-red-400">*</span>
+            </label>
+            <Textarea
+              placeholder="Enter hexadecimal frame data (e.g., C0A1B00700ABCD...)"
+              value={hexFrame}
+              onChange={(event) => onHexFrameChange(event.target.value)}
+              className="bg-[#0B1120] border-gray-600 text-white font-mono text-sm min-h-30"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              {hexCharCount} characters ({Math.floor(hexCharCount / 2)} bytes)
+            </p>
+          </div>
         ) : (
           <div>
             <label className="text-gray-300 text-sm mb-2 block">
@@ -119,6 +101,24 @@ export default function ManualDecoderForm({
             </p>
           </div>
         )}
+
+        <div>
+          <label className="text-gray-300 text-sm mb-2 block">
+            Frame Index{mode === "batch" ? (
+              <span className="text-red-400"> *</span>
+            ) : null}
+          </label>
+          <Input
+            type="number"
+            min={0}
+            placeholder="0"
+            value={frameIndex}
+            onChange={(event) =>
+              onFrameIndexChange(Number.parseInt(event.target.value, 10) || 0)
+            }
+            className="bg-[#0B1120] border-gray-600 text-white"
+          />
+        </div>
 
         <div>
           <label className="text-gray-300 text-sm mb-2 flex items-center gap-2">
