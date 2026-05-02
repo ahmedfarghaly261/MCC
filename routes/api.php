@@ -27,6 +27,8 @@ Route::prefix('mcc/command')->group(function () {
 });
 
 Route::prefix('mcc/telemetry')->group(function () {
-Route::get('/command-log/{commandLog}', [TelemetryController::class, 'showTelemetryByCommandLog']);
-Route::get('/last', [TelemetryController::class, 'GetLastTelemetry']);
-}); 
+    Route::get('/command-log/{commandLog}', [TelemetryController::class, 'showTelemetryByCommandLog']);
+    Route::get('/last', [TelemetryController::class, 'GetLastTelemetry']);
+    Route::post('/decode', [TelemetryController::class, 'decode']);
+    Route::post('/decode/batch', [TelemetryController::class, 'decodeBatch']);
+});
