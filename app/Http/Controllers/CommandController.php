@@ -7,6 +7,7 @@ use App\Models\CommandLog;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\CommandReply;
+use App\Jobs\SendCommandJob;
 use Exception;
 
 class CommandController extends Controller
@@ -54,25 +55,39 @@ class CommandController extends Controller
     public function send(Request $request): JsonResponse
     {
         $request->validate([
-            'command_id' => 'required|integer|exists:commands,id',
+            'command_id'   => 'required|integer|exists:commands,id',
             'dest_address' => 'required|integer',
-            'data' => 'array',
-            'data.*' => 'integer|min:0|max:255',
+            'data'         => 'array',
+            'data.*'       => 'integer|min:0|max:255',
         ]);
+
         try {
-            $log = $this->commandService->dispatch(
-                $request->input('command_id'),
+            $command = $this->commandService->getCommandById($request->input('command_id'));
+
+            // Create the log immediately so we can return the ID right away
+            $log = CommandLog::create([
+                'command_id'      => $command->id,
+                'dest_address'    => sprintf('0x%02X', $request->input('dest_address')),
+                'src_address'     => sprintf('0x%02X', 0xB0), // SRC_GCS
+                'raw_binary_sent' => null, // Job will handle actual sending
+                'status'          => 'pending',
+                'sent_at'         => now(),
+            ]);
+
+            SendCommandJob::dispatch(
+                $command->id,
                 $request->input('dest_address'),
-                $request->input('data', [])
+                $request->input('data', []),
+                $log->id,
             );
-            $log = is_array($log) ? $log['log'] : $log;
+
             return response()->json([
-                'message' => 'Command dispatched successfully',
-                'log_id' => $log->id,
-            ], 200);
+                'message' => 'Command queued successfully',
+                'log_id'  => $log->id,
+            ]);
         } catch (Exception $e) {
             return response()->json([
-                'message' => 'Failed to dispatch command: ' . $e->getMessage(),
+                'message' => 'Failed to queue command: ' . $e->getMessage(),
             ], 400);
         }
     }

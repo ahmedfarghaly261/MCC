@@ -38,13 +38,13 @@ services:
     networks:
       - app-network
 
-  # ─── Queue worker ─────────────────────────────────────────────
-  queue:
+# ─── Horizon (Advanced Queue Management) ──────────────────────
+  horizon:
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
-    command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=90 --max-jobs=500 --max-time=3600
+    command: php artisan horizon
     env_file: .env
     environment:
       - APP_ENV=${APP_ENV:-production}

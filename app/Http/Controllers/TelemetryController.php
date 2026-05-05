@@ -104,7 +104,7 @@ class TelemetryController extends Controller
     public function decodeBatch(Request $request)
     {
         $request->validate([
-            'frames'               => 'required|array|max:500', // Max 500 frames[cite: 1]
+            'frames'               => 'required|array|max:500', // Max 500 frames
             'frames.*.hex_frame'   => 'required|string|min:112',
             'frames.*.frame_index' => 'required|integer',
         ]);

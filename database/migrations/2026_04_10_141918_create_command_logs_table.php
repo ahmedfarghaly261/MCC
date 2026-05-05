@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('src_address')->default('0xB0'); // GCS
             
             // The actual payload sent
-            $table->text('raw_binary_sent'); 
+            $table->text('raw_binary_sent')->nullable(); 
             
             // Status Tracking
             // pending: sent but no reply yet

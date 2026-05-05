@@ -109,7 +109,7 @@ class CommandService
     /**
      * Formats the 9-field CSSP frame 
      */
-    private function buildCsspFrame(int $cmdId, int $dest, array $data): string
+    public function buildCsspFrame(int $cmdId, int $dest, array $data): string
     {
         $len = count($data);
 
@@ -155,7 +155,7 @@ class CommandService
         ];
     }
 
-    private function validateCRC(string $binary): bool
+    public function validateCRC(string $binary): bool
     {
         $len = strlen($binary);
         $payload = substr($binary, 1, 5);
@@ -193,7 +193,7 @@ class CommandService
     /**
      * Sends the binary frame to the local Python gateway and returns the raw binary response
      */
-    private function sendToGateway(string $binary, string $commandName)
+    public function sendToGateway(string $binary, string $commandName)
     {
         Log::info("MCC SENDING CSSP FRAME: " . bin2hex($binary));
         $url = "ws://host.docker.internal:8081/ws/radio";

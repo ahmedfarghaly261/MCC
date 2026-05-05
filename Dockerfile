@@ -15,8 +15,10 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
  && docker-php-ext-install -j$(nproc) \
     pdo_mysql pdo_pgsql \
     gd zip bcmath intl opcache \
-    pcntl sockets
+    pcntl sockets\
+    pcntl sockets posix
 
+    
 # Redis extension
 RUN pecl install redis && docker-php-ext-enable redis
 
