@@ -34,24 +34,24 @@ class SendCommandJob implements ShouldQueue
         $log = CommandLog::findOrFail($this->logId);
         $command = Command::findOrFail($this->commandId);
 
-        // --- Visibility Check ---
-        if (!$satelliteService->isCurrentlyVisible()) {
-            $secondsUntilWindow = $satelliteService->getSecondsUntilNextWindow();
+        // // --- Visibility Check ---
+        // if (!$satelliteService->isCurrentlyVisible()) {
+        //     $secondsUntilWindow = $satelliteService->getSecondsUntilNextWindow();
 
-            Log::info("Satellite not visible. Command log #{$log->id} will retry in {$secondsUntilWindow}s.");
+        //     Log::info("Satellite not visible. Command log #{$log->id} will retry in {$secondsUntilWindow}s.");
 
-            $log->update(['status' => 'waiting_for_aos']);
+        //     $log->update(['status' => 'waiting_for_aos']);
 
-            // Re-dispatch itself after the next AOS window
-            self::dispatch(
-                $this->commandId,
-                $this->dest,
-                $this->data,
-                $this->logId,
-            )->delay(now()->addSeconds($secondsUntilWindow));
+        //     // Re-dispatch itself after the next AOS window
+        //     self::dispatch(
+        //         $this->commandId,
+        //         $this->dest,
+        //         $this->data,
+        //         $this->logId,
+        //     )->delay(now()->addSeconds($secondsUntilWindow));
 
-            return;
-        }
+        //     return;
+        // }
 
         // --- Satellite is visible, proceed ---
         try {
