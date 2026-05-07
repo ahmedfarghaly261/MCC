@@ -6,7 +6,7 @@ use App\Services\CommandService;
 use App\Models\CommandLog;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Models\CommandReply;
+use App\Models\Command;
 use App\Jobs\SendCommandJob;
 use Exception;
 
@@ -57,27 +57,41 @@ class CommandController extends Controller
         $request->validate([
             'command_id'   => 'required|integer|exists:commands,id',
             'dest_address' => 'required|integer',
-            'data'         => 'array',
-            'data.*'       => 'integer|min:0|max:255',
+            'data' => 'nullable|array',
+            'data.pwrl_id' => 'nullable|string',
+            'data.img_id' => 'nullable|integer',
+            'data.timer_value' => 'nullable|integer',
+            'data.mode_id' => 'nullable|string',
+            'data.sequence_number' => 'nullable|integer',
+            'data.window_size' => 'nullable|integer',
+            'data.tlm_frame_seq_no' => 'nullable|integer',
         ]);
 
         try {
             $command = $this->commandService->getCommandById($request->input('command_id'));
+
+            $payload = array_filter(
+                $request->input('data', []),
+                fn ($value) => $value !== null
+            );
+
+            $this->commandService->validateCommandData($command->id, $payload);
 
             // Create the log immediately so we can return the ID right away
             $log = CommandLog::create([
                 'command_id'      => $command->id,
                 'dest_address'    => sprintf('0x%02X', $request->input('dest_address')),
                 'src_address'     => sprintf('0x%02X', 0xB0), // SRC_GCS
-                'raw_binary_sent' => null, // Job will handle actual sending
+                'raw_binary_sent' => null,
                 'status'          => 'pending',
+                'data'            => $payload,
                 'sent_at'         => now(),
             ]);
 
             SendCommandJob::dispatch(
                 $command->id,
                 $request->input('dest_address'),
-                $request->input('data', []),
+                $payload,
                 $log->id,
             );
 

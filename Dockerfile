@@ -40,6 +40,8 @@ RUN composer install --optimize-autoloader --no-interaction
 # Install & build frontend assets
 RUN npm ci && npm run build && rm -rf node_modules
 
+RUN composer require --dev laramint/laravel-brain
+
 # Permissions
 RUN chown -R www-data:www-data /var/www/html \
  && chmod -R 755 /var/www/html/storage \

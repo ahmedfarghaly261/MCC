@@ -8,6 +8,7 @@ class Command extends Model
     protected $fillable = [
         'name', 'cmd_id', 'description', 
         'allowed_sources', 'allowed_destinations', 
+        'required_data_fields',
         'expected_data_len', 'requires_ack'
     ];
 
@@ -19,7 +20,8 @@ class Command extends Model
     protected $casts = [
         'allowed_sources' => 'array',
         'allowed_destinations' => 'array',
-        'cmd_id' => 'integer', 
+        'cmd_id' => 'integer',
+        'required_data_fields' => 'array',
     ];
 
     public function commandLogs()

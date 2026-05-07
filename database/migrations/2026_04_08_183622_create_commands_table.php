@@ -13,11 +13,9 @@ return new class extends Migration
             $table->string('name'); 
             $table->unsignedTinyInteger('cmd_id')->unique();
             $table->text('description')->nullable();
-            
-            // Method A: JSON columns for multiple IDs
             $table->json('allowed_sources'); 
             $table->json('allowed_destinations');
-            
+            $table->json('required_data_fields')->nullable();
             $table->unsignedTinyInteger('expected_data_len')->default(0); 
             $table->boolean('requires_ack')->default(true); 
             $table->timestamps();

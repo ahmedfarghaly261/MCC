@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('hex_code', 100)->nullable();
             $table->string('description');
            
-            $table->string('status')->default('unknown');
+            $table->string('mode')->default('unknown');
             $table->timestamps();
         });
     }

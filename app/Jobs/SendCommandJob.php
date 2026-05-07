@@ -55,7 +55,7 @@ class SendCommandJob implements ShouldQueue
 
         // --- Satellite is visible, proceed ---
         try {
-            $binaryFrame = $commandService->buildCsspFrame($command->cmd_id, $this->dest, $this->data);
+            $binaryFrame = $commandService->buildCsspFrame($command, $this->dest, $this->data);
 
             $log->update([
                 'raw_binary_sent' => bin2hex($binaryFrame),

@@ -6,6 +6,8 @@ use App\Models\Command;
 use App\Models\CommandLog;
 use App\Models\CommandReply;
 use App\Models\SatelliteSubsystem;
+use App\Enums\PowerLine;
+use App\Enums\SatelliteMode;
 use Illuminate\Support\Facades\Log;
 use WebSocket\Client;
 use App\Jobs\DecodeTelemetryJob;
@@ -21,106 +23,52 @@ class CommandService
     const TYPE_TLM = 0x47;
 
     /**
-     * Entry point to dispatch a command
+     * Formats the 9-field CSSP frame by extracting only command-specific fields
      */
-    public function dispatch(int $commandId, int $dest, array $data = [])
+    public function buildCsspFrame(Command $command, int $dest, array $data): string
     {
-        // 1. Fetch command metadata
-        $command = Command::where('id', $commandId)->first();
-        if (!$command) {
-            throw new \Exception("Command $commandId not found in registry.");
-        }
+        $requiredFieldsByCommand = [
+            'SON'   => ['pwrl_id'],
+            'SOFF'  => ['pwrl_id'],
+            'GSTLM' => ['subsystem_addr', 'tlm_frame_seq_no'], 
+            'GIMG'  => ['img_id', 'sequence_number', 'window_size'],
+            'STIME' => ['timer_value'],
+            'SMODE' => ['mode_id'],
+        ];
 
-        try {
-            // 2. Build the CSSP Frame
-            $binaryFrame = $this->buildCsspFrame($command->cmd_id, $dest, $data);
+        $payload = '';
+        $byteCount = 0;
 
-            // 3. Log to database as 'pending'
-            $log = CommandLog::create([
-                'command_id'      => $command->id,
-                'dest_address'    => sprintf("0x%02X", $dest),
-                'src_address'     => sprintf("0x%02X", self::SRC_GCS),
-                'raw_binary_sent' => bin2hex($binaryFrame),
-                'status'          => 'pending',
-                'sent_at'         => now(),
-            ]);
+        if (isset($requiredFieldsByCommand[$command->name])) {
+            foreach ($requiredFieldsByCommand[$command->name] as $field) {
+                if (isset($data[$field])) {
+                    $value = $data[$field];
 
-            // 4. Send to Gateway
-            // response will be a single string (ACK/NACK) or an array of strings (for GSTLM) and no responce for Hi cmd
-            $response = $this->sendToGateway($binaryFrame, $command->name);
-            if ($response=="Hi Sent Successfully") {
-                $log->update(['status' => 'sent']);
-                return $log;
-            }
-
-            if ($response) {
-                // Normalize response to an array so we can use the same logic for all commands
-                $responseFrames = is_array($response) ? $response : [$response];
-
-                // 5. Update Log with the primary response (usually the first frame/ACK)
-                $primaryResponseHex = bin2hex($responseFrames[0]);
-                $log->update([
-                    'status'     => 'received',
-                    'replied_at' => now(),
-                ]);
-
-                // 6. Save each frame as a CommandReply and dispatch decoding
-                $satelliteId = 1; // Placeholder
-
-                foreach ($responseFrames as $index => $frameBinary) {
-                    $frameHex = bin2hex($frameBinary);
-
-                    CommandReply::create([
-                        'command_log_id' => $log->id,
-                        'reply_data'     => $frameHex,
-                    ]);
-
-                    if (strlen($frameHex) <= 18) {
-                        $decoded = $this->decode($frameHex);
-
-                        if ($decoded) {
-                            $log->update([
-                                'status' => $decoded['is_ack'] ? 'ack' : 'nack',
-                            ]);
-                        }
-                        continue;
+                    // Pack logic based on ICD data types (Section 7 and Command Descriptions)
+                    if ($field === 'timer_value') {
+                        // STIME uses 8 bytes [cite: 356]
+                        $payload .= pack('P', $value); // 64-bit little endian
+                        $byteCount += 8;
+                    } elseif ($field === 'sequence_number') {
+                        // GIMG sequence is 4 bytes [cite: 421]
+                        $payload .= pack('V', $value); // 32-bit little endian
+                        $byteCount += 4;
+                    } elseif (in_array($field, ['img_id', 'tlm_frame_seq_no', 'window_size'])) {
+                        // 2-byte fields [cite: 386, 421]
+                        $payload .= pack('v', $value); // 16-bit little endian
+                        $byteCount += 2;
+                    } else {
+                        // 1-byte fields (pwrl_id, mode_id, subsystem_addr)
+                        $payload .= pack('C', $value);
+                        $byteCount += 1;
                     }
-
-                    // 7. Dispatch decoding job for each frame
-                    Log::info("Dispatching DecodeTelemetryJob for command log ID: {$log->id}, frame index: {$index}, data: {$frameHex}");
-                    DecodeTelemetryJob::dispatch($frameHex, $satelliteId, $log->id);
-                    $log->update([
-                        'status'     => 'telemetry_received',
-                    ]);
                 }
-                return $log;
             }
-
-            return $log;
-        } catch (\Exception $e) {
-            Log::error("Gateway error: " . $e->getMessage());
-            if (isset($log)) {
-                $log->update(['status' => 'error']);
-            }
-            throw $e;
         }
-    }
-
-    /**
-     * Formats the 9-field CSSP frame 
-     */
-    public function buildCsspFrame(int $cmdId, int $dest, array $data): string
-    {
-        $len = count($data);
 
         // Field 2-5: DEST, SRC, CMD_ID, LEN 
-        $headerAndData = pack('CCCC', $dest, self::SRC_GCS, $cmdId, $len);
-
-        foreach ($data as $byte) {
-            $headerAndData .= pack('C', $byte);
-        }
-
-        // Field 7-8: CRC_0 (LSB) and CRC_1 (MSB) 
+        $headerAndData = pack('CCCC', $dest, self::SRC_GCS, $command->cmd_id, $byteCount);
+        $headerAndData .= $payload;
         $crc = $this->calculateCRC16($headerAndData);
         $crc0 = $crc & 0xFF;
         $crc1 = ($crc >> 8) & 0xFF;
@@ -128,6 +76,7 @@ class CommandService
         // Field 1 & 9: Flags 
         return pack('C', self::FLAG) . $headerAndData . pack('CCC', $crc0, $crc1, self::FLAG);
     }
+
 
     public function decode(string $hex): ?array
     {
@@ -234,6 +183,7 @@ class CommandService
         }
     }
 
+
     public function getAllCommands()
     {
         return Command::all();
@@ -271,5 +221,37 @@ class CommandService
             ->whereHas('commandLog.command')
             ->orderBy('created_at', 'desc')
             ->paginate(30);
+    }
+
+
+    public function validateCommandData(int $commandId, array $data): bool
+    {
+        $command = Command::findOrFail($commandId);
+
+        $requiredFieldsByCommand = [
+            'SON' => ['pwrl_id'],
+            'SOFF' => ['pwrl_id'],
+            'GSTLM' => ['tlm_frame_seq_no'],
+            'GIMG' => ['img_id', 'sequence_number', 'window_size'],
+            'STIME' => ['timer_value'],
+            'SMODE' => ['mode_id'],
+        ];
+
+        //then validate theat  pwrl_id , mode_id is valid and exist in the enum files
+        if (isset($data['pwrl_id']) && !PowerLine::tryFrom($data['pwrl_id'])) {
+            throw new \InvalidArgumentException("Invalid pwrl_id: {$data['pwrl_id']}. Must be a valid PowerLine enum value.");
+        }
+        if (isset($data['mode_id']) && !SatelliteMode::tryFrom($data['mode_id'])) {
+            throw new \InvalidArgumentException("Invalid mode_id: {$data['mode_id']}. Must be a valid SatelliteMode enum value.");
+        }
+        if (isset($requiredFieldsByCommand[$command->name])) {
+            foreach ($requiredFieldsByCommand[$command->name] as $field) {
+                if (!array_key_exists($field, $data) || $data[$field] === null) {
+                    throw new \InvalidArgumentException("{$field} is required for the {$command->name} command.");
+                }
+            }
+        }
+
+        return true;
     }
 }

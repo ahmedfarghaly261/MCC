@@ -11,7 +11,7 @@ class SatelliteSubsystem extends Model
         'hex_code',
         'name',
         'description',
-        'status',
+        'mode',
     ];
 
     public function satellite()
