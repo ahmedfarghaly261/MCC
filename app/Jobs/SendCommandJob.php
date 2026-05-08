@@ -93,9 +93,15 @@ class SendCommandJob implements ShouldQueue
                     if ($decoded) {
                         $log->update(['status' => $decoded['is_ack'] ? 'ack' : 'nack']);
                     }
+                    //if command SMODE is ack change subsystem mode in db to the new requested mode
+                    if ($command->name == 'SMODE' && $decoded['is_ack']) {
+                        $newMode = $this->data['mode_id'] ?? $this->data['mode'] ?? null;
+                        if ($newMode) {
+                            $satelliteService->updateSubsystemMode($newMode, $this->dest);
+                        }
+                    }
                     continue;
                 }
-
                 Log::info("Dispatching DecodeTelemetryJob for log #{$log->id}, frame {$index}: {$frameHex}");
                 DecodeTelemetryJob::dispatch($frameHex, $satelliteId, $log->id);
                 $log->update(['status' => 'telemetry_received']);

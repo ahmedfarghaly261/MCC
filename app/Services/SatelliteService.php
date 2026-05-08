@@ -4,6 +4,8 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\SatelliteSubsystem;
+use App\Enums\SatelliteMode;
 
 class SatelliteService
 {
@@ -117,5 +119,40 @@ class SatelliteService
         ]);
 
         return $response->json('aos_utc'); // Returns ISO8601 string
+    }
+
+    public function updateSubsystemMode(string $modeId, int $hexCode)
+    {
+        // Ensure the hex code format matches the DB seeder (e.g., 161 -> "0xA1")
+        $searchHexCode = '0x' . strtoupper(dechex($hexCode));
+
+        Log::info("Searching for Subsystem with Hex: {$searchHexCode}");
+
+        // Using where() is usually sufficient unless you specifically need whereRaw for collation reasons
+        $subsystem = SatelliteSubsystem::where('hex_code', $searchHexCode)->first();
+
+        if ($subsystem) {
+            // Normalize modeId: if it's an int, format as hex string; otherwise keep as is
+            $normalizedModeId = is_int($modeId) ? sprintf('0x%02X', $modeId) : $modeId;
+
+            $enum = SatelliteMode::tryFrom($normalizedModeId);
+
+            // Fallback: try to find by enum case name (case-insensitive)
+            if (!$enum) {
+                foreach (SatelliteMode::cases() as $case) {
+                    if (strcasecmp($case->name, (string)$normalizedModeId) === 0) {
+                        $enum = $case;
+                        break;
+                    }
+                }
+            }
+
+            $finalValue = $enum ? $enum->name : $normalizedModeId;
+            $subsystem->update(['mode' => $finalValue]);
+
+            Log::info("Subsystem {$searchHexCode} mode updated to {$finalValue}");
+        } else {
+            Log::warning("Subsystem with hex_code {$searchHexCode} not found.");
+        }
     }
 }
