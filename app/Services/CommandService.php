@@ -232,6 +232,7 @@ class CommandService
             'SON' => ['pwrl_id'],
             'SOFF' => ['pwrl_id'],
             'GSTLM' => ['tlm_frame_seq_no'],
+            'DIMG' => ['image_id'],
             'GIMG' => ['image_id', 'sequence_number', 'window_size'],
             'STIME' => ['timer_value'],
             'SMODE' => ['mode_id'],
