@@ -222,6 +222,41 @@ const loadTelemetry = async () => {
 							</div>
 						</div>
 
+						<div className="rounded-lg border border-slate-700/60 bg-[#1B2A3C] p-4 md:p-5">
+							<div className="mb-4 flex items-center gap-2">
+								<Activity className="h-4 w-4 text-pink-400" />
+								<h2 className="text-sm font-semibold text-slate-100">
+									Anomaly Status
+								</h2>
+							</div>
+
+							<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+								<div className="rounded-md border border-slate-700/50 bg-[#102033] p-3">
+									<p className="text-xs text-muted-foreground">Anomaly</p>
+									<div className="mt-1">
+										<Badge
+											variant="outline"
+											className={
+												response.is_anomaly
+													? "bg-red-500/20 text-red-400 border-red-500/50"
+													: "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
+											}
+										>
+											{response.is_anomaly ? "Yes" : "No"}
+										</Badge>
+									</div>
+								</div>
+								<div className="rounded-md border border-slate-700/50 bg-[#102033] p-3">
+									<p className="text-xs text-muted-foreground">Anomaly Score</p>
+									<p className="mt-1 text-[12px] text-pink-400">
+										{response.anomaly_score !== null
+											? response.anomaly_score.toFixed(2)
+											: "-"}
+									</p>
+								</div>
+							</div>
+						</div>
+
 					<TelemetryRepliesTable response={response} loading={loading} />
 				</div>
 			)}

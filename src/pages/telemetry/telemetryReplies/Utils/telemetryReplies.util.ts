@@ -1,13 +1,23 @@
 import type { TelemetryResponse, TelemetryStatus } from "../types/telemetryReplies.types";
 
-export function formatDateTime(dateStr?: string | null): string {
-	if (!dateStr) {
+export function formatDateTime(
+	value?: string | number | null
+): string {
+	if (value === null || value === undefined) {
 		return "-";
 	}
 
-	const parsed = new Date(dateStr);
+	if (typeof value === "number") {
+		return String(value);
+	}
+
+	if (/^\d+$/.test(value)) {
+		return value;
+	}
+
+	const parsed = new Date(value);
 	if (Number.isNaN(parsed.getTime())) {
-		return dateStr;
+		return value;
 	}
 
 	return parsed.toLocaleString("en-US", {

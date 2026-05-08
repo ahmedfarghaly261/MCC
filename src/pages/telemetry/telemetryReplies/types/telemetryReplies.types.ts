@@ -25,17 +25,19 @@ export type TelemetryStatus =
 export interface TelemetryResponse {
 	command_log_id: number;
 	command_id: number;
-	dest_address: string;
-	src_address: string;
+	dest_address: string | number;
+	src_address: string | number;
 	status: TelemetryStatus;
 	sent_at: string;
 	replied_at: string | null;
 	response_time_ms: number | null;
+	is_anomaly: boolean;
+	anomaly_score: number | null;
 	subsystem_id: number;
 	subsystem_address: number;
 	subsystem_mode: number;
-	subsystem_time: string | null;
-	subsystem_rtc: string | null;
+	subsystem_time: string | number | null;
+	subsystem_rtc: string | number | null;
 	telemetry_count: number;
 	telemetry: TelemetryReading[];
 }
