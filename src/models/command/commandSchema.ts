@@ -6,12 +6,27 @@ const integerString = z
   .min(1, "This field is required.")
   .refine((value) => /^-?\d+$/.test(value), "Value must be an integer.");
 
+const optionalIntegerString = z
+  .string()
+  .trim()
+  .optional()
+  .refine(
+    (value) =>
+      !value ||
+      /^-?\d+$/.test(value) ||
+      /^0x[0-9a-fA-F]+$/.test(value),
+    "Value must be an integer or hex (0xE1).",
+  );
+
 export const commandSchema = z.object({
   commandId: integerString,
   destAddress: integerString,
   data: z
     .string()
     .trim()
+    .optional(),
+  dataFields: z
+    .record(z.string(), optionalIntegerString)
     .optional(),
 }).refine(
   (value) => !value.data || /^-?\d+(\s*,\s*-?\d+)*$/.test(value.data),

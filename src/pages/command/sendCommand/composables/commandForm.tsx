@@ -15,7 +15,6 @@ import {
 } from "../services/commandLogService";
 
 import { Input } from "@/components/ui/input";
-import { InputGroup, InputGroupTextarea } from "@/components/ui/input-group";
 import {
   Select,
   SelectContent,
@@ -35,21 +34,27 @@ import {
 } from "@/models/command/commandSchema";
 import { toast } from "sonner";
 import SatCard from "./satCard";
+import CommandDataFields from "./CommandDataFields";
 import type { SatelliteData } from "./satCard";
 import { getDestinationOptions, formatAsHex } from "../Utils/commandCatalog.util";
 import { getDestinationButtonClass } from "../Utils/destinationStyles.util";
+import {
+  buildDataPayload,
+  isStringDataField,
+  normalizeRequiredFields,
+  parseNumericValue,
+} from "../Utils/commandForm.util";
 import { getCommandCatalog } from "../services/commandCatalogService";
 import { sendCommand } from "../services/sendCommandService";
 import type {
   CommandCatalogItem,
   DestinationOption,
 } from "../types/commandCatalog.types";
-import type { SendCommandPayload } from "../types/command.types";
+import type {
+  SendCommandPayload,
+  SendCommandResponse,
+} from "../types/command.types";
 
-interface SendCommandResponse {
-  log_id: string;
-  message: string;
-}
 
 const defaultSatellite: SatelliteData = {
   name: "EGSA Satellite-02",
@@ -59,19 +64,11 @@ const defaultSatellite: SatelliteData = {
   communicationStatus: "active",
 };
 
-function parseDataField(value?: string): number[] {
-  if (!value || value.trim().length === 0) {
-    return [];
-  }
-
-  return value.split(",").map((item) => Number(item.trim()));
-}
-
 function toPayload(values: CommandSchema): SendCommandPayload {
   return {
     command_id: Number(values.commandId.trim()),
     dest_address: Number(values.destAddress.trim()),
-    data: parseDataField(values.data),
+    data: {},
   };
 }
 
@@ -91,6 +88,7 @@ export default function CommandForm({
       commandId: "",
       destAddress: "",
       data: "",
+      dataFields: {},
     },
   });
 
@@ -112,6 +110,13 @@ export default function CommandForm({
     () => getDestinationOptions(selectedCommand),
     [selectedCommand],
   );
+
+  const requiredDataFields = useMemo(() => {
+    const fields =
+      selectedCommand?.required_data_fields ?? [];
+
+    return normalizeRequiredFields(fields);
+  }, [selectedCommand]);
 
   useEffect(() => {
     const fetchCommands = async () => {
@@ -155,12 +160,86 @@ export default function CommandForm({
     selectedDestAddress,
   ]);
 
+  useEffect(() => {
+    const nextFields: Record<string, string> = {};
+    requiredDataFields.forEach((field) => {
+      nextFields[field] = "";
+    });
+
+    form.setValue("dataFields", nextFields, {
+      shouldValidate: false,
+    });
+
+    if (requiredDataFields.length > 0) {
+      form.setValue("data", "", {
+        shouldValidate: false,
+      });
+    }
+
+    form.clearErrors("dataFields");
+  }, [form, requiredDataFields]);
+
+  const validateRequiredFields = (
+    fields: string[],
+    values: Record<string, unknown>,
+  ) => {
+    let isValid = true;
+
+    fields.forEach((field) => {
+      const rawValue = values[field];
+      const raw =
+        typeof rawValue === "string"
+          ? rawValue.trim()
+          : typeof rawValue === "number"
+          ? String(rawValue)
+          : "";
+
+      if (!raw) {
+        form.setError(`dataFields.${field}` as const, {
+          type: "manual",
+          message: "This field is required.",
+        });
+        isValid = false;
+        return;
+      }
+
+      if (isStringDataField(field)) {
+        return;
+      }
+
+      if (!raw || parseNumericValue(raw) === null) {
+        form.setError(`dataFields.${field}` as const, {
+          type: "manual",
+          message: "Value must be an integer or hex (0xE1).",
+        });
+        isValid = false;
+      }
+    });
+
+    return isValid;
+  };
+
   const onsubmit: SubmitHandler<
     CommandSchema
   > = async (values) => {
     try {
-      const payload =
-        toPayload(values);
+      if (
+        requiredDataFields.length > 0 &&
+        !validateRequiredFields(
+          requiredDataFields,
+          values.dataFields ?? {},
+        )
+      ) {
+        return;
+      }
+
+      const payload: SendCommandPayload = {
+        ...toPayload(values),
+        data: buildDataPayload(
+          values,
+          requiredDataFields,
+        ),
+      };
 
       const response =
         (await sendCommand(
@@ -469,50 +548,9 @@ export default function CommandForm({
                 )}
               />
 
-              {/* Data */}
-              <Controller
-                name="data"
+              <CommandDataFields
                 control={form.control}
-                render={({
-                  field,
-                  fieldState,
-                }) => (
-                  <Field
-                    data-invalid={
-                      fieldState.invalid
-                    }
-                  >
-                    <FieldLabel className="text-sm font-semibold text-gray-300">
-                      Data (Optional)
-                    </FieldLabel>
-
-                    <InputGroup>
-                      <InputGroupTextarea
-                        {...field}
-                        value={
-                          field.value ??
-                          ""
-                        }
-                        id="create-command-data"
-                        placeholder="1, 2, 3"
-                        rows={3}
-                        className="min-h-24 resize-none bg-[#0B1220] border-gray-600 text-gray-300 placeholder:text-gray-500"
-                      />
-                    </InputGroup>
-
-                    <FieldDescription className="text-gray-500 text-xs">
-                      Enter comma-separated integers, e.g. 0 or 1, 2, 3. Leave empty to send an empty array.
-                    </FieldDescription>
-
-                    {fieldState.invalid && (
-                      <FieldError
-                        errors={[
-                          fieldState.error,
-                        ]}
-                      />
-                    )}
-                  </Field>
-                )}
+                requiredDataFields={requiredDataFields}
               />
 
             </FieldGroup>
