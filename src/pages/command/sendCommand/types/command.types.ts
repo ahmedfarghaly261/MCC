@@ -1,7 +1,7 @@
 export interface SendCommandPayload {
   command_id: number;
   dest_address: number;
-  data: number[];
+  data: Record<string, string | number>;
 }
 
 export interface SendCommandResponse {

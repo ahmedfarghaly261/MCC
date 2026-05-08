@@ -8,6 +8,7 @@ export interface CommandCatalogItem {
   name: string;
   cmd_id: number;
   allowed_destinations: string[];
+  required_data_fields?: Array<string | number | null>;
   subsystems?: CommandCatalogSubsystem[];
 }
 
