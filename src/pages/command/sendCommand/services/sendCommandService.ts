@@ -7,12 +7,6 @@ import type {
 export async function sendCommand(
   payload: SendCommandPayload
 ): Promise<SendCommandResponse> {
-
-  const response =
-    await apiClient.post(
-      "mcc/command/send",
-      payload
-    );
-
+  const response = await apiClient.post("mcc/command/send", payload);
   return response.data;
 }
