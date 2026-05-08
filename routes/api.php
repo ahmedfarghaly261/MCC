@@ -42,4 +42,7 @@ Route::prefix('mcc/ai-insights/anomalies')->group(function () {
 
 Route::prefix('mcc/satellite')->group(function () {
     Route::get('/', [SatelliteController::class, 'index']);
+    Route::get('/status', [SatelliteController::class, 'getStatus']);
+    Route::get('/next-pass', [SatelliteController::class, 'getNextPass']);
+    Route::get('/visibility-check', [SatelliteController::class, 'checkVisibility']);
 });
