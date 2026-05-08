@@ -45,9 +45,22 @@ export default function CommandDictionaryTable({
     return new Date(date).toLocaleString();
   };
 
-  const formatList = (items?: string[]) => {
+  const formatList = (
+    items?: Array<string | number | null>
+  ) => {
     if (!items || items.length === 0) return "-";
-    return items.join(", ");
+
+    const normalized = items
+      .map((item) =>
+        item === null || item === undefined
+          ? ""
+          : String(item).trim()
+      )
+      .filter((item) => item.length > 0);
+
+    return normalized.length > 0
+      ? normalized.join(", ")
+      : "-";
   };
 
   const formatSubsystems = (

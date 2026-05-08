@@ -10,7 +10,7 @@ export interface CommandDictionary {
   description: string | null;
   allowed_sources: string[];
   allowed_destinations: string[];
-  required_data_fields: string[];
+  required_data_fields: Array<string | number | null>;
   expected_data_len: number;
   requires_ack: number;
   created_at: string | null;
