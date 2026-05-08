@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AnomalyExplaination;
 use App\Models\CommandLog;
 use App\Models\TelemetryLog;
 use Illuminate\Support\Facades\DB;
@@ -152,6 +153,10 @@ class DetectAnomaliesService
                 $this->persistTelemetryAnomalyPredictions($commandLog, $result['predictions']);
             }
 
+            if (!empty($result['explanation']) && is_array($result['explanation'])) {
+                $this->persistAnomalyExplanation($commandLog, $result['explanation']);
+            }
+
             return $result;
         } catch (RequestException $e) {
             $status = $e->response->status();
@@ -187,6 +192,16 @@ class DetectAnomaliesService
         $data = $request->validate([
             'command_log_id' => 'required|integer|exists:command_logs,id',
             'predictions' => 'required|array',
+            'explanation' => 'nullable|array',
+            'explanation.method' => 'nullable|string',
+            'explanation.subsystem' => 'nullable|string',
+            'explanation.root_cause' => 'nullable|string',
+            'explanation.current_val' => 'nullable',
+            'explanation.confidence' => 'nullable|numeric',
+            'explanation.top_3_features' => 'nullable|array',
+            'explanation.top_3_features.*.feature' => 'nullable|string',
+            'explanation.top_3_features.*.value' => 'nullable',
+            'explanation.top_3_features.*.shap' => 'nullable|numeric',
         ]);
 
         DB::transaction(function () use ($data) {
@@ -202,9 +217,54 @@ class DetectAnomaliesService
                         'anomaly_score' => is_numeric($prediction['anomaly_score']) ? (float) $prediction['anomaly_score'] : null,
                     ]);
             }
+
+            if (! empty($data['explanation']) && is_array($data['explanation'])) {
+                $commandLog = CommandLog::findOrFail($data['command_log_id']);
+                $this->persistAnomalyExplanation($commandLog, $data['explanation']);
+            }
         });
 
         return response()->json(['message' => 'Telemetry updated with anomaly scores']);
+    }
+
+    protected function persistAnomalyExplanation(CommandLog $commandLog, array $explanation): void
+    {
+        AnomalyExplaination::updateOrCreate(
+            ['command_log_id' => $commandLog->id],
+            [
+                'explaination' => [
+                    'message' => $this->buildExplanationMessage($explanation)
+                ],
+                'root_cause' => $explanation['root_cause'] ?? null,
+                'top_3_anomalies' => $explanation['top_3_features'] ?? $explanation['top_3_anomalies'] ?? [],
+            ]
+        );
+    }
+
+    protected function buildExplanationMessage(array $explanation): string
+    {
+        $subsystem = $explanation['subsystem'] ?? 'unknown';
+        $rootCause = $explanation['root_cause'] ?? 'unknown';
+        $currentVal = $explanation['current_val'] ?? ($explanation['current_value'] ?? 'unknown');
+        $confidence = $explanation['confidence'] ?? null;
+
+        if (is_numeric($confidence)) {
+            $confidence = number_format((float) $confidence, 2);
+            if ((float) $confidence <= 1 && $confidence !== '0.00') {
+                $confidence = number_format((float) $confidence * 100, 2);
+            }
+            $confidence = "{$confidence}%";
+        } elseif ($confidence === null) {
+            $confidence = 'unknown%';
+        }
+
+        return sprintf(
+            'Alert: Anomaly detected in %s subsystem. The root cause is identified as %s with a reading of %s. Detection confidence: %s.',
+            $subsystem,
+            $rootCause,
+            $currentVal,
+            $confidence,
+        );
     }
 
     protected function persistTelemetryAnomalyPredictions(CommandLog $commandLog, array $predictions): void

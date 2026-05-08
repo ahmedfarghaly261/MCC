@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TelemetryParameterController;
 use App\Http\Controllers\CommandController;
 use App\Http\Controllers\TelemetryController;
+use App\Http\Controllers\AnomalyExplainationController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -31,4 +32,9 @@ Route::prefix('mcc/telemetry')->group(function () {
     Route::get('/last', [TelemetryController::class, 'GetLastTelemetry']);
     Route::post('/decode', [TelemetryController::class, 'decode']);
     Route::post('/decode/batch', [TelemetryController::class, 'decodeBatch']);
+});
+
+Route::prefix('mcc/ai-insights/anomalies')->group(function () {
+    Route::get('/', [AnomalyExplainationController::class, 'index']);
+    Route::get('/command-log/{commandLog}', [AnomalyExplainationController::class, 'showByCommandLog']);
 });
