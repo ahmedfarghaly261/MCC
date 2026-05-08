@@ -99,7 +99,7 @@ export default function CommandForm({
     () =>
       commands.find(
         (command) =>
-          String(command.cmd_id) === selectedCommandId,
+          String(command.id) === selectedCommandId,
       ),
     [commands, selectedCommandId],
   );
@@ -414,7 +414,7 @@ export default function CommandForm({
                                 command.id
                               }
                               value={String(
-                                command.cmd_id,
+                                command.id,
                               )}
                             >
                               {`${formatAsHex(

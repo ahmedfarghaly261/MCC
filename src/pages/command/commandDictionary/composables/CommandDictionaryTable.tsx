@@ -149,7 +149,7 @@ export default function CommandDictionaryTable({
                     </td>
 
                     <td className="p-4">
-                      {cmd.cmd_id}
+                      {cmd.id}
                     </td>
 
                     <td className="p-4">
