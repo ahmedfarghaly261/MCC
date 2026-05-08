@@ -59,7 +59,7 @@ class CommandController extends Controller
             'dest_address' => 'required|integer',
             'data' => 'nullable|array',
             'data.pwrl_id' => 'nullable|string',
-            'data.img_id' => 'nullable|integer',
+            'data.image_id' => 'nullable|integer',
             'data.timer_value' => 'nullable|integer',
             'data.mode_id' => 'nullable|string',
             'data.sequence_number' => 'nullable|integer',

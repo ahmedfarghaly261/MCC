@@ -31,7 +31,7 @@ class CommandService
             'SON'   => ['pwrl_id'],
             'SOFF'  => ['pwrl_id'],
             'GSTLM' => ['subsystem_addr', 'tlm_frame_seq_no'], 
-            'GIMG'  => ['img_id', 'sequence_number', 'window_size'],
+            'GIMG'  => ['image_id', 'sequence_number', 'window_size'],
             'STIME' => ['timer_value'],
             'SMODE' => ['mode_id'],
         ];
@@ -53,7 +53,7 @@ class CommandService
                         // GIMG sequence is 4 bytes [cite: 421]
                         $payload .= pack('V', $value); // 32-bit little endian
                         $byteCount += 4;
-                    } elseif (in_array($field, ['img_id', 'tlm_frame_seq_no', 'window_size'])) {
+                    } elseif (in_array($field, ['image_id', 'tlm_frame_seq_no', 'window_size'])) {
                         // 2-byte fields [cite: 386, 421]
                         $payload .= pack('v', $value); // 16-bit little endian
                         $byteCount += 2;
@@ -232,7 +232,7 @@ class CommandService
             'SON' => ['pwrl_id'],
             'SOFF' => ['pwrl_id'],
             'GSTLM' => ['tlm_frame_seq_no'],
-            'GIMG' => ['img_id', 'sequence_number', 'window_size'],
+            'GIMG' => ['image_id', 'sequence_number', 'window_size'],
             'STIME' => ['timer_value'],
             'SMODE' => ['mode_id'],
         ];

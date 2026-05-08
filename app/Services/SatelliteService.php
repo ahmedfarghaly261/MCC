@@ -5,7 +5,9 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\SatelliteSubsystem;
+use App\Models\Satellite;
 use App\Enums\SatelliteMode;
+
 
 class SatelliteService
 {
@@ -153,6 +155,23 @@ class SatelliteService
             Log::info("Subsystem {$searchHexCode} mode updated to {$finalValue}");
         } else {
             Log::warning("Subsystem with hex_code {$searchHexCode} not found.");
+        }
+    }
+
+    public function getSatelliteWithSubsystems()
+    {
+        try {
+            $satellites = Satellite::with('subsystems')->get();
+
+            if ($satellites->isEmpty()) {
+                Log::warning("No satellites found in the database.");
+                return response()->json(["message" => "No satellites found."], 404);
+            }
+
+            return $satellites;
+        } catch (\Exception $e) {
+            Log::error("Satellite Info Error: " . $e->getMessage());
+            return response()->json(["error" => "Error fetching satellite data."], 500);
         }
     }
 }

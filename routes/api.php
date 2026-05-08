@@ -6,6 +6,7 @@ use App\Http\Controllers\TelemetryParameterController;
 use App\Http\Controllers\CommandController;
 use App\Http\Controllers\TelemetryController;
 use App\Http\Controllers\AnomalyExplainationController;
+use App\Http\Controllers\SatelliteController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -16,7 +17,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::apiResource('telemetry-parameters', TelemetryParameterController::class);
+// Route::apiResource('telemetry-parameters', TelemetryParameterController::class);
 
 Route::prefix('mcc/command')->group(function () {
     Route::get('/history', [CommandController::class, 'history']);
@@ -37,4 +38,8 @@ Route::prefix('mcc/telemetry')->group(function () {
 Route::prefix('mcc/ai-insights/anomalies')->group(function () {
     Route::get('/', [AnomalyExplainationController::class, 'index']);
     Route::get('/command-log/{commandLog}', [AnomalyExplainationController::class, 'showByCommandLog']);
+});
+
+Route::prefix('mcc/satellite')->group(function () {
+    Route::get('/', [SatelliteController::class, 'index']);
 });

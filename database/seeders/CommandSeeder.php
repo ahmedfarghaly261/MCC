@@ -149,7 +149,7 @@ class CommandSeeder extends Seeder
                 'allowed_destinations' => [$subsystems['PL']],
                 'expected_data_len' => 8,
                 'requires_ack' => true,
-                'required_data_fields' => ['img_id', 'sequence_number', 'window_size'],
+                'required_data_fields' => ['image_id', 'sequence_number', 'window_size'],
             ],
         ];
 
