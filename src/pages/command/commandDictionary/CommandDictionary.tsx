@@ -4,7 +4,7 @@ import { Activity } from "lucide-react";
 import CommandDictionaryTable from "./composables/CommandDictionaryTable";
 import CommandDictionaryFilters from "./composables/CommandDictionaryFilters";
 
-import { getCommandsDictionary } from "./services/commandDictionaryService";
+import { getCommandsDictionary } from "./services/commandDictionary.Service";
 
 import { type CommandDictionary } from "./types/commandDictionaryTypes";
 

@@ -45,6 +45,23 @@ export default function CommandDictionaryTable({
     return new Date(date).toLocaleString();
   };
 
+  const formatList = (items?: string[]) => {
+    if (!items || items.length === 0) return "-";
+    return items.join(", ");
+  };
+
+  const formatSubsystems = (
+    items?: CommandDictionary["subsystems"]
+  ) => {
+    if (!items || items.length === 0) return "-";
+    return items
+      .map(
+        (subsystem) =>
+          `${subsystem.hex_code} (${subsystem.name})`
+      )
+      .join(", ");
+  };
+
   return (
     <Card className="bg-[#1A2333] border border-gray-700">
       <CardContent className="p-0 overflow-x-auto">
@@ -156,6 +173,18 @@ export default function CommandDictionaryTable({
 
                           <div>
                             <p className="text-gray-400">
+                              Required Data Fields
+                            </p>
+
+                            <p className="mt-1">
+                              {formatList(
+                                cmd.required_data_fields
+                              )}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-gray-400">
                               Allowed Sources
                             </p>
 
@@ -175,6 +204,18 @@ export default function CommandDictionaryTable({
                               {cmd.allowed_destinations?.join(
                                 ", "
                               ) || "-"}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-gray-400">
+                              Subsystems
+                            </p>
+
+                            <p className="mt-1">
+                              {formatSubsystems(
+                                cmd.subsystems
+                              )}
                             </p>
                           </div>
 
