@@ -9,6 +9,7 @@ import CommandHistoryView from "@/pages/command/commandHistory/commandHistoryVie
 import TelemetryRepliesView from "@/pages/telemetry/telemetryReplies/telemetryRepliesView";
 import ManualDecoder from "@/pages/ManualDecoder/manualDecoderView";
 import SatelliteOverviewView from "@/pages/satellite/satelliteOverview/satelliteOverview.view";
+import NotFound from "@/components/layout/NotFound";
 
 export default function AppRoutes() {
   return (
@@ -19,14 +20,21 @@ export default function AppRoutes() {
         {/* Command Center */}
         <Route path="/commands/create" element={<CreateCommand />} />
         <Route path="/commands/history" element={<CommandHistoryView />} />
-        <Route path="/logs" element={<LogPage />} />
         <Route path="/commands/dictionary" element={<CommandDictionary />} />
         <Route path="/commands/responses" element={<CommandResponses />} />
+
+        {/* Telemetry */}
         <Route path="/telemetry/replies" element={<TelemetryRepliesView />} />
         <Route path="/telemetry-replies/:commandLogId" element={<TelemetryRepliesView />} />
-        <Route path="/manual-decoder" element={<ManualDecoder />} />
-        <Route path="/satellites/overview" element={<SatelliteOverviewView />} />
 
+        {/* Manual Decoder */}
+        <Route path="/manual-decoder" element={<ManualDecoder />} />
+
+        {/* Satellites */}
+        <Route path="/satellites/overview" element={<SatelliteOverviewView />} />
+        
+        {/* Logs */}
+        <Route path="/logs" element={<LogPage />} />
         {/* Future routes */}
 
         {/* <Route path="/commands/scheduled" element={<ScheduledCommands />} /> */}
@@ -34,7 +42,7 @@ export default function AppRoutes() {
         {/* <Route path="/ai-insights" element={<AIInsights />} /> */}
         {/* <Route path="/faults" element={<Faults />} /> */}
 
-        <Route path="*" element={<div>404 - Page Not Found</div>} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );
