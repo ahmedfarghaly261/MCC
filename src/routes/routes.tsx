@@ -8,6 +8,7 @@ import CommandResponses from "@/pages/command/commandResponses/CommandResponses"
 import CommandHistoryView from "@/pages/command/commandHistory/commandHistoryView";
 import TelemetryRepliesView from "@/pages/telemetry/telemetryReplies/telemetryRepliesView";
 import ManualDecoder from "@/pages/ManualDecoder/manualDecoderView";
+import SatelliteOverviewView from "@/pages/satellite/satelliteOverview/satelliteOverview.view";
 
 export default function AppRoutes() {
   return (
@@ -24,6 +25,7 @@ export default function AppRoutes() {
         <Route path="/telemetry/replies" element={<TelemetryRepliesView />} />
         <Route path="/telemetry-replies/:commandLogId" element={<TelemetryRepliesView />} />
         <Route path="/manual-decoder" element={<ManualDecoder />} />
+        <Route path="/satellites/overview" element={<SatelliteOverviewView />} />
 
         {/* Future routes */}
 

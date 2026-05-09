@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   TerminalIcon,
   SatelliteDish,
+  Satellite,
   FileText,
   Activity,
   Code,
@@ -78,6 +79,17 @@ const navItems: NavItem[] = [
         icon: <FilePlus size={18} />,
       },
     ]
+  },
+  {
+    label: "Satellites",
+    icon: <Satellite size={20} />,
+    children: [
+      {
+        label: "Overview",
+        path: "/satellites/overview",
+        icon: <Satellite size={18} />,
+      },
+    ],
   },
       {
         label: "Manual Decoder",
