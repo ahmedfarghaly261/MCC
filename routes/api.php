@@ -6,6 +6,7 @@ use App\Http\Controllers\TelemetryParameterController;
 use App\Http\Controllers\CommandController;
 use App\Http\Controllers\TelemetryController;
 use App\Http\Controllers\AnomalyExplainationController;
+use App\Http\Controllers\ImageEnhancementController;
 use App\Http\Controllers\SatelliteController;
 /*
 |--------------------------------------------------------------------------
@@ -46,3 +47,5 @@ Route::prefix('mcc/satellite')->group(function () {
     Route::get('/next-pass', [SatelliteController::class, 'getNextPass']);
     Route::get('/visibility-check', [SatelliteController::class, 'checkVisibility']);
 });
+
+Route::post('/enhance-image', [ImageEnhancementController::class, 'enhanceImage']);
