@@ -17,3 +17,4 @@ Schedule::job(new RetryDecodingErrorsJob())
 
 Schedule::command('satellite:get-tle')->everyMinute();
 Schedule::command('satellite:get-tle 39444')->everyMinute();
+Schedule::command('app:detect-anomalies-command')->everyMinute();
