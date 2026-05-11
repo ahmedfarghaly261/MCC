@@ -89,6 +89,9 @@ export default function CommandDictionaryTable({
                 Command ID
               </th>
               <th className="p-4 text-left">
+                Hex ID
+              </th>
+              <th className="p-4 text-left">
                 Expected Data
               </th>
               <th className="p-4 text-left">
@@ -146,6 +149,9 @@ export default function CommandDictionaryTable({
 
                     <td className="p-4 font-medium">
                       {cmd.name}
+                    </td>
+                    <td>
+                      {cmd.id}
                     </td>
 
                     <td className="p-4">

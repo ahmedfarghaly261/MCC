@@ -23,13 +23,13 @@ function isCommandCatalogItem(value: unknown): value is CommandCatalogItem {
   return (
     typeof value.id === "number" &&
     typeof value.name === "string" &&
-    typeof value.cmd_id === "number" &&
+    typeof value.cmd_id === "string" &&
     Array.isArray(value.allowed_destinations)
   );
 }
 
 export function formatAsHex(value: number): string {
-  return `0x${value.toString(16).toUpperCase().padStart(2, "0")}`;
+  return `0x${value.toString(16).padStart(2, "0")}`;
 }
 
 function parseDestinationValue(raw: string): number | null {
