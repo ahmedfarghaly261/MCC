@@ -33,13 +33,14 @@ class Command extends Model
     {
         return $this->hasMany(CommandLog::class, 'command_id');
     }
-
+    
 
     protected function cmdId(): Attribute
     {
         return Attribute::make(
             get: function ($value) {
-                return '0x' . str_pad(dechex($value), 2, '0', STR_PAD_LEFT);
+                $hex = str_pad(dechex($value), 2, '0', STR_PAD_LEFT);
+                return '0x' . strtoupper($hex);
             },
             set: fn($value) => is_string($value) ? hexdec($value) : $value,
         );
