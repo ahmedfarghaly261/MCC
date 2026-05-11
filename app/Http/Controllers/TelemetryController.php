@@ -13,12 +13,13 @@ use Illuminate\Support\Facades\Log;
 
 class TelemetryController extends Controller
 {
+    protected string $decoderUrl;
 
     public function __construct(
         private readonly TelemetryService $telemetryService
-    ) {}
-
-    protected string $decoderUrl = 'http://host.docker.internal:8082';
+    ) {
+        $this->decoderUrl = config('services.decoder.url');
+    }
 
     /**
      * Get telemetry data by command log

@@ -36,9 +36,33 @@ return [
     ],
 
     'anomaly_api' => [
-    'url'     => env('ANOMALY_API_URL', 'http://host.docker.internal:8000'),
-    'key'     => env('ANOMALY_API_KEY', 'change-me-in-production'),
-    'timeout' => env('ANOMALY_API_TIMEOUT', 15),
-],
+        'url'     => env('ANOMALY_API_URL', 'http://host.docker.internal:8000'),
+        'key'     => env('ANOMALY_API_KEY', 'change-me-in-production'),
+        'timeout' => env('ANOMALY_API_TIMEOUT', 15),
+    ],
 
+    'enhancement_api' => [
+        'url'     => env('ENHANCEMENT_API_URL', 'http://host.docker.internal:8001'),
+        'timeout' => env('ENHANCEMENT_API_TIMEOUT', 15),
+    ],
+
+    'object_detection_api' => [
+        'url'     => env('OBJECT_DETECTION_API_URL', 'http://host.docker.internal:8002'),
+        'timeout' => env('OBJECT_DETECTION_API_TIMEOUT', 15),
+    ],
+
+    'satellite' => [
+        'url'     => env('SATELLITE_API_URL', 'http://host.docker.internal:8080'),
+        'timeout' => env('SATELLITE_API_TIMEOUT', 15),
+    ],
+
+    'command' => [
+        'url'     => env('COMMAND_API_URL', 'http://host.docker.internal:8081'),
+        'timeout' => env('COMMAND_API_TIMEOUT', 15),
+    ],
+
+    'decoder' => [
+        'url'     => env('DECODER_API_URL', 'http://host.docker.internal:8082'),
+        'timeout' => env('DECODER_API_TIMEOUT', 15),
+    ],
 ];

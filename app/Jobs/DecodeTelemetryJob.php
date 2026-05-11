@@ -19,19 +19,21 @@ class DecodeTelemetryJob implements ShouldQueue
     protected $rawHex;
     protected $satelliteId;
     protected $commandLogId;
+    protected $decoderUrl;
 
     public function __construct($rawHex, $satelliteId, $commandLogId)
     {
         $this->rawHex = $rawHex;
         $this->satelliteId = $satelliteId;
         $this->commandLogId = $commandLogId;
+        $this->decoderUrl = config('services.decoder.url').'/decode';
     }
 
     public function handle()
     {
         Log::info("Starting telemetry decoding for command log ID: {$this->commandLogId}, raw data: {$this->rawHex}");
         try {
-            $response = Http::timeout(30)->post('http://host.docker.internal:8082/decode', [
+            $response = Http::timeout(30)->post($this->decoderUrl, [
                 'hex_frame' => $this->rawHex,
                 'satellite_id' => $this->satelliteId
             ]);

@@ -26,7 +26,7 @@ class FetchSatelliteTLE extends Command
     public function handle()
     {
         $noradId = $this->argument('norad');
-        $baseUrl = 'http://127.0.0.1:8080'; // Ensure this matches your Uvicorn port
+        $baseUrl = config('services.satellite.url'); 
 
         $this->info("Fetching TLE for NORAD ID: {$noradId}...");
 

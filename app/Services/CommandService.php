@@ -22,6 +22,15 @@ class CommandService
     const TYPE_NACK = 0x03;
     const TYPE_TLM = 0x47;
 
+    protected string $commandUrl;
+
+    public function __construct(
+        private readonly TelemetryService $telemetryService
+    ) {
+        $this->commandUrl = config('services.command.url');
+    }
+
+
     /**
      * Formats the 9-field CSSP frame by extracting only command-specific fields
      */
@@ -30,7 +39,7 @@ class CommandService
         $requiredFieldsByCommand = [
             'SON'   => ['pwrl_id'],
             'SOFF'  => ['pwrl_id'],
-            'GSTLM' => ['subsystem_addr', 'tlm_frame_seq_no'], 
+            'GSTLM' => ['subsystem_addr', 'tlm_frame_seq_no'],
             'GIMG'  => ['image_id', 'sequence_number', 'window_size'],
             'STIME' => ['timer_value'],
             'SMODE' => ['mode_id'],
@@ -67,7 +76,8 @@ class CommandService
         }
 
         // Field 2-5: DEST, SRC, CMD_ID, LEN 
-        $headerAndData = pack('CCCC', $dest, self::SRC_GCS, $command->cmd_id, $byteCount);
+        $realId = $command->getRawOriginal('cmd_id');
+        $headerAndData = pack('CCCC', $dest, self::SRC_GCS, $realId, $byteCount);
         $headerAndData .= $payload;
         $crc = $this->calculateCRC16($headerAndData);
         $crc0 = $crc & 0xFF;
@@ -145,10 +155,10 @@ class CommandService
     public function sendToGateway(string $binary, string $commandName)
     {
         Log::info("MCC SENDING CSSP FRAME: " . bin2hex($binary));
-        $url = "ws://host.docker.internal:8081/ws/radio";
+        $commandUrl = "ws://host.docker.internal:8081/ws/radio";
 
         try {
-            $client = new Client($url, ['timeout' => 5]);
+            $client = new Client($commandUrl, ['timeout' => 5]);
             $client->send($binary, 'binary');
 
             if ($commandName == 'Hi') {

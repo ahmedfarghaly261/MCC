@@ -21,7 +21,7 @@ class SatelliteService
 
     public function __construct()
     {
-        $this->baseUrl = config('services.satellite.url', 'http://host.docker.internal:8080');
+        $this->baseUrl = config('services.satellite.url');
     }
 
     /**
