@@ -41,9 +41,9 @@ logger = logging.getLogger(__name__)
 # ─────────────────────────────────────────────────────────────────────
 # Config
 # ─────────────────────────────────────────────────────────────────────
-MODEL_PATH    = os.getenv("MODEL_PATH",    "pkls/best_anomaly_modelV3.pkl")
-SCALER_PATH   = os.getenv("SCALER_PATH",   "pkls/scalerV3.pkl")
-METADATA_PATH = os.getenv("METADATA_PATH", "pkls/model_metadataV3.json")
+MODEL_PATH    = os.getenv("MODEL_PATH",    "../pkls/best_anomaly_modelV3.pkl")
+SCALER_PATH   = os.getenv("SCALER_PATH",   "../pkls/scalerV3.pkl")
+METADATA_PATH = os.getenv("METADATA_PATH", "../pkls/model_metadataV3.json")
 API_KEY       = os.getenv("ANOMALY_API_KEY", "change-me-in-production")
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)

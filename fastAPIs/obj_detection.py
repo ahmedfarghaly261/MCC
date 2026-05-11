@@ -25,10 +25,10 @@ import uvicorn
 
 
 # ── Config ──────────────────────────────────────────────────────────────────
-DOTA_PKL       = Path("/pkls/object_detection/my_model.pkl")                          # preferred – joblib pkl
-DOTA_WEIGHTS   = Path("/pkls/object_detection/best.pt")    # fallback – native .pt
+DOTA_PKL       = Path("../pkls/object_detection/my_model.pkl")                          # preferred – joblib pkl
+DOTA_WEIGHTS   = Path("../pkls/object_detection/best.pt")    # fallback – native .pt
 BUILDING_REPO  = "keremberke/yolov8s-building-segmentation"
-BUILDING_DIR   = Path("/pkls/object_detection/building_model")
+BUILDING_DIR   = Path("../pkls/object_detection/building_model")
 DEVICE         = 0 if torch.cuda.is_available() else "cpu"
 DOTA_IMGSZ     = 640
 BUILDING_IMGSZ = 416
