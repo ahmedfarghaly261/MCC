@@ -4,8 +4,13 @@ if ! grep -q "APP_KEY=base64" .env && [ -z "$APP_KEY" ]; then
     php artisan key:generate --force
 fi
 
-# Run database migrations
-php artisan migrate --force
+CONTAINER_ROLE="${CONTAINER_ROLE:-app}"
+if [ "$CONTAINER_ROLE" = "app" ]; then
+    php artisan migrate --force
+fi
 
-# Start PHP-FPM
+if [ "$#" -gt 0 ]; then
+    exec "$@"
+fi
+
 exec php-fpm
