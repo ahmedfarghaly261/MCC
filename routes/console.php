@@ -12,9 +12,9 @@ Artisan::command('inspire', function () {
 
 
 Schedule::job(new RetryDecodingErrorsJob())
-    ->everyMinute() 
+    ->everyTenMinutes() 
     ->withoutOverlapping();
 
-Schedule::command('satellite:get-tle')->everyMinute();
-Schedule::command('satellite:get-tle 39444')->everyMinute();
-Schedule::command('app:detect-anomalies-command')->everyMinute();
+Schedule::command('satellite:get-tle')->Hourly();
+Schedule::command('satellite:get-tle 39444')->Hourly();
+Schedule::command('app:detect-anomalies-command')->Hourly();

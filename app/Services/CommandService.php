@@ -34,12 +34,16 @@ class CommandService
     /**
      * Formats the 9-field CSSP frame by extracting only command-specific fields
      */
+    /**
+     * Formats the 9-field CSSP frame according to ICD Rev 2.0
+     */
     public function buildCsspFrame(Command $command, int $dest, array $data): string
     {
         $requiredFieldsByCommand = [
             'SON'   => ['pwrl_id'],
             'SOFF'  => ['pwrl_id'],
             'GSTLM' => ['subsystem_addr', 'tlm_frame_seq_no'],
+            'DIMG'  => ['image_id'],
             'GIMG'  => ['image_id', 'sequence_number', 'window_size'],
             'STIME' => ['timer_value'],
             'SMODE' => ['mode_id'],
@@ -53,40 +57,66 @@ class CommandService
                 if (isset($data[$field])) {
                     $value = $data[$field];
 
-                    // Pack logic based on ICD data types (Section 7 and Command Descriptions)
-                    if ($field === 'timer_value') {
-                        // STIME uses 8 bytes [cite: 356]
-                        $payload .= pack('P', $value); // 64-bit little endian
-                        $byteCount += 8;
-                    } elseif ($field === 'sequence_number') {
-                        // GIMG sequence is 4 bytes [cite: 421]
-                        $payload .= pack('V', $value); // 32-bit little endian
-                        $byteCount += 4;
-                    } elseif (in_array($field, ['image_id', 'tlm_frame_seq_no', 'window_size'])) {
-                        // 2-byte fields [cite: 386, 421]
-                        $payload .= pack('v', $value); // 16-bit little endian
-                        $byteCount += 2;
-                    } else {
-                        // 1-byte fields (pwrl_id, mode_id, subsystem_addr)
-                        $payload .= pack('C', $value);
-                        $byteCount += 1;
+                    switch ($field) {
+                        case 'timer_value':
+                            // Issue 6: Using Big-Endian (Network Byte Order) for consistency
+                            $payload .= pack('J', $value);
+                            $byteCount += 8;
+                            break;
+                        case 'sequence_number':
+                            // standardizing to Big-Endian 'N'
+                            $payload .= pack('N', $value);
+                            $byteCount += 4;
+                            break;
+                        case 'image_id':
+                        case 'tlm_frame_seq_no':
+                        case 'window_size':
+                            // standardizing to Big-Endian 'n'
+                            $payload .= pack('n', $value);
+                            $byteCount += 2;
+                            break;
+                        default:
+                            // 1-byte fields
+                            $payload .= pack('C', $value);
+                            $byteCount += 1;
+                            break;
                     }
                 }
             }
         }
 
-        // Field 2-5: DEST, SRC, CMD_ID, LEN 
+        // Field 2-5: DEST, SRC, CMD_ID, LEN
         $realId = $command->getRawOriginal('cmd_id');
+        // Ensure self::SRC_GCS is 0xB0 per Issue 3
         $headerAndData = pack('CCCC', $dest, self::SRC_GCS, $realId, $byteCount);
         $headerAndData .= $payload;
-        $crc = $this->calculateCRC16($headerAndData);
-        $crc0 = $crc & 0xFF;
-        $crc1 = ($crc >> 8) & 0xFF;
 
-        // Field 1 & 9: Flags 
-        return pack('C', self::FLAG) . $headerAndData . pack('CCC', $crc0, $crc1, self::FLAG);
+        // Issue 1: Proper CRC-16/IBM-3740
+        $crc = $this->calculateCRC16IBM($headerAndData);
+
+        // Issue 2: Field 7 is LSB, Field 8 is MSB
+        return pack('C', self::FLAG) . $headerAndData . pack('vC', $crc, self::FLAG);
     }
 
+    /**
+     * CRC-16/IBM-3740 Implementation
+     * Poly: 0x1021 (X^16 + X^12 + X^5 + 1), Init: 0xFFFF
+     */
+    private function calculateCRC16IBM(string $data): int
+    {
+        $crc = 0xFFFF;
+        for ($i = 0; $i < strlen($data); $i++) {
+            $crc ^= (ord($data[$i]) << 8);
+            for ($j = 0; $j < 8; $j++) {
+                if ($crc & 0x8000) {
+                    $crc = ($crc << 1) ^ 0x1021;
+                } else {
+                    $crc <<= 1;
+                }
+            }
+        }
+        return $crc & 0xFFFF;
+    }
 
     public function decode(string $hex): ?array
     {
@@ -113,15 +143,15 @@ class CommandService
             'is_valid'   => $this->validateCRC($binary)
         ];
     }
-
     public function validateCRC(string $binary): bool
     {
         $len = strlen($binary);
-        $payload = substr($binary, 1, 5);
+        // The ICD specifies CRC is calculated on Fields 2 through 6 (Dest, Src, CmdID, Len, and Data)
+        // This is everything between the first Flag (index 0) and the CRC_0 (index len-3)
+        $payloadForCrc = substr($binary, 1, $len - 4);
 
-        $calculated = $this->calculateCRC16($payload);
+        $calculated = $this->calculateCRC16IBM($payloadForCrc);
 
-        // Per your ICD: CRC_0 is LSB, CRC_1 is MSB
         $lsb = ord($binary[$len - 3]);
         $msb = ord($binary[$len - 2]);
         $received = ($msb << 8) | $lsb;
@@ -129,25 +159,6 @@ class CommandService
         return $calculated === $received;
     }
 
-    /**
-     * CRC-16/IBM-3740: X^16 + X^12 + X^5 + 1 
-     */
-    private function calculateCRC16(string $data): int
-    {
-        $crc = 0xFFFF;
-        $bytes = unpack('C*', $data);
-        foreach ($bytes as $byte) {
-            $crc ^= ($byte << 8);
-            for ($i = 0; $i < 8; $i++) {
-                if ($crc & 0x8000) {
-                    $crc = ($crc << 1) ^ 0x1021;
-                } else {
-                    $crc <<= 1;
-                }
-            }
-        }
-        return $crc & 0xFFFF;
-    }
 
     /**
      * Sends the binary frame to the local Python gateway and returns the raw binary response

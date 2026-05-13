@@ -52,7 +52,7 @@ return [
     ],
 
     'satellite' => [
-        'url'     => env('SATELLITE_API_URL', 'http://host.docker.internal:8010'),
+        'url'     => env('SATELLITE_API_URL', 'http://host.docker.internal:8081'),
         'timeout' => env('SATELLITE_API_TIMEOUT', 15),
     ],
 
