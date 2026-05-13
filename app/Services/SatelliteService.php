@@ -174,4 +174,30 @@ class SatelliteService
             return response()->json(["error" => "Error fetching satellite data."], 500);
         }
     }
+
+
+    public function getTelemetryForBroadcast()
+    {
+        $position = $this->getLatestPosition(); // lat, lng, alt
+        $lookAngles = $this->getLookAngles();   // visibility, etc.
+
+        // Logic for time remaining: 
+        // You'll need an endpoint like /next-pass that returns 'los_utc'
+        $response = Http::get("{$this->baseUrl}/next-pass", [
+            'norad' => $this->noradId,
+            'lat'   => $this->gsLat,
+            'lng'   => $this->gsLng,
+        ]);
+
+        $losUtc = $response->json('los_utc'); // Time when it disappears
+        $secondsRemaining = $losUtc ? now()->diffInSeconds(\Carbon\Carbon::parse($losUtc), false) : 0;
+
+        return [
+            'lat' => $position['lat'] ?? null,
+            'lng' => $position['lng'] ?? null,
+            'is_visible' => $lookAngles['visible'] ?? false,
+            'seconds_remaining' => max(0, $secondsRemaining),
+            'timestamp' => now()->toIso8601String(),
+        ];
+    }
 }

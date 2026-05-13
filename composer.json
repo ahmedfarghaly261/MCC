@@ -18,6 +18,7 @@
         "textalk/websocket": "^1.5"
     },
     "require-dev": {
+        "beyondcode/laravel-er-diagram-generator": "^6.0",
         "fakerphp/faker": "^1.23",
         "laramint/laravel-brain": "^2.0",
         "laravel/pail": "^1.2.2",
