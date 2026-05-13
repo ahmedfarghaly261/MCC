@@ -10,6 +10,7 @@ import TelemetryRepliesView from "@/pages/telemetry/telemetryReplies/telemetryRe
 import ManualDecoder from "@/pages/ManualDecoder/manualDecoderView";
 import SatelliteOverviewView from "@/pages/satellite/satelliteOverview/satelliteOverview.view";
 import NotFound from "@/components/layout/NotFound";
+import FaultsDiagnosticsView from "@/pages/faults-diagnostics/FaultsDiagnosticsView";
 
 export default function AppRoutes() {
   return (
@@ -35,6 +36,8 @@ export default function AppRoutes() {
         
         {/* Logs */}
         <Route path="/logs" element={<LogPage />} />
+        {/* Faults & Diagnostics */}
+        <Route path="/faults" element={<FaultsDiagnosticsView />} />
         {/* Future routes */}
 
         {/* <Route path="/commands/scheduled" element={<ScheduledCommands />} /> */}
