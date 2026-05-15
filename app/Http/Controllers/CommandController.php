@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Services\CommandService;
 use App\Models\CommandLog;
+use App\Models\Image;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Command;
 use App\Jobs\SendCommandJob;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Exception;
 
 class CommandController extends Controller
@@ -28,14 +31,12 @@ class CommandController extends Controller
             $commands = $this->commandService->getAllCommandsWithSubsystems();
             return response()->json($commands);
         } catch (Exception $e) {
-            return response()->json([
-                'message' => 'Failed to fetch commands: ' . $e->getMessage(),
-            ], 400);
+            return response()->json(['message' => 'Failed to fetch commands: ' . $e->getMessage()], 400);
         }
     }
 
     /**
-     *  Get a command by ID
+     * Get a command by ID
      */
     public function show($id): JsonResponse
     {
@@ -43,28 +44,26 @@ class CommandController extends Controller
             $command = $this->commandService->getCommandById($id);
             return response()->json($command);
         } catch (Exception $e) {
-            return response()->json([
-                'message' => 'Failed to fetch command: ' . $e->getMessage(),
-            ], 400);
+            return response()->json(['message' => 'Failed to fetch command: ' . $e->getMessage()], 400);
         }
     }
 
     /**
-     *  Send a command
+     * Send a command
      */
     public function send(Request $request): JsonResponse
     {
         $request->validate([
-            'command_id'   => 'required|integer|exists:commands,id',
-            'dest_address' => 'required|integer',
-            'data' => 'nullable|array',
-            'data.pwrl_id' => 'nullable|string',
-            'data.image_id' => 'nullable|integer',
-            'data.timer_value' => 'nullable|integer',
-            'data.mode_id' => 'nullable|string',
+            'command_id'           => 'required|integer|exists:commands,id',
+            'dest_address'         => 'required|integer',
+            'data'                 => 'nullable|array',
+            'data.pwrl_id'         => 'nullable|string',
+            'data.image_id'        => 'nullable|integer',
+            'data.timer_value'     => 'nullable|integer',
+            'data.mode_id'         => 'nullable|string',
             'data.sequence_number' => 'nullable|integer',
-            'data.window_size' => 'nullable|integer',
-            'data.tlm_frame_seq_no' => 'nullable|integer',
+            'data.window_size'     => 'nullable|integer',
+            'data.tlm_frame_seq_no'=> 'nullable|integer',
         ]);
 
         try {
@@ -77,37 +76,41 @@ class CommandController extends Controller
 
             $this->commandService->validateCommandData($command->id, $payload);
 
-            // Create the log immediately so we can return the ID right away
             $log = CommandLog::create([
                 'command_id'      => $command->id,
                 'dest_address'    => sprintf('0x%02X', $request->input('dest_address')),
-                'src_address'     => sprintf('0x%02X', 0xB0), // SRC_GCS
+                'src_address'     => sprintf('0x%02X', 0xB0),
                 'raw_binary_sent' => null,
                 'status'          => 'pending',
                 'data'            => $payload,
                 'sent_at'         => now(),
             ]);
 
-            SendCommandJob::dispatch(
+            $job = new SendCommandJob(
                 $command->id,
                 $request->input('dest_address'),
                 $payload,
                 $log->id,
+                $command->name,
             );
+
+            if ($command->name === 'GIMG') {
+                $job->onQueue('images');
+            }
+
+            dispatch($job);
 
             return response()->json([
                 'message' => 'Command queued successfully',
                 'log_id'  => $log->id,
             ]);
         } catch (Exception $e) {
-            return response()->json([
-                'message' => 'Failed to queue command: ' . $e->getMessage(),
-            ], 400);
+            return response()->json(['message' => 'Failed to queue command: ' . $e->getMessage()], 400);
         }
     }
 
     /**
-     *  Show command log 
+     * Show command log
      */
     public function getCommandLog($id): JsonResponse
     {
@@ -122,15 +125,12 @@ class CommandController extends Controller
             ]);
             return response()->json($log);
         } catch (Exception $e) {
-            return response()->json([
-                'message' => 'Failed to fetch command log: ' . $e->getMessage(),
-            ], 400);
+            return response()->json(['message' => 'Failed to fetch command log: ' . $e->getMessage()], 400);
         }
     }
 
-
     /**
-     * Get Command History 
+     * Get Command History
      */
     public function history(): JsonResponse
     {
@@ -140,14 +140,12 @@ class CommandController extends Controller
                 ->paginate(20);
             return response()->json($history);
         } catch (Exception $e) {
-            return response()->json([
-                'message' => 'Failed to fetch command history: ' . $e->getMessage(),
-            ], 400);
+            return response()->json(['message' => 'Failed to fetch command history: ' . $e->getMessage()], 400);
         }
     }
 
     /**
-     * Get all command replies 
+     * Get all command replies
      */
     public function getReplies(): JsonResponse
     {
@@ -155,9 +153,50 @@ class CommandController extends Controller
             $replies = $this->commandService->getAllReplies();
             return response()->json($replies);
         } catch (Exception $e) {
-            return response()->json([
-                'message' => 'Failed to fetch command replies: ' . $e->getMessage(),
-            ], 400);
+            return response()->json(['message' => 'Failed to fetch command replies: ' . $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Download the reconstructed PNG image for a GIMG command log.
+     *
+     * Route:  GET /api/commands/logs/{id}/image
+     *
+     * Looks up the `images` record whose command_log_id matches the log,
+     * then streams the PNG from disk.
+     */
+    public function downloadImage(int $id):BinaryFileResponse|JsonResponse
+    {
+        try {
+            $log = CommandLog::findOrFail($id);
+
+            $imageRecord = Image::where('command_log_id', $log->id)->latest()->first();
+
+            if (!$imageRecord) {
+                return response()->json([
+                    'message' => 'No image available for this command log. '
+                               . 'Current status: "' . $log->status . '".',
+                ], 404);
+            }
+
+            // Prefer enhanced version; fall back to original
+            $relativePath = $imageRecord->enhanced_path ?? $imageRecord->original_path;
+
+            if (!Storage::disk('public')->exists($relativePath)) {
+                return response()->json([
+                    'message'  => 'Image file not found on disk. It may have been deleted.',
+                    'expected' => Storage::disk('public')->path($relativePath),
+                ], 404);
+            }
+
+            $filePath = Storage::disk('public')->path($relativePath);
+
+            return response()->file($filePath, [
+                'Content-Type'        => 'image/png',
+                'Content-Disposition' => 'attachment; filename="' . basename($filePath) . '"',
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'Failed to download image: ' . $e->getMessage()], 400);
         }
     }
 }

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('images', function (Blueprint $table) {
             $table->id();
             $table->string('original_path');
-            $table->string('enhanced_path');
+            $table->string('enhanced_path')->nullable();
             $table->unsignedBigInteger('command_log_id');
             $table->foreign('command_log_id')->references('id')->on('command_logs')->onDelete('cascade'); 
             $table->timestamps();

@@ -5,10 +5,12 @@ namespace App\Services;
 use App\Models\Command;
 use App\Models\CommandLog;
 use App\Models\CommandReply;
+use App\Models\Image;
 use App\Models\SatelliteSubsystem;
 use App\Enums\PowerLine;
 use App\Enums\SatelliteMode;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use WebSocket\Client;
 use App\Jobs\DecodeTelemetryJob;
 use Exception;
@@ -22,6 +24,12 @@ class CommandService
     const TYPE_NACK = 0x03;
     const TYPE_TLM = 0x47;
 
+    /**
+     * The command ID byte used by the OBC when sending back image chunks.
+     * Matches 0x0E in command2.py's GIMG handler.
+     */
+    const TYPE_IMG_CHUNK = 0x0E;
+
     protected string $commandUrl;
 
     public function __construct(
@@ -31,9 +39,6 @@ class CommandService
     }
 
 
-    /**
-     * Formats the 9-field CSSP frame by extracting only command-specific fields
-     */
     /**
      * Formats the 9-field CSSP frame according to ICD Rev 2.0
      */
@@ -59,24 +64,20 @@ class CommandService
 
                     switch ($field) {
                         case 'timer_value':
-                            // Issue 6: Using Big-Endian (Network Byte Order) for consistency
                             $payload .= pack('J', $value);
                             $byteCount += 8;
                             break;
                         case 'sequence_number':
-                            // standardizing to Big-Endian 'N'
                             $payload .= pack('N', $value);
                             $byteCount += 4;
                             break;
                         case 'image_id':
                         case 'tlm_frame_seq_no':
                         case 'window_size':
-                            // standardizing to Big-Endian 'n'
                             $payload .= pack('n', $value);
                             $byteCount += 2;
                             break;
                         default:
-                            // 1-byte fields
                             $payload .= pack('C', $value);
                             $byteCount += 1;
                             break;
@@ -85,17 +86,13 @@ class CommandService
             }
         }
 
-        // Field 2-5: DEST, SRC, CMD_ID, LEN
         $realId = $command->getRawOriginal('cmd_id');
-        // Ensure self::SRC_GCS is 0xB0 per Issue 3
         $headerAndData = pack('CCCC', $dest, self::SRC_GCS, $realId, $byteCount);
         $headerAndData .= $payload;
 
-        // Issue 1: Proper CRC-16/IBM-3740
         $crc = $this->calculateCRC16IBM($headerAndData);
 
-        // Issue 2: Field 7 is LSB, Field 8 is MSB
-        return pack('C', self::FLAG) . $headerAndData . pack('vC', $crc, self::FLAG);
+        return pack('C', self::FLAG) . $headerAndData . pack('nC', $crc, self::FLAG);
     }
 
     /**
@@ -123,65 +120,61 @@ class CommandService
         $binary = hex2bin(str_replace(' ', '', $hex));
         $bytes = array_values(unpack('C*', $binary));
 
-        // 1. Minimum check: Flag + Dest + Src + Type + Len + Data + CRC + CRC + Flag = 9 bytes
         if (count($bytes) < 9 || $bytes[0] !== 0xC0) {
             return null;
         }
 
-        $type = $bytes[3]; // Byte 4 is the Identifier
+        $type = $bytes[3];
 
-        // 2. Strict Filter: If it's not ACK (02) or NACK (03), ignore it
         if ($type !== self::TYPE_ACK && $type !== self::TYPE_NACK) {
             return null;
         }
 
         return [
-            'is_ack'     => ($type === self::TYPE_ACK),
-            'command_id' => $bytes[5],
-            'source'     => sprintf('0x%02x', $bytes[1]),
+            'is_ack'      => ($type === self::TYPE_ACK),
+            'command_id'  => $bytes[5],
+            'source'      => sprintf('0x%02x', $bytes[1]),
             'destination' => sprintf('0x%02x', $bytes[2]),
-            'is_valid'   => $this->validateCRC($binary)
+            'is_valid'    => $this->validateCRC($binary),
         ];
     }
+
     public function validateCRC(string $binary): bool
     {
         $len = strlen($binary);
-        // The ICD specifies CRC is calculated on Fields 2 through 6 (Dest, Src, CmdID, Len, and Data)
-        // This is everything between the first Flag (index 0) and the CRC_0 (index len-3)
         $payloadForCrc = substr($binary, 1, $len - 4);
-
         $calculated = $this->calculateCRC16IBM($payloadForCrc);
 
-        $lsb = ord($binary[$len - 3]);
-        $msb = ord($binary[$len - 2]);
+        $msb = ord($binary[$len - 3]);
+        $lsb = ord($binary[$len - 2]);
         $received = ($msb << 8) | $lsb;
 
         return $calculated === $received;
     }
 
-
-    /**
-     * Sends the binary frame to the local Python gateway and returns the raw binary response
-     */
-    public function sendToGateway(string $binary, string $commandName)
+    public function sendToGateway(string $binary, string $commandName): mixed
     {
         Log::info("MCC SENDING CSSP FRAME: " . bin2hex($binary));
         $commandUrl = "ws://host.docker.internal:8081/ws/radio";
 
+        $timeout = ($commandName === 'GIMG') ? 1000: 10;
+
         try {
-            $client = new Client($commandUrl, ['timeout' => 5]);
+            $client = new Client($commandUrl, ['timeout' => $timeout]);
             $client->send($binary, 'binary');
 
-            if ($commandName == 'Hi') {
+            // HI: fire-and-forget
+            if ($commandName === 'Hi') {
                 $client->close();
                 return "Hi Sent Successfully";
             }
 
-            // 1. Receive the ACK/NACK first
+            // Receive the first frame — always ACK or NACK
             $firstResponse = $client->receive();
             Log::info("Initial ACK/NACK: " . bin2hex($firstResponse));
 
-            if ($commandName == 'GSTLM') {
+            //GSTLM: ACK + up to 7 stored telemetry frames 
+            if ($commandName === 'GSTLM') {
                 $allFrames = [$firstResponse];
                 for ($i = 0; $i < 8; $i++) {
                     try {
@@ -189,11 +182,74 @@ class CommandService
                         Log::info("Received Stored TLM " . ($i + 1) . ": " . bin2hex($telemetryFrame));
                         $allFrames[] = $telemetryFrame;
                     } catch (\Exception $e) {
-                        Log::warning("Timed out or failed waiting for frame $i");
+                        Log::warning("Timed out or failed waiting for TLM frame $i — stopping.");
+                        break;
                     }
                 }
                 $client->close();
                 return $allFrames;
+            }
+
+            //  GIMG: ACK + variable-length image chunk stream 
+            if ($commandName === 'GIMG') {
+                $firstBytes = array_values(unpack('C*', $firstResponse));
+                $isAck      = isset($firstBytes[3]) && $firstBytes[3] === self::TYPE_ACK;
+
+                if (!$isAck) {
+                    Log::warning("GIMG: NACK on first frame — aborting chunk collection.");
+                    $client->close();
+                    return ['image_chunks' => [], 'ack_frame' => $firstResponse];
+                }
+
+                Log::info("GIMG: ACK received — starting chunk collection on SAME connection.");
+                $chunks = [];
+
+                $client->setTimeout(5);
+
+                while (true) {
+                    try {
+                        $chunkFrame = $client->receive();
+                        $chunkBytes = array_values(unpack('C*', $chunkFrame));
+
+                        if (
+                            count($chunkBytes) >= 5 &&
+                            $chunkBytes[0] === 0xC0 &&
+                            $chunkBytes[3] === self::TYPE_IMG_CHUNK
+                        ) {
+                            $dataLen  = $chunkBytes[4];
+                            $payload  = substr($chunkFrame, 5, $dataLen);
+                            $chunks[] = $payload;
+
+                            if (count($chunks) % 500 === 0) {
+                                Log::info("GIMG: collected " . count($chunks) . " chunks so far…");
+                            }
+                        } else {
+                            Log::warning(
+                                "GIMG: unexpected frame cmd_id=0x" .
+                                    sprintf('%02X', $chunkBytes[3] ?? 0xFF) .
+                                    " after " . count($chunks) . " chunks — stopping."
+                            );
+                            break;
+                        }
+                    } catch (\WebSocket\ConnectionException $e) {
+                        // OBC closed the connection after last chunk — normal end-of-stream.
+                        Log::info("GIMG: connection closed by OBC after " . count($chunks) . " chunk(s).");
+                        break;
+                    } catch (\Exception $e) {
+                        // 2s read timeout = OBC finished streaming. Expected exit path.
+                        Log::info("GIMG: stream ended after " . count($chunks) . " chunk(s) (2s idle timeout).");
+                        break;
+                    }
+                }
+
+                $client->close();
+
+                Log::info("GIMG: total chunks collected: " . count($chunks));
+
+                return [
+                    'ack_frame'    => $firstResponse,
+                    'image_chunks' => $chunks,
+                ];
             }
 
             $client->close();
@@ -205,6 +261,55 @@ class CommandService
     }
 
 
+    //  Image reconstruction 
+
+    public function reconstructAndSaveImage(array $chunks, int $imageId, int $logId): ?Image
+    {
+        if (empty($chunks)) {
+            Log::warning("GIMG: no chunks to reconstruct for image_id={$imageId}, log_id={$logId}");
+            return null;
+        }
+
+        // ── 1. Concatenate all chunk payloads in order ────────────────────────
+        $rawBytes = implode('', $chunks);
+
+        // ── 2. Prepare storage directory ─────────────────────────────────────
+        Storage::disk('public')->makeDirectory('/satellite_images/original');
+
+        $filename = "image_{$imageId}_log_{$logId}.png";
+        $path = 'satellite_images/original/' . $filename;
+
+        // ── 3. Decode and save as PNG ─────────────────────────────────────────
+        $gdImage = @imagecreatefromstring($rawBytes);
+
+        if ($gdImage !== false) {
+            ob_start();
+            imagepng($gdImage);
+            $pngData = ob_get_clean();
+            Storage::disk('public')->put($path, $pngData);
+            imagedestroy($gdImage);
+            Log::info("GIMG: PNG saved → {$path}");
+        } else {
+            Storage::disk('public')->put($path, $rawBytes);
+            Log::warning(
+                "GIMG: GD could not decode image bytes; raw bytes saved to {$path}. " .
+                    "Total bytes: " . strlen($rawBytes)
+            );
+        }
+
+        // ── 4. Persist to `images` table ──────────────────────────────────────
+        $imageRecord = Image::create([
+            'original_path'  => $path,
+            'command_log_id' => $logId,
+        ]);
+
+        Log::info("GIMG: Image record #{$imageRecord->id} created for log #{$logId}.");
+        return $imageRecord;
+    }
+
+
+    // ── Repository helpers ───────────────────────────────────────────────────
+
     public function getAllCommands()
     {
         return Command::all();
@@ -213,7 +318,6 @@ class CommandService
     public function getAllCommandsWithSubsystems()
     {
         $commands = $this->getAllCommands();
-        // Load subsystems from allowed destinations and get subsystem name only
         $allDestinations = $commands->pluck('allowed_destinations')->flatten()->unique()->filter();
         $subsystems = SatelliteSubsystem::whereIn('hex_code', $allDestinations)->get(['hex_code', 'name']);
         $subsystemMap = $subsystems->keyBy('hex_code');
@@ -235,7 +339,6 @@ class CommandService
         return $command;
     }
 
-
     public function getAllReplies()
     {
         return CommandReply::with(['commandLog.command:id,name', 'commandLog'])
@@ -244,22 +347,20 @@ class CommandService
             ->paginate(30);
     }
 
-
     public function validateCommandData(int $commandId, array $data): bool
     {
         $command = Command::findOrFail($commandId);
 
         $requiredFieldsByCommand = [
-            'SON' => ['pwrl_id'],
-            'SOFF' => ['pwrl_id'],
+            'SON'   => ['pwrl_id'],
+            'SOFF'  => ['pwrl_id'],
             'GSTLM' => ['tlm_frame_seq_no'],
-            'DIMG' => ['image_id'],
-            'GIMG' => ['image_id', 'sequence_number', 'window_size'],
+            'DIMG'  => ['image_id'],
+            'GIMG'  => ['image_id', 'sequence_number', 'window_size'],
             'STIME' => ['timer_value'],
             'SMODE' => ['mode_id'],
         ];
 
-        //then validate theat  pwrl_id , mode_id is valid and exist in the enum files
         if (isset($data['pwrl_id']) && !PowerLine::tryFrom($data['pwrl_id'])) {
             throw new \InvalidArgumentException("Invalid pwrl_id: {$data['pwrl_id']}. Must be a valid PowerLine enum value.");
         }

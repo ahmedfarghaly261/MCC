@@ -6,7 +6,7 @@ use App\Http\Controllers\TelemetryParameterController;
 use App\Http\Controllers\CommandController;
 use App\Http\Controllers\TelemetryController;
 use App\Http\Controllers\AnomalyExplainationController;
-use App\Http\Controllers\ImageEnhancementController;
+use App\Http\Controllers\ImageController;
 use App\Http\Controllers\SatelliteController;
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +27,7 @@ Route::prefix('mcc/command')->group(function () {
     Route::get('/replies', [CommandController::class, 'getReplies']);
     Route::get('/', [CommandController::class, 'index']);
     Route::get('/{id}', [CommandController::class, 'show']);
+    Route::get('/log/{id}/image', [CommandController::class, 'downloadImage']);
 });
 
 Route::prefix('mcc/telemetry')->group(function () {
@@ -48,4 +49,10 @@ Route::prefix('mcc/satellite')->group(function () {
     Route::get('/visibility-check', [SatelliteController::class, 'checkVisibility']);
 });
 
-Route::post('/enhance-image', [ImageEnhancementController::class, 'enhanceImage']);
+Route::prefix('images')->group(function () {
+    Route::get('/',                        [ImageController::class, 'index']);
+    Route::get('/{id}',                    [ImageController::class, 'show']);
+    Route::delete('/{id}',                 [ImageController::class, 'destroy']);
+    Route::get('/by-log/{logId}',          [ImageController::class, 'byCommandLog']);
+    Route::post('/enhance',                [ImageController::class, 'enhanceImage']);
+});

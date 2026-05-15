@@ -10,50 +10,59 @@ use App\Services\SatelliteService;
 use App\Jobs\DecodeTelemetryJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldBeUnique;  // ← ADD THIS
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class SendCommandJob implements ShouldQueue
+class SendCommandJob implements ShouldQueue, ShouldBeUnique  // ← ADD ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 1;   // We handle retries manually via re-dispatch
-    public int $timeout = 30;
+    public int  $tries         = 1;
+    public int  $timeout       = 1000;
+    public int  $maxExceptions = 1;
+    public bool $failOnTimeout = false;
+
+    // ← REMOVE retryUntil() entirely. It keeps a failed job alive for 20 min,
+    //   during which re-deliveries from worker restarts bypass $tries = 1.
+
+    // ── Unique lock ───────────────────────────────────────────────────────────
+    // One job per logId at a time. A second dispatch for the same log is silently
+    // dropped until the lock is released (job finishes or times out).
+
+    public function uniqueId(): string
+    {
+        return (string) $this->logId;
+    }
+
+    public function uniqueFor(): int
+    {
+        // Hold the lock for the job's full timeout + a small buffer.
+        // Without this, the default (60s) releases the lock while the job
+        // is still collecting GIMG chunks, allowing a new job to start.
+        return $this->timeout + 60;
+    }
 
     public function __construct(
-        public readonly int $commandId,
-        public readonly int $dest,
-        public readonly array $data,
-        public readonly int $logId,
-    ) {}
+        public readonly int    $commandId,
+        public readonly int    $dest,
+        public readonly array  $data,
+        public readonly int    $logId,
+        public readonly string $commandName = '',
+    ) {
+        if ($commandName === 'GIMG') {
+            $this->queue = 'images';
+            Log::info("SendCommandJob: GIMG routed to [images] queue, log #{$this->logId}");
+        }
+    }
 
     public function handle(CommandService $commandService, SatelliteService $satelliteService): void
     {
-        $log = CommandLog::findOrFail($this->logId);
+        $log     = CommandLog::findOrFail($this->logId);
         $command = Command::findOrFail($this->commandId);
 
-        // // --- Visibility Check ---
-        // if (!$satelliteService->isCurrentlyVisible()) {
-        //     $secondsUntilWindow = $satelliteService->getSecondsUntilNextWindow();
-
-        //     Log::info("Satellite not visible. Command log #{$log->id} will retry in {$secondsUntilWindow}s.");
-
-        //     $log->update(['status' => 'waiting_for_aos']);
-
-        //     // Re-dispatch itself after the next AOS window
-        //     self::dispatch(
-        //         $this->commandId,
-        //         $this->dest,
-        //         $this->data,
-        //         $this->logId,
-        //     )->delay(now()->addSeconds($secondsUntilWindow));
-
-        //     return;
-        // }
-
-        // --- Satellite is visible, proceed ---
         try {
             $binaryFrame = $commandService->buildCsspFrame($command, $this->dest, $this->data);
 
@@ -65,6 +74,7 @@ class SendCommandJob implements ShouldQueue
 
             $response = $commandService->sendToGateway($binaryFrame, $command->name);
 
+            // ── HI ────────────────────────────────────────────────────────────
             if ($response === 'Hi Sent Successfully') {
                 $log->update(['status' => 'sent']);
                 return;
@@ -75,9 +85,16 @@ class SendCommandJob implements ShouldQueue
                 return;
             }
 
+            // ── GIMG: image chunk reassembly ──────────────────────────────────
+            if ($command->name === 'GIMG') {
+                $this->handleGimgResponse($response, $command, $log, $commandService);
+                return;
+            }
+
+            // ── GSTLM / single-frame commands ─────────────────────────────────
             $log->update(['status' => 'received', 'replied_at' => now()]);
 
-            $frames = is_array($response) ? $response : [$response];
+            $frames      = is_array($response) ? $response : [$response];
             $satelliteId = 1;
 
             foreach ($frames as $index => $frameBinary) {
@@ -89,12 +106,13 @@ class SendCommandJob implements ShouldQueue
                 ]);
 
                 if (strlen($frameHex) <= 18) {
+                    // Short frame → ACK/NACK
                     $decoded = $commandService->decode($frameHex);
                     if ($decoded) {
                         $log->update(['status' => $decoded['is_ack'] ? 'ack' : 'nack']);
                     }
-                    //if command SMODE is ack change subsystem mode in db to the new requested mode
-                    if ($command->name == 'SMODE' && $decoded['is_ack']) {
+
+                    if ($command->name === 'SMODE' && ($decoded['is_ack'] ?? false)) {
                         $newMode = $this->data['mode_id'] ?? $this->data['mode'] ?? null;
                         if ($newMode) {
                             $satelliteService->updateSubsystemMode($newMode, $this->dest);
@@ -102,14 +120,101 @@ class SendCommandJob implements ShouldQueue
                     }
                     continue;
                 }
+
+                // Long frame → telemetry
                 Log::info("Dispatching DecodeTelemetryJob for log #{$log->id}, frame {$index}: {$frameHex}");
                 DecodeTelemetryJob::dispatch($frameHex, $satelliteId, $log->id);
                 $log->update(['status' => 'telemetry_received']);
             }
+
         } catch (\Throwable $e) {
             Log::error("SendCommandJob failed for log #{$log->id}: " . $e->getMessage());
             $log->update(['status' => 'error']);
-            throw $e;
+            // Do not rethrow and do not call $this->fail() — both cause Laravel
+            // to increment the attempt counter and emit "attempted too many times".
+            // The error is fully recorded via the log status; let the job finish cleanly.
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Handles the structured response from CommandService::sendToGateway()
+     * for a GIMG command.
+     *
+     * $response shape:
+     *   [
+     *     'ack_frame'    => <binary string>,   // raw ACK/NACK frame
+     *     'image_chunks' => [<binary>, ...],   // raw payload bytes per chunk
+     *   ]
+     */
+    private function handleGimgResponse(
+        mixed          $response,
+        Command        $command,
+        CommandLog     $log,
+        CommandService $commandService,
+    ): void {
+        // Validate the response structure we expect from sendToGateway()
+        if (!is_array($response) || !isset($response['image_chunks'])) {
+            Log::error("GIMG: unexpected response structure for log #{$log->id}");
+            $log->update(['status' => 'error']);
+            return;
+        }
+
+        $ackFrame    = $response['ack_frame']    ?? null;
+        $imageChunks = $response['image_chunks'] ?? [];
+
+        // ── 1. Log the ACK frame ─────────────────────────────────────────────
+        if ($ackFrame) {
+            $ackHex = bin2hex($ackFrame);
+            CommandReply::create([
+                'command_log_id' => $log->id,
+                'reply_data'     => $ackHex,
+            ]);
+
+            $decoded = $commandService->decode($ackHex);
+            if ($decoded && !$decoded['is_ack']) {
+                // OBC sent NACK — nothing to reconstruct
+                Log::warning("GIMG: NACK received for log #{$log->id}. No image to reconstruct.");
+                $log->update(['status' => 'nack', 'replied_at' => now()]);
+                return;
+            }
+        }
+
+        $log->update(['status' => 'received', 'replied_at' => now()]);
+
+        // ── 2. Guard: nothing came through ───────────────────────────────────
+        if (empty($imageChunks)) {
+            Log::warning("GIMG: ACK received but zero image chunks for log #{$log->id}.");
+            $log->update(['status' => 'error']);
+            return;
+        }
+
+        Log::info("GIMG: " . count($imageChunks) . " chunk(s) received for log #{$log->id}. Reconstructing image…");
+
+        // ── 3. Log a summary reply entry for the image data ──────────────────
+        // Storing the full raw hex of every chunk would be huge; store a
+        // compact summary instead so the reply table stays manageable.
+        $totalBytes = array_sum(array_map('strlen', $imageChunks));
+        CommandReply::create([
+            'command_log_id' => $log->id,
+            'reply_data'     => json_encode([
+                'type'        => 'image_chunks',
+                'chunk_count' => count($imageChunks),
+                'total_bytes' => $totalBytes,
+            ]),
+        ]);
+
+        // ── 4. Reconstruct + save the image ──────────────────────────────────
+        $imageId    = $this->data['image_id'] ?? 0;
+        $imageRecord = $commandService->reconstructAndSaveImage($imageChunks, $imageId, $log->id);
+
+        if ($imageRecord) {
+            $log->update(['status' => 'image_received']);
+            Log::info("GIMG: Image record #{$imageRecord->id} linked to log #{$log->id}.");
+        } else {
+            $log->update(['status' => 'error']);
+            Log::error("GIMG: failed to reconstruct/save image for log #{$log->id}.");
         }
     }
 }
