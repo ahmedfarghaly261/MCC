@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
-import Dashboard from "@/pages/Dashboard";
+import DashboardView from "@/pages/dashboard/dashboardView";
 import CreateCommand from "@/pages/command/sendCommand/createCommand";
 import LogPage from "@/pages/logPage/logpage";
 import CommandDictionary from "@/pages/command/commandDictionary/CommandDictionary";
@@ -16,7 +16,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<DashboardView />} />
 
         {/* Command Center */}
         <Route path="/commands/create" element={<CreateCommand />} />
