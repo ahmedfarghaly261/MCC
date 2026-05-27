@@ -6,6 +6,7 @@ use App\Models\Image;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Jobs\DetectObjectsJob;
 
 
 class ImageController extends Controller
@@ -155,5 +156,82 @@ class ImageController extends Controller
         if (!$path) return null;
 
         return asset('storage/' . ltrim($path, '/'));
+    }
+
+    /**
+     * @group Image Processing
+     *
+     * Detect objects in an image (Async Job)
+     *
+     * Dispatches a background job that sends the image to FastAPI,
+     * processing DOTA and building detection models.
+     */
+    public function detectObjects(Request $request, int $id)
+    {
+        // 1. Ensure image asset exists
+        $image = Image::findOrFail($id);
+
+        // 2. Optional parameters to overwrite confidence scales on-demand
+        $request->validate([
+            'run_dota'      => 'nullable|string|in:true,false',
+            'run_buildings' => 'nullable|string|in:true,false',
+            'dota_conf'     => 'nullable|numeric|between:0,1',
+            'building_conf' => 'nullable|numeric|between:0,1',
+        ]);
+
+        $options = array_filter([
+            'run_dota'      => $request->input('run_dota'),
+            'run_buildings' => $request->input('run_buildings'),
+            'dota_conf'     => $request->input('dota_conf'),
+            'building_conf' => $request->input('building_conf'),
+        ], fn($value) => !is_null($value));
+
+        // 3. Dispatch Background processing job
+        DetectObjectsJob::dispatch($image->id, $options);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => "Object detection job has been successfully dispatched for image #{$id}.",
+            'target'  => $this->formatImage($image)
+        ], 202); // 202 Accepted means request received for asynchronous batch handling
+    }
+
+    /**
+     * @group Image Processing
+     *
+     * Get detections by Image ID
+     *
+     * Returns the annotated image download URL and raw detection breakdown data.
+     */
+    public function getDetections(int $id)
+    {
+        $image = Image::findOrFail($id);
+
+        // Check if the background job has written any data yet
+        if (!$image->detected_obj_path && !$image->detections) {
+            return response()->json([
+                'status'  => 'processing',
+                'message' => 'Object detection analysis is still running in the background or failed.'
+            ], 202);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => [
+                'id'                 => $image->id,
+                'command_log_id'     => $image->command_log_id,
+                'original_path'      => $image->original_path,
+                'original_url'       => $this->resolveDownloadUrl($image->original_path),
+                'enhanced_path'      => $image->enhanced_path,
+                'enhanced_url'       => $this->resolveDownloadUrl($image->enhanced_path),
+                'detected_obj_path'   => $image->detected_obj_path,
+                'detected_obj_url'    => $this->resolveDownloadUrl($image->detected_obj_path),
+                'elapsed_seconds'    => $image->detections['elapsed_seconds'] ?? null,
+                'description'        => $image->detections['description'] ?? '',
+                'summary'            => $image->detections['summary'] ?? null,
+                'detections'         => $image->detections['detections'] ?? null,
+                'created_at'         => $image->created_at?->toISOString(),
+            ]
+        ]);
     }
 }

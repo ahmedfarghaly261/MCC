@@ -55,4 +55,6 @@ Route::prefix('images')->group(function () {
     Route::delete('/{id}',                 [ImageController::class, 'destroy']);
     Route::get('/by-log/{logId}',          [ImageController::class, 'byCommandLog']);
     Route::post('/enhance',                [ImageController::class, 'enhanceImage']);
+    Route::post('/images/{id}/detect',     [ImageController::class, 'detectObjects']);
+    Route::get('/images/{id}/detections', [ImageController::class, 'getDetections']);
 });
