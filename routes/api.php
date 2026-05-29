@@ -49,7 +49,7 @@ Route::prefix('mcc/satellite')->group(function () {
     Route::get('/visibility-check', [SatelliteController::class, 'checkVisibility']);
 });
 
-Route::prefix('images')->group(function () {
+Route::prefix('mcc/images')->group(function () {
     Route::get('/',                        [ImageController::class, 'index']);
     Route::get('/{id}',                    [ImageController::class, 'show']);
     Route::delete('/{id}',                 [ImageController::class, 'destroy']);

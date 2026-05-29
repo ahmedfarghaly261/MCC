@@ -11,6 +11,7 @@ class Image extends Model
         'command_log_id',
         'original_path',
         'enhanced_path',
+        'meta_data',
         'detected_obj_path',
         'detections',
     ];
@@ -22,5 +23,6 @@ class Image extends Model
 
     protected $casts = [
         'detections' => 'array',
+        'meta_data' => 'array',
     ];
 }

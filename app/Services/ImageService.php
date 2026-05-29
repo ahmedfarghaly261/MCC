@@ -38,9 +38,9 @@ class ImageService
                 return $response->body(); 
             }
 
-            throw new \Exception("FastAPI Processing Error: " . $response->status());
+            throw new Exception("FastAPI Processing Error: " . $response->status());
         } catch (ConnectionException $e) {
-            throw new \Exception("FastAPI service is unreachable on port 8001.");
+            throw new Exception("FastAPI service is unreachable on port 8001.");
         } finally {
             if (is_resource($fileStream)) {
                 fclose($fileStream);
@@ -55,7 +55,7 @@ class ImageService
     public function detectObjects(string $relativePath, array $options = []): string
     {
         if (!Storage::disk('public')->exists($relativePath)) {
-            throw new \Exception("Satellite image not found: " . $relativePath);
+            throw new Exception("Satellite image not found: " . $relativePath);
         }
 
         $fullPath = Storage::disk('public')->path($relativePath);
