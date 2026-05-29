@@ -263,7 +263,7 @@ class CommandService
 
     //  Image reconstruction 
 
-    public function reconstructAndSaveImage(array $chunks, int $imageId, int $logId, array $metaData = []): ?Image
+    public function reconstructAndSaveImage(array $chunks, int $imageId, int $logId): ?Image
     {
         if (empty($chunks)) {
             Log::warning("GIMG: no chunks to reconstruct for image_id={$imageId}, log_id={$logId}");
@@ -272,105 +272,35 @@ class CommandService
 
         // ── 1. Concatenate all chunk payloads in order ────────────────────────
         $rawBytes = implode('', $chunks);
-        $totalBytes = strlen($rawBytes);
 
-        Log::info("GIMG: Reconstructing — {$totalBytes} B, first 16 B: " . bin2hex(substr($rawBytes, 0, 16)));
-
-        // ── 2. Strip any non-image prefix (e.g. metadata JSON leaked through) ─
-        // Scan for the first recognised image magic byte sequence.
-        $jpegOffset = strpos($rawBytes, "ÿØÿ");
-        $pngOffset  = strpos($rawBytes, "PNG"); // PNG
-
-        if ($jpegOffset === false && $pngOffset === false) {
-            Log::error(
-                "GIMG: No JPEG/PNG magic found in {$totalBytes} B for log #{$logId}. " .
-                "First 64 B: " . bin2hex(substr($rawBytes, 0, 64))
-            );
-            // Save the raw bytes anyway so we can inspect the file manually.
-            Storage::disk('public')->makeDirectory('/satellite_images/original');
-            $debugPath = "satellite_images/original/image_{$imageId}_log_{$logId}_RAW.bin";
-            Storage::disk('public')->put($debugPath, $rawBytes);
-            Log::warning("GIMG: Raw bytes saved for manual inspection → {$debugPath}");
-            return null;
-        }
-
-        // Pick the earliest magic (JPEG wins on a tie).
-        if ($jpegOffset !== false && $pngOffset !== false) {
-            $startOffset = min($jpegOffset, $pngOffset);
-        } elseif ($jpegOffset !== false) {
-            $startOffset = $jpegOffset;
-        } else {
-            $startOffset = $pngOffset;
-        }
-        $isJpeg = ($jpegOffset !== false && $startOffset === $jpegOffset);
-
-        if ($startOffset > 0) {
-            Log::warning(
-                "GIMG: Stripping {$startOffset} leading non-image byte(s) for log #{$logId}. " .
-                "Prefix hex: " . bin2hex(substr($rawBytes, 0, min($startOffset, 64)))
-            );
-            $rawBytes = substr($rawBytes, $startOffset);
-        }
-
-        // ── 3. Prepare storage directory ─────────────────────────────────────
+        // ── 2. Prepare storage directory ─────────────────────────────────────
         Storage::disk('public')->makeDirectory('/satellite_images/original');
 
-        $ext  = $isJpeg ? 'jpg' : 'png';
-        $path = "satellite_images/original/image_{$imageId}_log_{$logId}.{$ext}";
+        $filename = "image_{$imageId}_log_{$logId}.png";
+        $path = 'satellite_images/original/' . $filename;
 
-        // ── 4. Try GD first; fall back to Imagick if available ───────────────
-        $saved = false;
-
-        // 4a. GD — works for baseline JPEG, PNG, GIF, WebP
+        // ── 3. Decode and save as PNG ─────────────────────────────────────────
         $gdImage = @imagecreatefromstring($rawBytes);
+
         if ($gdImage !== false) {
-            $pngPath = "satellite_images/original/image_{$imageId}_log_{$logId}.png";
             ob_start();
             imagepng($gdImage);
             $pngData = ob_get_clean();
-            Storage::disk('public')->put($pngPath, $pngData);
+            Storage::disk('public')->put($path, $pngData);
             imagedestroy($gdImage);
-            $path  = $pngPath;
-            $saved = true;
-            Log::info("GIMG: GD decoded → PNG saved: {$path}");
-        }
-
-        // 4b. Imagick — handles CMYK JPEG, progressive JPEG, TIFF, WebP, etc.
-        if (!$saved && class_exists('\Imagick')) {
-            try {
-                $im = new \Imagick();
-                $im->readImageBlob($rawBytes);
-                $im->setImageFormat('png');
-                // Flatten in case of CMYK or multi-layer
-                $im = $im->mergeImageLayers(\Imagick::LAYERMETHOD_FLATTEN);
-                $im->transformImageColorspace(\Imagick::COLORSPACE_SRGB);
-                $pngPath = "satellite_images/original/image_{$imageId}_log_{$logId}.png";
-                Storage::disk('public')->put($pngPath, $im->getImageBlob());
-                $im->destroy();
-                $path  = $pngPath;
-                $saved = true;
-                Log::info("GIMG: Imagick decoded → PNG saved: {$path}");
-            } catch (\Throwable $e) {
-                Log::warning("GIMG: Imagick also failed for log #{$logId}: " . $e->getMessage());
-            }
-        }
-
-        // 4c. Last resort — save raw bytes under the detected extension.
-        //     The file is still usable: a browser / viewer that knows the format
-        //     can open it, and it can be re-processed later.
-        if (!$saved) {
+            Log::info("GIMG: PNG saved → {$path}");
+        } else {
             Storage::disk('public')->put($path, $rawBytes);
             Log::warning(
-                "GIMG: Both GD and Imagick failed; raw {$ext} saved: {$path} ({$totalBytes} B). " .
-                "Magic offset was {$startOffset}."
+                "GIMG: GD could not decode image bytes; raw bytes saved to {$path}. " .
+                    "Total bytes: " . strlen($rawBytes)
             );
         }
 
-        // ── 5. Persist to `images` table ─────────────────────────────────────
+        // ── 4. Persist to `images` table ──────────────────────────────────────
         $imageRecord = Image::create([
             'original_path'  => $path,
             'command_log_id' => $logId,
-            'meta_data'     => $metaData,
         ]);
 
         Log::info("GIMG: Image record #{$imageRecord->id} created for log #{$logId}.");
