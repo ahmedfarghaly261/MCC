@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { useLayoutLoading } from "@/components/layout/layoutLoadingContext";
+import { downloadImage } from "@/utils";
 
 import ImageIndexHeader from "./composables/ImageIndexHeader";
 import ImageIndexStats from "./composables/ImageIndexStats";
@@ -96,13 +97,15 @@ export default function ImageIndexView() {
 
 	const handleDownload = async (image: ImageRecord) => {
 		if (image.download_url) {
-			openUrl(image.download_url);
+			await downloadImage(image.download_url, { filename: image.original_path });
 			return;
 		}
 
 		const details = await getImageById(image.id);
 		if (details?.download_url) {
-			openUrl(details.download_url);
+			await downloadImage(details.download_url, {
+				filename: details.original_path || image.original_path,
+			});
 		}
 	};
 
