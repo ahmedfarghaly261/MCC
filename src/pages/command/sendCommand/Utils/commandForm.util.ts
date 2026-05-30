@@ -2,6 +2,14 @@ import type { CommandSchema } from "@/models/command/commandSchema";
 
 const stringDataFields = new Set(["pwrl_id", "mode_id"]);
 
+const payloadFieldAliases: Record<string, string> = {
+  img_id: "image_id",
+};
+
+function resolvePayloadField(field: string): string {
+  return payloadFieldAliases[field] ?? field;
+}
+
 export function isStringDataField(field: string): boolean {
   return stringDataFields.has(field);
 }
@@ -64,6 +72,7 @@ export function buildDataPayload(
   const payload: Record<string, string | number> = {};
 
   requiredFields.forEach((field) => {
+    const payloadField = resolvePayloadField(field);
     const raw =
       typeof dataFields[field] === "string"
         ? dataFields[field]
@@ -74,19 +83,19 @@ export function buildDataPayload(
     if (isStringDataField(field)) {
       const trimmed = raw.trim();
       if (trimmed.length > 0) {
-        payload[field] = trimmed;
+        payload[payloadField] = trimmed;
       }
       return;
     }
 
     const parsed = parseNumericValue(raw);
     if (parsed !== null) {
-      payload[field] = parsed;
+      payload[payloadField] = parsed;
       return;
     }
 
     if (raw.trim().length > 0) {
-      payload[field] = raw.trim();
+      payload[payloadField] = raw.trim();
     }
   });
 
