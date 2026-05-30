@@ -4,7 +4,7 @@ import { useLayoutLoading } from "@/components/layout/layoutLoadingContext";
 
 import ImageIndexHeader from "./composables/ImageIndexHeader";
 import ImageIndexStats from "./composables/ImageIndexStats";
-import ImageCenterTabsView from "./tabs/tabs.view";
+import ImageCenterTabsView from "../tabs/tabs.view";
 
 import { getImageById, getImages } from "./services/images.service";
 import type { ImageRecord, ImagesMeta } from "./types/images.types";

@@ -2,8 +2,8 @@ import { Image } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import SatelliteImagesSection from "../composables/SatelliteImagesSection";
-import type { ImageRecord } from "../types/images.types";
+import SatelliteImagesSection from "../index/composables/SatelliteImagesSection";
+import type { ImageRecord } from "../index/types/images.types";
 
 interface ImageCenterTabsViewProps {
 	activeTab: string;
