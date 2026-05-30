@@ -9,7 +9,7 @@ export default function ImageIndexHeader() {
 
 			<div>
 				<h1 className="text-white text-lg font-semibold">Images &amp; Received Data</h1>
-				<p className="text-gray-400 text-sm">Satellite imagery, signals, and processed data</p>
+				<p className="text-gray-400 text-sm">Satellite imagery and AI features</p>
 			</div>
 		</div>
 	);

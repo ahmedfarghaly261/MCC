@@ -12,7 +12,7 @@ export default function ImageIndexStats({
 	avgConfidenceLabel = "-",
 }: ImageIndexStatsProps) {
 	return (
-		<div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+		<div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 mt-6">
 			<div className="p-4 bg-[#1F2937] rounded-lg border border-gray-700/50">
 				<p className="text-gray-400 text-sm mb-1">Total Images</p>
 				<p className="text-blue-400">{totalImages}</p>
