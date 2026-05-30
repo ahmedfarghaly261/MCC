@@ -11,6 +11,7 @@ import ManualDecoder from "@/pages/ManualDecoder/manualDecoderView";
 import SatelliteOverviewView from "@/pages/satellite/satelliteOverview/satelliteOverview.view";
 import NotFound from "@/components/layout/NotFound";
 import FaultsDiagnosticsView from "@/pages/faults-diagnostics/FaultsDiagnosticsView";
+import ImageIndexView from "@/pages/imageCenter/index/imageIndex.view";
 
 export default function AppRoutes() {
   return (
@@ -33,6 +34,9 @@ export default function AppRoutes() {
 
         {/* Satellites */}
         <Route path="/satellites/overview" element={<SatelliteOverviewView />} />
+
+        {/* Image Center */}
+        <Route path="/images" element={<ImageIndexView />} />
         
         {/* Logs */}
         <Route path="/logs" element={<LogPage />} />

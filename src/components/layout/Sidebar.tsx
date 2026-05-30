@@ -91,6 +91,11 @@ const navItems: NavItem[] = [
       },
     ],
   },
+	{
+		label: "Image Center",
+		path: "/images",
+		icon: <FileText size={20} />,
+	},
       {
         label: "Manual Decoder",
         path: "/manual-decoder",
