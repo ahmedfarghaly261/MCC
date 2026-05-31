@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Image;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use App\Jobs\DetectObjectsJob;
-
+use Illuminate\Support\Facades\Storage;
+use Exception;
 
 class ImageController extends Controller
 {
@@ -46,6 +46,7 @@ class ImageController extends Controller
         }
     }
 
+
     /**
      * @group Image Processing
      *
@@ -53,15 +54,13 @@ class ImageController extends Controller
      *
      * Returns every image record with its original path and metadata.
      */
-    public function index(Request $request)
+    public function index(Request $request, ImageService $service)
     {
-        $images = Image::query()
-            ->orderBy('created_at', 'desc')
-            ->paginate($request->integer('per_page', 20));
+        $images = $service->listImages($request->integer('per_page', 20));
 
         return response()->json([
             'status' => 'success',
-            'data'   => $images->map(fn($img) => $this->formatImage($img)),
+            'data'   => $images->map(fn($img) => $service->formatImage($img)),
             'meta'   => [
                 'total'        => $images->total(),
                 'per_page'     => $images->perPage(),
@@ -76,14 +75,21 @@ class ImageController extends Controller
      *
      * Get a single image by ID
      */
-    public function show(int $id)
+    public function show($id, ImageService $service)
     {
-        $image = Image::findOrFail($id);
+        try {
+            $image = $service->findImage($id);
 
-        return response()->json([
-            'status' => 'success',
-            'data'   => $this->formatImage($image),
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'data'   => $service->formatImage($image),
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => "Image with ID {$id} not found."
+            ], 404);
+        }
     }
 
     /**
@@ -93,11 +99,9 @@ class ImageController extends Controller
      *
      * Returns every image linked to the given command_log_id.
      */
-    public function byCommandLog(int $logId)
+    public function byCommandLog($logId, ImageService $service)
     {
-        $images = Image::where('command_log_id', $logId)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $images = $service->getImagesByCommandLog($logId);
 
         if ($images->isEmpty()) {
             return response()->json([
@@ -107,10 +111,10 @@ class ImageController extends Controller
         }
 
         return response()->json([
-            'status'          => 'success',
-            'command_log_id'  => $logId,
-            'count'           => $images->count(),
-            'data'            => $images->map(fn($img) => $this->formatImage($img)),
+            'status'         => 'success',
+            'command_log_id' => $logId,
+            'count'          => $images->count(),
+            'data'           => $images->map(fn($img) => $service->formatImage($img)),
         ]);
     }
 
@@ -119,43 +123,14 @@ class ImageController extends Controller
      *
      * Delete an image record and its files from disk
      */
-    public function destroy(int $id)
+    public function destroy($id, ImageService $service)
     {
-        $image = Image::findOrFail($id);
-
-        // Remove physical files if they exist
-        foreach (['original_path'] as $field) {
-            if ($image->$field && file_exists($image->$field)) {
-                unlink($image->$field);
-            }
-        }
-
-        $image->delete();
+        $service->deleteImage($id);
 
         return response()->json([
             'status'  => 'success',
             'message' => "Image #{$id} deleted.",
         ]);
-    }
-
-    // Private helpers
-
-    private function formatImage(Image $image): array
-    {
-        return [
-            'id'              => $image->id,
-            'command_log_id'  => $image->command_log_id,
-            'original_path'   => $image->original_path,
-            'download_url'    => $this->resolveDownloadUrl($image->original_path),
-            'created_at'      => $image->created_at?->toISOString(),
-        ];
-    }
-
-    private function resolveDownloadUrl(?string $path): ?string
-    {
-        if (!$path) return null;
-
-        return asset('storage/' . ltrim($path, '/'));
     }
 
     /**
@@ -166,12 +141,10 @@ class ImageController extends Controller
      * Dispatches a background job that sends the image to FastAPI,
      * processing DOTA and building detection models.
      */
-    public function detectObjects(Request $request, int $id)
+    public function detectObjects(Request $request, $id, ImageService $service)
     {
-        // 1. Ensure image asset exists
-        $image = Image::findOrFail($id);
+        $image = $service->findImage($id);
 
-        // 2. Optional parameters to overwrite confidence scales on-demand
         $request->validate([
             'run_dota'      => 'nullable|string|in:true,false',
             'run_buildings' => 'nullable|string|in:true,false',
@@ -186,14 +159,13 @@ class ImageController extends Controller
             'building_conf' => $request->input('building_conf'),
         ], fn($value) => !is_null($value));
 
-        // 3. Dispatch Background processing job
         DetectObjectsJob::dispatch($image->id, $options);
 
         return response()->json([
             'status'  => 'success',
             'message' => "Object detection job has been successfully dispatched for image #{$id}.",
-            'target'  => $this->formatImage($image)
-        ], 202); // 202 Accepted means request received for asynchronous batch handling
+            'target'  => $service->formatImage($image),
+        ], 202);
     }
 
     /**
@@ -203,35 +175,78 @@ class ImageController extends Controller
      *
      * Returns the annotated image download URL and raw detection breakdown data.
      */
-    public function getDetections(int $id)
+    public function getDetections($id, ImageService $service)
     {
-        $image = Image::findOrFail($id);
+        $image = $service->findImage($id);
 
-        // Check if the background job has written any data yet
         if (!$image->detected_obj_path && !$image->detections) {
             return response()->json([
                 'status'  => 'processing',
-                'message' => 'Object detection analysis is still running in the background or failed.'
+                'message' => 'Object detection analysis is still running in the background or failed.',
             ], 202);
         }
 
         return response()->json([
             'status' => 'success',
-            'data'   => [
-                'id'                 => $image->id,
-                'command_log_id'     => $image->command_log_id,
-                'original_path'      => $image->original_path,
-                'original_url'       => $this->resolveDownloadUrl($image->original_path),
-                'enhanced_path'      => $image->enhanced_path,
-                'enhanced_url'       => $this->resolveDownloadUrl($image->enhanced_path),
-                'detected_obj_path'   => $image->detected_obj_path,
-                'detected_obj_url'    => $this->resolveDownloadUrl($image->detected_obj_path),
-                'elapsed_seconds'    => $image->detections['elapsed_seconds'] ?? null,
-                'description'        => $image->detections['description'] ?? '',
-                'summary'            => $image->detections['summary'] ?? null,
-                'detections'         => $image->detections['detections'] ?? null,
-                'created_at'         => $image->created_at?->toISOString(),
-            ]
+            'data'   => $service->formatDetections($image),
+        ]);
+    }
+
+    /**
+     * @group Image Processing
+     *
+     * Generate an automated panorama from a single seed image ID.
+     */
+    public function generateAutomationPanorama(Request $request, ImageService $service)
+    {
+        $request->validate([
+            'image_id' => 'required|integer|exists:images,id'
+        ]);
+
+        try {
+            $result = $service->generatePanorama($request->input('image_id'));
+
+            return response()->json([
+                'status'       => 'success',
+                'message'      => $result['message'],
+                'panorama_id'  => $result['panorama_id'],
+                'download_url' => $result['download_url'],
+            ], 201);
+        } catch (Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @group Image Processing
+     *
+     * Get all panorama images
+     *
+     * Returns every panorama image record with pagination.
+     */
+    public function getPanoramas(Request $request, ImageService $service)
+    {
+        $panoramas = $service->getPanoramas($request->integer('per_page', 20));
+
+        if ($panoramas->isEmpty()) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'No panorama images found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $panoramas->map(fn($img) => $service->formatPanorama($img)),
+            'meta'   => [
+                'total'        => $panoramas->total(),
+                'per_page'     => $panoramas->perPage(),
+                'current_page' => $panoramas->currentPage(),
+                'last_page'    => $panoramas->lastPage(),
+            ],
         ]);
     }
 }

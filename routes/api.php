@@ -50,11 +50,13 @@ Route::prefix('mcc/satellite')->group(function () {
 });
 
 Route::prefix('mcc/images')->group(function () {
-    Route::get('/',                        [ImageController::class, 'index']);
-    Route::get('/{id}',                    [ImageController::class, 'show']);
-    Route::delete('/{id}',                 [ImageController::class, 'destroy']);
-    Route::get('/by-log/{logId}',          [ImageController::class, 'byCommandLog']);
-    Route::post('/enhance',                [ImageController::class, 'enhanceImage']);
-    Route::post('/images/{id}/detect',     [ImageController::class, 'detectObjects']);
-    Route::get('/images/{id}/detections', [ImageController::class, 'getDetections']);
+    Route::get('/',                       [ImageController::class, 'index']);
+    Route::get('/panorama',               [ImageController::class, 'getPanoramas']);
+    Route::post('/panorama',              [ImageController::class, 'generateAutomationPanorama']);
+    Route::post('/enhance',               [ImageController::class, 'enhanceImage']);
+    Route::get('/by-log/{logId}',         [ImageController::class, 'byCommandLog']);
+    Route::get('/{id}',                   [ImageController::class, 'show']);
+    Route::delete('/{id}',                [ImageController::class, 'destroy']);
+    Route::post('/{id}/detect',           [ImageController::class, 'detectObjects']);
+    Route::get('/{id}/detections',        [ImageController::class, 'getDetections']);
 });

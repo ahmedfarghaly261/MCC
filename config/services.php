@@ -51,6 +51,10 @@ return [
         'timeout' => env('OBJECT_DETECTION_API_TIMEOUT', 15),
     ],
 
+    'panorama_api' => [
+        'url' => env('PANORAMA_API_URL', 'http://host.docker.internal:8003'), 
+    ],
+
     'satellite' => [
         'url'     => env('SATELLITE_API_URL', 'http://host.docker.internal:8081'),
         'timeout' => env('SATELLITE_API_TIMEOUT', 15),
