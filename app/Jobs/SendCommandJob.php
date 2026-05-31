@@ -126,7 +126,6 @@ class SendCommandJob implements ShouldQueue, ShouldBeUnique  // ← ADD ShouldBe
                 DecodeTelemetryJob::dispatch($frameHex, $satelliteId, $log->id);
                 $log->update(['status' => 'telemetry_received']);
             }
-
         } catch (\Throwable $e) {
             Log::error("SendCommandJob failed for log #{$log->id}: " . $e->getMessage());
             $log->update(['status' => 'error']);
@@ -136,17 +135,9 @@ class SendCommandJob implements ShouldQueue, ShouldBeUnique  // ← ADD ShouldBe
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-
     /**
      * Handles the structured response from CommandService::sendToGateway()
      * for a GIMG command.
-     *
-     * $response shape:
-     *   [
-     *     'ack_frame'    => <binary string>,   // raw ACK/NACK frame
-     *     'image_chunks' => [<binary>, ...],   // raw payload bytes per chunk
-     *   ]
      */
     private function handleGimgResponse(
         mixed          $response,
@@ -154,7 +145,6 @@ class SendCommandJob implements ShouldQueue, ShouldBeUnique  // ← ADD ShouldBe
         CommandLog     $log,
         CommandService $commandService,
     ): void {
-        // Validate the response structure we expect from sendToGateway()
         if (!is_array($response) || !isset($response['image_chunks'])) {
             Log::error("GIMG: unexpected response structure for log #{$log->id}");
             $log->update(['status' => 'error']);
@@ -163,6 +153,7 @@ class SendCommandJob implements ShouldQueue, ShouldBeUnique  // ← ADD ShouldBe
 
         $ackFrame    = $response['ack_frame']    ?? null;
         $imageChunks = $response['image_chunks'] ?? [];
+        $metadata    = $response['metadata']     ?? null; // 🌟 This is our clear text JSON array from the satellite
 
         // ── 1. Log the ACK frame ─────────────────────────────────────────────
         if ($ackFrame) {
@@ -174,7 +165,6 @@ class SendCommandJob implements ShouldQueue, ShouldBeUnique  // ← ADD ShouldBe
 
             $decoded = $commandService->decode($ackHex);
             if ($decoded && !$decoded['is_ack']) {
-                // OBC sent NACK — nothing to reconstruct
                 Log::warning("GIMG: NACK received for log #{$log->id}. No image to reconstruct.");
                 $log->update(['status' => 'nack', 'replied_at' => now()]);
                 return;
@@ -192,26 +182,27 @@ class SendCommandJob implements ShouldQueue, ShouldBeUnique  // ← ADD ShouldBe
 
         Log::info("GIMG: " . count($imageChunks) . " chunk(s) received for log #{$log->id}. Reconstructing image…");
 
-        // ── 3. Log a summary reply entry for the image data ──────────────────
-        // Storing the full raw hex of every chunk would be huge; store a
-        // compact summary instead so the reply table stays manageable.
+        // ── 3. Log a summary reply entry including metadata ──────────────────
         $totalBytes = array_sum(array_map('strlen', $imageChunks));
         CommandReply::create([
             'command_log_id' => $log->id,
             'reply_data'     => json_encode([
-                'type'        => 'image_chunks',
-                'chunk_count' => count($imageChunks),
-                'total_bytes' => $totalBytes,
+                'type'         => 'image_chunks',
+                'chunk_count'  => count($imageChunks),
+                'total_bytes'  => $totalBytes,
+                'sat_metadata' => $metadata, // Keeps a copy in the logs wrapper too
             ]),
         ]);
 
-        // ── 4. Reconstruct + save the image ──────────────────────────────────
-        $imageId    = $this->data['image_id'] ?? 0;
-        $imageRecord = $commandService->reconstructAndSaveImage($imageChunks, $imageId, $log->id);
+        // ── 4. Reconstruct + save the image (Passing the metadata down) ──────
+        $imageId     = $this->data['image_id'] ?? 0;
+
+        // 🌟 PASS $metadata AS THE 4TH ARGUMENT HERE:
+        $imageRecord = $commandService->reconstructAndSaveImage($imageChunks, $imageId, $log->id, $metadata);
 
         if ($imageRecord) {
             $log->update(['status' => 'image_received']);
-            Log::info("GIMG: Image record #{$imageRecord->id} linked to log #{$log->id}.");
+            Log::info("GIMG: Image record #{$imageRecord->id} linked to log #{$log->id} with metadata saved.");
         } else {
             $log->update(['status' => 'error']);
             Log::error("GIMG: failed to reconstruct/save image for log #{$log->id}.");

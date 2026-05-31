@@ -29,6 +29,7 @@ class CommandService
      * Matches 0x0E in command2.py's GIMG handler.
      */
     const TYPE_IMG_CHUNK = 0x0E;
+    const TYPE_META_CHUNK = 0x4E;
 
     protected string $commandUrl;
 
@@ -157,7 +158,7 @@ class CommandService
         Log::info("MCC SENDING CSSP FRAME: " . bin2hex($binary));
         $commandUrl = "ws://host.docker.internal:8081/ws/radio";
 
-        $timeout = ($commandName === 'GIMG') ? 1000: 10;
+        $timeout = ($commandName === 'GIMG') ? 1000 : 10;
 
         try {
             $client = new Client($commandUrl, ['timeout' => $timeout]);
@@ -190,19 +191,21 @@ class CommandService
                 return $allFrames;
             }
 
-            //  GIMG: ACK + variable-length image chunk stream 
+            // ── GIMG: Collect Text Metadata AND Binary Image Chunks ──────────
             if ($commandName === 'GIMG') {
                 $firstBytes = array_values(unpack('C*', $firstResponse));
                 $isAck      = isset($firstBytes[3]) && $firstBytes[3] === self::TYPE_ACK;
 
                 if (!$isAck) {
-                    Log::warning("GIMG: NACK on first frame — aborting chunk collection.");
+                    Log::warning("GIMG: NACK on first frame — aborting collection.");
                     $client->close();
-                    return ['image_chunks' => [], 'ack_frame' => $firstResponse];
+                    return ['image_chunks' => [], 'metadata' => null, 'ack_frame' => $firstResponse];
                 }
 
-                Log::info("GIMG: ACK received — starting chunk collection on SAME connection.");
+                Log::info("GIMG: ACK received — starting metadata and image chunk collection.");
+
                 $chunks = [];
+                $metadataText = ""; // 🌟 Container for incoming clear text JSON string
 
                 $client->setTimeout(5);
 
@@ -211,44 +214,52 @@ class CommandService
                         $chunkFrame = $client->receive();
                         $chunkBytes = array_values(unpack('C*', $chunkFrame));
 
-                        if (
-                            count($chunkBytes) >= 5 &&
-                            $chunkBytes[0] === 0xC0 &&
-                            $chunkBytes[3] === self::TYPE_IMG_CHUNK
-                        ) {
-                            $dataLen  = $chunkBytes[4];
-                            $payload  = substr($chunkFrame, 5, $dataLen);
+                        if (count($chunkBytes) < 5 || $chunkBytes[0] !== self::FLAG) {
+                            Log::warning("GIMG: Malformed frame received.");
+                            break;
+                        }
+
+                        $cmdId   = $chunkBytes[3];
+                        $dataLen = $chunkBytes[4];
+                        $payload = substr($chunkFrame, 5, $dataLen);
+
+                        // 🌟 CASE A: Chunk is CLEAR TEXT metadata JSON snippet
+                        if ($cmdId === self::TYPE_META_CHUNK) {
+                            $metadataText .= $payload; // Append raw string text directly
+                        }
+                        // 🌟 CASE B: Chunk is binary image data
+                        elseif ($cmdId === self::TYPE_IMG_CHUNK) {
                             $chunks[] = $payload;
 
                             if (count($chunks) % 500 === 0) {
-                                Log::info("GIMG: collected " . count($chunks) . " chunks so far…");
+                                Log::info("GIMG: collected " . count($chunks) . " image chunks so far…");
                             }
                         } else {
-                            Log::warning(
-                                "GIMG: unexpected frame cmd_id=0x" .
-                                    sprintf('%02X', $chunkBytes[3] ?? 0xFF) .
-                                    " after " . count($chunks) . " chunks — stopping."
-                            );
+                            Log::warning("GIMG: unexpected frame cmd_id=0x" . sprintf('%02X', $cmdId) . " — stopping.");
                             break;
                         }
                     } catch (\WebSocket\ConnectionException $e) {
-                        // OBC closed the connection after last chunk — normal end-of-stream.
-                        Log::info("GIMG: connection closed by OBC after " . count($chunks) . " chunk(s).");
+                        Log::info("GIMG: connection closed by OBC after stream completion.");
                         break;
                     } catch (\Exception $e) {
-                        // 2s read timeout = OBC finished streaming. Expected exit path.
-                        Log::info("GIMG: stream ended after " . count($chunks) . " chunk(s) (2s idle timeout).");
+                        Log::info("GIMG: stream ended (idle timeout reached).");
                         break;
                     }
                 }
 
                 $client->close();
 
-                Log::info("GIMG: total chunks collected: " . count($chunks));
+                // Convert text JSON to array if present
+                $parsedMetadata = null;
+                if (!empty($metadataText)) {
+                    Log::info("GIMG: Successfully collected metadata text string: " . $metadataText);
+                    $parsedMetadata = json_decode($metadataText, true);
+                }
 
                 return [
                     'ack_frame'    => $firstResponse,
                     'image_chunks' => $chunks,
+                    'metadata'     => $parsedMetadata,
                 ];
             }
 
@@ -260,10 +271,10 @@ class CommandService
         }
     }
 
-
-    //  Image reconstruction 
-
-    public function reconstructAndSaveImage(array $chunks, int $imageId, int $logId): ?Image
+    /**
+     * Image reconstruction and storage
+     */
+    public function reconstructAndSaveImage(array $chunks, int $imageId, int $logId, ?array $metadata = null): ?Image
     {
         if (empty($chunks)) {
             Log::warning("GIMG: no chunks to reconstruct for image_id={$imageId}, log_id={$logId}");
@@ -291,22 +302,19 @@ class CommandService
             Log::info("GIMG: PNG saved → {$path}");
         } else {
             Storage::disk('public')->put($path, $rawBytes);
-            Log::warning(
-                "GIMG: GD could not decode image bytes; raw bytes saved to {$path}. " .
-                    "Total bytes: " . strlen($rawBytes)
-            );
+            Log::warning("GIMG: GD could not decode image bytes; raw bytes saved to {$path}.");
         }
 
-        // ── 4. Persist to `images` table ──────────────────────────────────────
+        // ── 4. Persist to `images` table  ─────────────────
         $imageRecord = Image::create([
             'original_path'  => $path,
             'command_log_id' => $logId,
+            'meta_data'      => $metadata, 
         ]);
 
         Log::info("GIMG: Image record #{$imageRecord->id} created for log #{$logId}.");
         return $imageRecord;
     }
-
 
     // ── Repository helpers ───────────────────────────────────────────────────
 
