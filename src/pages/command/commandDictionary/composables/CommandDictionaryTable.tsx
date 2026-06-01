@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 
 import { type CommandDictionary } from "../types/commandDictionaryTypes";
+import SatelliteLoading from "@/components/shared/SatelliteLoading";
 
 interface Props {
   data: CommandDictionary[];
@@ -25,14 +26,14 @@ export default function CommandDictionaryTable({
   ) => {
     if (requires_ack === 1) {
       return (
-        <Badge className="bg-green-500/20 text-green-400">
+        <Badge className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium">
           ACK
         </Badge>
       );
     }
 
     return (
-      <Badge className="bg-yellow-500/20 text-yellow-400">
+      <Badge className="bg-amber-500/10 border border-amber-500/20 text-amber-400 font-medium">
         NO ACK
       </Badge>
     );
@@ -45,81 +46,50 @@ export default function CommandDictionaryTable({
     return new Date(date).toLocaleString();
   };
 
-  const formatList = (
-    items?: Array<string | number | null>
-  ) => {
-    if (!items || items.length === 0) return "-";
 
-    const normalized = items
-      .map((item) =>
-        item === null || item === undefined
-          ? ""
-          : String(item).trim()
-      )
-      .filter((item) => item.length > 0);
-
-    return normalized.length > 0
-      ? normalized.join(", ")
-      : "-";
-  };
-
-  const formatSubsystems = (
-    items?: CommandDictionary["subsystems"]
-  ) => {
-    if (!items || items.length === 0) return "-";
-    return items
-      .map(
-        (subsystem) =>
-          `${subsystem.hex_code} (${subsystem.name})`
-      )
-      .join(", ");
-  };
 
   return (
-    <Card className="bg-[#1A2333] border border-gray-700">
+    <Card className="bg-[#0a1325] border border-gray-800 shadow-xl overflow-hidden rounded-xl">
       <CardContent className="p-0 overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-[#0B1220] text-gray-400">
+          <thead className="bg-card text-gray-400 border-b border-gray-800">
             <tr>
-              <th className="p-4"></th>
-              <th className="p-4 text-left">
+              <th className="p-4 w-12"></th>
+              <th className="p-4 text-left font-medium uppercase tracking-wider text-xs">
                 Command Name
               </th>
-              <th className="p-4 text-left">
+              <th className="p-4 text-left font-medium uppercase tracking-wider text-xs">
                 Command ID
               </th>
-              <th className="p-4 text-left">
+              <th className="p-4 text-left font-medium uppercase tracking-wider text-xs">
                 Hex ID
               </th>
-              <th className="p-4 text-left">
+              <th className="p-4 text-left font-medium uppercase tracking-wider text-xs">
                 Expected Data
               </th>
-              <th className="p-4 text-left">
+              <th className="p-4 text-left font-medium uppercase tracking-wider text-xs">
                 Status
               </th>
-              <th className="p-4 text-left">
+              <th className="p-4 text-left font-medium uppercase tracking-wider text-xs">
                 Created
               </th>
             </tr>
           </thead>
 
-          <tbody>
+          <tbody className="divide-y divide-gray-800/50">
             {loading ? (
               <tr>
-                <td
-                  colSpan={6}
-                  className="p-6 text-center"
-                >
-                  Loading...
+                <td colSpan={7} className="p-12">
+                  <SatelliteLoading />
                 </td>
               </tr>
             ) : data.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
-                  className="p-6 text-center"
+                  colSpan={7}
+                  className="p-12 text-center text-gray-500"
                 >
-                  No commands found
+                  No commands found matching your criteria.
                 </td>
               </tr>
             ) : (
@@ -127,39 +97,35 @@ export default function CommandDictionaryTable({
                 <>
                   <tr
                     key={cmd.id}
-                    className="border-t border-gray-700 hover:bg-[#0B1220]/50"
+                    onClick={() => setExpandedRow(expandedRow === cmd.id ? null : cmd.id)}
+                    className={`group hover:bg-[#1F2937]/60 cursor-pointer transition-all duration-200 ${
+                      expandedRow === cmd.id ? "bg-[#1F2937]/40" : ""
+                    }`}
                   >
                     <td className="p-4">
-                      <button
-                        onClick={() =>
-                          setExpandedRow(
-                            expandedRow === cmd.id
-                              ? null
-                              : cmd.id
-                          )
-                        }
-                      >
+                      <div className={`flex items-center justify-center w-6 h-6 rounded-full transition-colors ${expandedRow === cmd.id ? 'bg-gray-700/50 text-white' : 'text-gray-500 group-hover:text-gray-300'}`}>
                         {expandedRow === cmd.id ? (
-                          <ChevronDown size={16} />
+                          <ChevronDown size={14} className="transition-transform duration-200" />
                         ) : (
-                          <ChevronRight size={16} />
+                          <ChevronRight size={14} className="transition-transform duration-200" />
                         )}
-                      </button>
+                      </div>
                     </td>
 
-                    <td className="p-4 font-medium">
+                    <td className="p-4 font-semibold text-gray-200">
                       {cmd.name}
                     </td>
-                    <td>
-                      {cmd.id}
+                    
+                    <td className="p-4 text-gray-400">
+                      #{cmd.id}
                     </td>
 
-                    <td className="p-4">
+                    <td className="p-4 font-mono text-blue-400/90 bg-blue-500/5 px-2 rounded w-fit inline-block mt-3">
                       {cmd.cmd_id}
                     </td>
 
-                    <td className="p-4">
-                      {cmd.expected_data_len}
+                    <td className="p-4 text-gray-300">
+                      {cmd.expected_data_len} <span className="text-gray-500 text-xs">bytes</span>
                     </td>
 
                     <td className="p-4">
@@ -168,7 +134,7 @@ export default function CommandDictionaryTable({
                       )}
                     </td>
 
-                    <td className="p-4 text-gray-400">
+                    <td className="p-4 text-gray-400 text-xs whitespace-nowrap">
                       {formatTime(
                         cmd.created_at
                       )}
@@ -176,78 +142,107 @@ export default function CommandDictionaryTable({
                   </tr>
 
                   {expandedRow === cmd.id && (
-                    <tr className="bg-[#0B1220]">
-                      <td colSpan={6} className="p-6">
-                        <div className="grid md:grid-cols-2 gap-6 text-sm">
-                          <div>
-                            <p className="text-gray-400">
-                              Description
-                            </p>
+                    <tr>
+                      <td colSpan={7} className="p-0 border-b-0">
+                        <div className="bg-linear-to-b from-[#111827] to-[#0B1220] p-6 shadow-inner border-y border-gray-800/50">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <div className="space-y-2">
+                              <p className="text-gray-500 font-semibold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50" />
+                                Description
+                              </p>
+                              <p className="text-gray-300 leading-relaxed pl-3 border-l border-gray-700/50">
+                                {cmd.description ||
+                                  "No description available for this command."}
+                              </p>
+                            </div>
 
-                            <p className="mt-1">
-                              {cmd.description ||
-                                "No description"}
-                            </p>
-                          </div>
+                            <div className="space-y-2">
+                              <p className="text-gray-500 font-semibold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-purple-500/50" />
+                                Required Data Fields
+                              </p>
+                              <div className="pl-3">
+                                {cmd.required_data_fields && cmd.required_data_fields.length > 0 && cmd.required_data_fields.some(f => f) ? (
+                                  <div className="flex flex-wrap gap-2">
+                                    {cmd.required_data_fields.filter(f => f).map((field, i) => (
+                                      <Badge key={i} className="bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700">
+                                        {String(field)}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-500 italic">None</span>
+                                )}
+                              </div>
+                            </div>
 
-                          <div>
-                            <p className="text-gray-400">
-                              Required Data Fields
-                            </p>
+                            <div className="space-y-2">
+                              <p className="text-gray-500 font-semibold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-green-500/50" />
+                                Subsystems
+                              </p>
+                              <div className="pl-3">
+                                {cmd.subsystems && cmd.subsystems.length > 0 ? (
+                                  <div className="flex flex-col gap-1.5">
+                                    {cmd.subsystems.map((sub, i) => (
+                                      <div key={i} className="flex items-center gap-2 text-gray-300">
+                                        <span className="font-mono text-xs text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded">{sub.hex_code}</span>
+                                        <span>{sub.name}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-500 italic">-</span>
+                                )}
+                              </div>
+                            </div>
 
-                            <p className="mt-1">
-                              {formatList(
-                                cmd.required_data_fields
-                              )}
-                            </p>
-                          </div>
+                            <div className="space-y-2">
+                              <p className="text-gray-500 font-semibold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-orange-500/50" />
+                                Allowed Sources
+                              </p>
+                              <div className="pl-3 flex flex-wrap gap-2">
+                                {cmd.allowed_sources && cmd.allowed_sources.length > 0 ? (
+                                  cmd.allowed_sources.map((src, i) => (
+                                    <Badge key={i} className="bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20">
+                                      {src}
+                                    </Badge>
+                                  ))
+                                ) : (
+                                  <span className="text-gray-500 italic">Any</span>
+                                )}
+                              </div>
+                            </div>
 
-                          <div>
-                            <p className="text-gray-400">
-                              Allowed Sources
-                            </p>
+                            <div className="space-y-2">
+                              <p className="text-gray-500 font-semibold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-pink-500/50" />
+                                Allowed Destinations
+                              </p>
+                              <div className="pl-3 flex flex-wrap gap-2">
+                                {cmd.allowed_destinations && cmd.allowed_destinations.length > 0 ? (
+                                  cmd.allowed_destinations.map((dst, i) => (
+                                    <Badge key={i} className="bg-pink-500/10 text-pink-400 border border-pink-500/20 hover:bg-pink-500/20">
+                                      {dst}
+                                    </Badge>
+                                  ))
+                                ) : (
+                                  <span className="text-gray-500 italic">Any</span>
+                                )}
+                              </div>
+                            </div>
 
-                            <p className="mt-1">
-                              {cmd.allowed_sources?.join(
-                                ", "
-                              ) || "-"}
-                            </p>
-                          </div>
-
-                          <div>
-                            <p className="text-gray-400">
-                              Allowed Destinations
-                            </p>
-
-                            <p className="mt-1">
-                              {cmd.allowed_destinations?.join(
-                                ", "
-                              ) || "-"}
-                            </p>
-                          </div>
-
-                          <div>
-                            <p className="text-gray-400">
-                              Subsystems
-                            </p>
-
-                            <p className="mt-1">
-                              {formatSubsystems(
-                                cmd.subsystems
-                              )}
-                            </p>
-                          </div>
-
-                          <div>
-                            <p className="text-gray-400">
-                              Updated At
-                            </p>
-
-                            <p className="mt-1">
-                              {formatTime(
-                                cmd.updated_at
-                              )}
-                            </p>
+                            <div className="space-y-2">
+                              <p className="text-gray-500 font-semibold text-xs uppercase tracking-wider flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-gray-500/50" />
+                                Last Updated
+                              </p>
+                              <p className="pl-3 text-gray-400 text-sm">
+                                {formatTime(cmd.updated_at)}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </td>
