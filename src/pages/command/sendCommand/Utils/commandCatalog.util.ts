@@ -29,7 +29,7 @@ function isCommandCatalogItem(value: unknown): value is CommandCatalogItem {
 }
 
 export function formatAsHex(value: number): string {
-  return `0x${value.toString(16).padStart(2, "0")}`;
+  return `${value.toString(16).padStart(2, "0")}`;
 }
 
 function parseDestinationValue(raw: string): number | null {
