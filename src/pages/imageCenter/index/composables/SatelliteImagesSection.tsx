@@ -42,8 +42,15 @@ export default function SatelliteImagesSection({
 					key={img.id}
 					className="bg-[#1F2937] rounded-lg border border-gray-700/50 overflow-hidden hover:border-blue-500/50 transition-colors"
 				>
-					<div className="aspect-video bg-linear-to-br from-blue-900/30 to-purple-900/30 flex items-center justify-center">
-						<Image className="w-16 h-16 text-gray-600" />
+					<div className="aspect-video bg-linear-to-br from-blue-900/30 to-purple-900/30 flex items-center justify-center overflow-hidden relative">
+						{img.download_url ? (
+							<img src={img.download_url} alt={`Satellite Image ${img.id}`} className="w-full h-full object-cover" />
+						) : (
+							<div className="flex flex-col items-center justify-center">
+								<Image className="w-16 h-16 text-gray-600 mb-2" />
+								<span className="text-gray-400 text-sm font-medium">Image not available</span>
+							</div>
+						)}
 					</div>
 
 					<div className="p-4">
