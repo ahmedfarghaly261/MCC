@@ -77,7 +77,12 @@ export default function SatelliteImagesSection({
 								<span className="text-gray-400">Created At</span>
 								<span className="text-white">{formatImageDateTime(img.created_at)}</span>
 							</div>
-
+							<div className="flex justify-between">
+								<span className="text-gray-400">Download Status</span>
+								<Badge className={img.download_url ? "bg-green-400/20 border-green-400/50 text-green-400" : "bg-red-400/20 border-red-400/50 text-red-400"}>
+									{img.download_url ? "Ready" : "Failed"}
+								</Badge>
+							</div>
 						</div>
 
 						<p className="text-xs text-gray-400 mb-3">{formatImageDateTime(img.created_at)}</p>
