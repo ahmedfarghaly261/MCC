@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 
 import { formatImageDateTime } from "../utils/images.util";
 import type { ImageRecord } from "../types/images.types";
+import SatelliteLoading from "@/components/shared/SatelliteLoading";
 
 interface SatelliteImagesSectionProps {
 	images: ImageRecord[];
@@ -21,8 +22,8 @@ export default function SatelliteImagesSection({
 }: SatelliteImagesSectionProps) {
 	if (loading && images.length === 0) {
 		return (
-			<div className="rounded-lg border border-gray-700/50 bg-[#1F2937] p-8 text-center text-sm text-gray-400">
-				Loading images...
+			<div className="rounded-lg border border-gray-700/50 bg-[#1F2937] flex items-center justify-center p-4">
+				<SatelliteLoading />
 			</div>
 		);
 	}
@@ -40,9 +41,9 @@ export default function SatelliteImagesSection({
 			{images.map((img) => (
 				<div
 					key={img.id}
-					className="bg-[#1F2937] rounded-lg border border-gray-700/50 overflow-hidden hover:border-blue-500/50 transition-colors"
+					className="bg-[#1F2937] rounded-lg border border-gray-700/50 hover:border-blue-500/50 transition-colors"
 				>
-					<div className="aspect-video bg-linear-to-br from-blue-900/30 to-purple-900/30 flex items-center justify-center overflow-hidden relative">
+					<div className="aspect-video bg-linear-to-br from-blue-900/30 to-purple-900/30 flex items-center justify-center overflow-hidden relative rounded-t-lg">
 						{img.download_url ? (
 							<img src={img.download_url} alt={`Satellite Image ${img.id}`} className="w-full h-full object-cover" />
 						) : (
@@ -76,12 +77,7 @@ export default function SatelliteImagesSection({
 								<span className="text-gray-400">Created At</span>
 								<span className="text-white">{formatImageDateTime(img.created_at)}</span>
 							</div>
-							<div className="flex justify-between">
-								<span className="text-gray-400">Download</span>
-								<Badge className="bg-green-400/20 border-green-400/50 text-green-400">
-									{img.download_url ? "Ready" : "-"}
-								</Badge>
-							</div>
+
 						</div>
 
 						<p className="text-xs text-gray-400 mb-3">{formatImageDateTime(img.created_at)}</p>
@@ -98,13 +94,14 @@ export default function SatelliteImagesSection({
 								<Eye className="w-4 h-4 mr-1" />
 								View
 							</Button>
+							
 							<Button
 								type="button"
 								variant="outline"
 								size="sm"
-								className="bg-green-500/10 border-green-500/50 text-green-400 hover:bg-green-500/20"
+								className={`bg-green-500/10 border-green-500/50 text-green-400 hover:bg-green-500/20 ${!img.download_url ? 'opacity-50 cursor-not-allowed hover:bg-green-500/10' : ''}`}
 								onClick={() => {
-									onDownload(img);
+									if (img.download_url) onDownload(img);
 								}}
 							>
 								<Download className="w-4 h-4" />
