@@ -309,7 +309,7 @@ class CommandService
         $imageRecord = Image::create([
             'original_path'  => $path,
             'command_log_id' => $logId,
-            'meta_data'      => $metadata, 
+            'meta_data'      => $metadata,
         ]);
 
         Log::info("GIMG: Image record #{$imageRecord->id} created for log #{$logId}.");
@@ -369,8 +369,14 @@ class CommandService
             'SMODE' => ['mode_id'],
         ];
 
-        if (isset($data['pwrl_id']) && !PowerLine::tryFrom($data['pwrl_id'])) {
-            throw new \InvalidArgumentException("Invalid pwrl_id: {$data['pwrl_id']}. Must be a valid PowerLine enum value.");
+        if (isset($data['pwrl_id']) && $data['pwrl_id'] !== null) {
+            $valueToValidate = $data['pwrl_id'] instanceof \App\Enums\PowerLine
+                ? $data['pwrl_id']->value
+                : $data['pwrl_id'];
+
+            if (!\App\Enums\PowerLine::tryFrom($valueToValidate)) {
+                throw new \InvalidArgumentException("Invalid pwrl_id: {$valueToValidate}. Must match an active PowerLine enum value.");
+            }
         }
         if (isset($data['mode_id']) && !SatelliteMode::tryFrom($data['mode_id'])) {
             throw new \InvalidArgumentException("Invalid mode_id: {$data['mode_id']}. Must be a valid SatelliteMode enum value.");

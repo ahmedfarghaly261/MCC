@@ -18,3 +18,4 @@ Schedule::job(new RetryDecodingErrorsJob())
 Schedule::command('satellite:get-tle')->Hourly();
 Schedule::command('satellite:get-tle 39444')->Hourly();
 Schedule::command('app:detect-anomalies-command')->Hourly();
+Schedule::command('mcc:process-atc')->everyMinute();

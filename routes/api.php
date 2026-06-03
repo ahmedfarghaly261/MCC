@@ -28,6 +28,8 @@ Route::prefix('mcc/command')->group(function () {
     Route::get('/', [CommandController::class, 'index']);
     Route::get('/{id}', [CommandController::class, 'show']);
     Route::get('/log/{id}/image', [CommandController::class, 'downloadImage']);
+    Route::post('/macro-goals', [CommandController::class, 'sendMacroGoal']);
+    Route::post('/schedule-atc', [CommandController::class, 'scheduleIndividualCommand'])->name('commands.schedule-atc');
 });
 
 Route::prefix('mcc/telemetry')->group(function () {
