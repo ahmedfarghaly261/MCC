@@ -8,7 +8,8 @@ import ImageIndexHeader from "./composables/ImageIndexHeader";
 import ImageIndexStats from "./composables/ImageIndexStats";
 import ImageCenterTabsView from "../tabs/tabs.view";
 
-import { getImageById, getImages } from "./services/images.service";
+import { getImageById, getImages, deleteImage } from "./services/images.service";
+import { ConfirmDialog } from "@/components/ui/dialog";
 import type { ImageRecord, ImagesMeta } from "./types/images.types";
 
 function isSameLocalDay(a: Date, b: Date): boolean {
@@ -26,6 +27,8 @@ export default function ImageIndexView() {
 	const [meta, setMeta] = useState<ImagesMeta | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [imageToDelete, setImageToDelete] = useState<ImageRecord | null>(null);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	const loadImages = useCallback(async () => {
 		setLoading(true);
@@ -118,6 +121,48 @@ export default function ImageIndexView() {
 		}
 	};
 
+	const handleDeleteClick = (image: ImageRecord) => {
+		setImageToDelete(image);
+	};
+
+	const handleDeleteConfirm = async () => {
+		if (!imageToDelete) return;
+		setIsDeleting(true);
+		try {
+			const res = await deleteImage(imageToDelete.id);
+			if (res.status === "success") {
+				setImages((prev) => prev.filter((img) => img.id !== imageToDelete.id));
+				if (meta) {
+					setMeta({
+						...meta,
+						total: Math.max(0, meta.total - 1),
+					});
+				}
+				toast.success(res.message || "Image deleted successfully!", {
+					position: "bottom-right",
+				});
+			} else {
+				toast.error(res.message || "Failed to delete image.", {
+					position: "bottom-right",
+				});
+			}
+		} catch (error) {
+			if (isAxiosError(error)) {
+				toast.error(
+					error.response?.data?.message ?? "An error occurred while deleting the image.",
+					{ position: "bottom-right" },
+				);
+			} else {
+				toast.error("An error occurred while deleting the image.", {
+					position: "bottom-right",
+				});
+			}
+		} finally {
+			setIsDeleting(false);
+			setImageToDelete(null);
+		}
+	};
+
 	return (
 		<div className="min-h-screen bg-[#0B1120] text-white p-6">
 			<div className="mb-8">
@@ -143,6 +188,26 @@ export default function ImageIndexView() {
 				onDownload={(img) => {
 					void handleDownload(img);
 				}}
+				onDelete={handleDeleteClick}
+			/>
+
+			<ConfirmDialog
+				isOpen={!!imageToDelete}
+				onClose={() => setImageToDelete(null)}
+				title="Confirm Deletion"
+				description={
+					<span>
+						Are you sure you want to delete the image{" "}
+						<strong className="text-red-400">
+							IMG-{String(imageToDelete?.id).padStart(3, "0")}
+						</strong>
+						? This action cannot be undone.
+					</span>
+				}
+				confirmText="Delete"
+				cancelText="Cancel"
+				onConfirm={handleDeleteConfirm}
+				isLoading={isDeleting}
 			/>
 		</div>
 	);

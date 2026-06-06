@@ -13,6 +13,7 @@ interface ImageCenterTabsViewProps {
 	loading: boolean;
 	onView: (image: ImageRecord) => void;
 	onDownload: (image: ImageRecord) => void;
+	onDelete: (image: ImageRecord) => void;
 }
 
 export default function ImageCenterTabsView({
@@ -22,6 +23,7 @@ export default function ImageCenterTabsView({
 	loading,
 	onView,
 	onDownload,
+	onDelete,
 }: ImageCenterTabsViewProps) {
 	return (
 		<Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
@@ -52,6 +54,7 @@ export default function ImageCenterTabsView({
 					loading={loading}
 					onView={onView}
 					onDownload={onDownload}
+					onDelete={onDelete}
 				/>
 			</TabsContent>
 
