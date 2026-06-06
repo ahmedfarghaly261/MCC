@@ -3,6 +3,7 @@ import { Image } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import SatelliteImagesSection from "../index/composables/SatelliteImagesSection";
+import ImageObjDetectionView from "../objectDetection/imageObjDetection.view";
 import type { ImageRecord } from "../index/types/images.types";
 
 interface ImageCenterTabsViewProps {
@@ -62,10 +63,7 @@ export default function ImageCenterTabsView({
 			</TabsContent>
 
 			<TabsContent value="object-detection">
-				<div className="text-center py-12">
-					<Image className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-					<p className="text-gray-400">Object detection results will appear here</p>
-				</div>
+				<ImageObjDetectionView />
 			</TabsContent>
 		</Tabs>
 	);
