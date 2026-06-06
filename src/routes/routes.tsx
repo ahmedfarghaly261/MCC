@@ -12,6 +12,7 @@ import SatelliteOverviewView from "@/pages/satellite/satelliteOverview/satellite
 import NotFound from "@/components/layout/NotFound";
 import FaultsDiagnosticsView from "@/pages/faults-diagnostics/FaultsDiagnosticsView";
 import ImageIndexView from "@/pages/imageCenter/index/imageIndex.view";
+import DetectionResultsView from "@/pages/imageCenter/objectDetection/composables/DetectionResultsView";
 
 export default function AppRoutes() {
   return (
@@ -37,6 +38,7 @@ export default function AppRoutes() {
 
         {/* Image Center */}
         <Route path="/images" element={<ImageIndexView />} />
+        <Route path="/images/detection/:id" element={<DetectionResultsView />} />
         
         {/* Logs */}
         <Route path="/logs" element={<LogPage />} />
