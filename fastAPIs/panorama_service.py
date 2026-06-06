@@ -11,10 +11,14 @@ from typing import List
 import io
 import json
 
+import certifi
+
+os.environ["SSL_CERT_FILE"] = certifi.where()
+
 app = FastAPI(title="Panorama Stitching Service")
 
 # ── Load config ────────────────────────────────────────────────────
-with open("pipeline_config.pkl", "rb") as f:
+with open("../pkls/panorama/pipeline_config.pkl", "rb") as f:
     CONFIG = pickle.load(f)
 
 TILE_SIZE     = CONFIG["tile_size"]
@@ -155,10 +159,13 @@ def health():
         }
     }
 
+# FIXED — explicitly declare it as a Form field
+from fastapi import FastAPI, UploadFile, File, Form
+
 @app.post("/stitch")
 async def stitch_panorama(
     files    : List[UploadFile] = File(...),
-    metadata : str              = None
+    metadata : str              = Form(...)   
 ):
     """
     Input:
