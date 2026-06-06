@@ -18,3 +18,8 @@ export async function getImageById(id: number): Promise<ImageRecord | null> {
 	const response = await apiClient.get(`/mcc/images/${id}`);
 	return extractImageDetails(response.data);
 }
+
+export async function deleteImage(id: number): Promise<{ status: string; message: string }> {
+	const response = await apiClient.delete(`/mcc/images/${id}`);
+	return response.data;
+}
