@@ -1,4 +1,5 @@
-import { Download, Eye, Image } from "lucide-react";
+import { Download, Eye, Image, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ interface SatelliteImagesSectionProps {
 	loading: boolean;
 	onView: (image: ImageRecord) => void;
 	onDownload: (image: ImageRecord) => void;
+	onDelete: (image: ImageRecord) => void;
 }
 
 export default function SatelliteImagesSection({
@@ -19,6 +21,7 @@ export default function SatelliteImagesSection({
 	loading,
 	onView,
 	onDownload,
+	onDelete,
 }: SatelliteImagesSectionProps) {
 	if (loading && images.length === 0) {
 		return (
@@ -111,6 +114,24 @@ export default function SatelliteImagesSection({
 							>
 								<Download className="w-4 h-4" />
 							</Button>
+
+							<motion.div
+								whileHover={{ scale: 1.08 }}
+								whileTap={{ scale: 0.92 }}
+								className="shrink-0"
+							>
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									className="bg-red-500/10 border-red-500/50 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200"
+									onClick={() => {
+										onDelete(img);
+									}}
+								>
+									<Trash2 className="w-4 h-4" />
+								</Button>
+							</motion.div>
 						</div>
 					</div>
 				</div>
