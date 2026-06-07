@@ -18,6 +18,7 @@ import {
   FileText,
   Activity,
   Code,
+  CalendarClock,
 } from "lucide-react";
 
 interface NavItem {
@@ -46,6 +47,11 @@ const navItems: NavItem[] = [
         label: "Scheduled Macro Goals",
         path: "/commands/scheduled",
         icon: <Clock size={18} />,
+      },
+      {
+        label: "Schedule ATC",
+        path: "/commands/atc",
+        icon: <CalendarClock size={18} />,
       },
       {
         label: "Command History",
