@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import SatelliteImagesSection from "../index/composables/SatelliteImagesSection";
 import ImageObjDetectionView from "../objectDetection/imageObjDetection.view";
+import ImagePanoramaView from "../panorama/imagePanorama.view";
 import type { ImageRecord } from "../index/types/images.types";
 
 interface ImageCenterTabsViewProps {
@@ -46,6 +47,12 @@ export default function ImageCenterTabsView({
 				>
 					Object Detection
 				</TabsTrigger>
+				<TabsTrigger
+					value="panorama"
+					className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400"
+				>
+					Panorama
+				</TabsTrigger>
 			</TabsList>
 
 			<TabsContent value="images">
@@ -67,6 +74,10 @@ export default function ImageCenterTabsView({
 
 			<TabsContent value="object-detection">
 				<ImageObjDetectionView />
+			</TabsContent>
+
+			<TabsContent value="panorama">
+				<ImagePanoramaView />
 			</TabsContent>
 		</Tabs>
 	);
