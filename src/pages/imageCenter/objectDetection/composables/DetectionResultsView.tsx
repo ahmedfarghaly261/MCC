@@ -1,13 +1,16 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, Eye, FileText, ScanSearch, Image } from "lucide-react";
+import { motion } from "framer-motion";
+import { isAxiosError } from "axios";
+import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-import { getDetections } from "../services/objectDetection.service";
-import type { DetectionData } from "../types/objectDetection.types";
+import { getDetections, detectObjects } from "../services/objectDetection.service";
+import type { DetectionData, DetectObjectsPayload } from "../types/objectDetection.types";
 import SatelliteLoading from "@/components/shared/SatelliteLoading";
 
 function safeString(value: unknown): string {
@@ -100,27 +103,109 @@ export default function DetectionResultsView() {
 
 	const [detection, setDetection] = useState<DetectionData | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [processing, setProcessing] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [retrying, setRetrying] = useState(false);
+	const [triggerCount, setTriggerCount] = useState(0);
 
 	useEffect(() => {
 		if (!id) return;
 
-		const fetchDetections = async () => {
-			setLoading(true);
-			setErrorMessage(null);
+		let isMounted = true;
+		let timeoutId: ReturnType<typeof setTimeout> | null = null;
+		const MAX_POLLS = 20;
 
+		const fetchDetections = async (retryCount = 0, pollCount = 0) => {
 			try {
-				const result = await getDetections(Number(id));
-				setDetection(result);
+				const response = await getDetections(Number(id));
+
+				if (!isMounted) return;
+
+				if (response && response.status === "processing") {
+					if (pollCount >= MAX_POLLS) {
+						setErrorMessage("Object detection took too long to complete. Please try again.");
+						setProcessing(false);
+						setLoading(false);
+						return;
+					}
+					setProcessing(true);
+					setLoading(false);
+					setErrorMessage(null);
+					timeoutId = setTimeout(() => fetchDetections(0, pollCount + 1), 3000);
+				} else if (response && response.status === "success" && response.data) {
+					setDetection(response.data);
+					setProcessing(false);
+					setLoading(false);
+					setErrorMessage(null);
+				} else {
+					setDetection(response?.data || null);
+					setProcessing(false);
+					setLoading(false);
+					setErrorMessage(null);
+				}
 			} catch {
-				setErrorMessage("Failed to load detection results.");
-			} finally {
-				setLoading(false);
+				if (!isMounted) return;
+
+				if (retryCount < 10) {
+					setProcessing(true);
+					setLoading(false);
+					timeoutId = setTimeout(() => fetchDetections(retryCount + 1, pollCount), 3000);
+				} else {
+					setErrorMessage("Failed to load detection results after multiple attempts.");
+					setLoading(false);
+					setProcessing(false);
+				}
 			}
 		};
 
+		setLoading(true);
+		setErrorMessage(null);
+		setProcessing(false);
 		void fetchDetections();
-	}, [id]);
+
+		return () => {
+			isMounted = false;
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+			}
+		};
+	}, [id, triggerCount]);
+
+	const handleRetry = async () => {
+		if (!id) return;
+		setRetrying(true);
+		setErrorMessage(null);
+		setLoading(true);
+
+		const payload: DetectObjectsPayload = {
+			run_dota: "true",
+			run_buildings: "true",
+			dota_conf: 0,
+			building_conf: 0,
+		};
+
+		try {
+			const res = await detectObjects(Number(id), payload);
+			if (res && res.status === "processing") {
+				toast.info(res.message || "Object detection restarted in the background.", {
+					position: "bottom-right",
+				});
+			} else {
+				toast.success("Object detection started successfully!", {
+					position: "bottom-right",
+				});
+			}
+			setTriggerCount(prev => prev + 1);
+		} catch (error) {
+			const msg = isAxiosError(error)
+				? error.response?.data?.message ?? "Failed to restart object detection."
+				: "An unexpected error occurred.";
+			setErrorMessage(msg);
+			setLoading(false);
+		} finally {
+			setRetrying(false);
+		}
+	};
 
 	const summaryResult = useMemo(
 		() => parseSummary(detection?.summary),
@@ -142,22 +227,149 @@ export default function DetectionResultsView() {
 		);
 	}
 
+	if (processing) {
+		return (
+			<div className="min-h-screen bg-[#0B1120] text-white p-6 flex flex-col justify-center items-center">
+				<div className="w-full max-w-2xl mb-8 flex justify-start">
+					<Button
+						variant="outline"
+						className="bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-700/50"
+						onClick={() => navigate("/images")}
+					>
+						<ArrowLeft className="w-4 h-4 mr-2" />
+						Back to Image Center
+					</Button>
+				</div>
+
+				<div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-800 bg-[#0F172A]/80 p-8 text-center shadow-2xl backdrop-blur-md flex flex-col items-center animate-in fade-in-50 duration-500">
+					<div className="relative w-48 h-48 mb-8 flex items-center justify-center">
+						<motion.div
+							className="absolute inset-0 rounded-full border border-blue-500/20"
+							animate={{ scale: [1, 1.4], opacity: [0.8, 0] }}
+							transition={{ repeat: Infinity, duration: 3, ease: "easeOut" }}
+						/>
+						<motion.div
+							className="absolute inset-4 rounded-full border border-purple-500/20"
+							animate={{ scale: [1, 1.3], opacity: [0.6, 0] }}
+							transition={{ repeat: Infinity, duration: 3, ease: "easeOut", delay: 1 }}
+						/>
+						<motion.div
+							className="absolute inset-8 rounded-full border border-blue-500/30"
+							animate={{ scale: [1, 1.2], opacity: [0.4, 0] }}
+							transition={{ repeat: Infinity, duration: 3, ease: "easeOut", delay: 2 }}
+						/>
+
+						<div className="w-36 h-36 rounded-full border-2 border-blue-500/30 relative overflow-hidden bg-blue-950/20 flex items-center justify-center">
+							<motion.div
+								className="absolute inset-0 origin-center bg-gradient-to-tr from-transparent via-transparent to-blue-500/40"
+								style={{ borderRadius: "50%" }}
+								animate={{ rotate: 360 }}
+								transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
+							/>
+
+							<motion.div
+								animate={{ scale: [0.95, 1.05, 0.95] }}
+								transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+								className="text-blue-400 z-10"
+							>
+								<ScanSearch size={44} className="animate-pulse" />
+							</motion.div>
+
+							<motion.div
+								className="absolute top-8 left-12 w-2.5 h-2.5 rounded-full bg-purple-500 shadow-lg shadow-purple-500/50"
+								animate={{ opacity: [0, 1, 0] }}
+								transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }}
+							/>
+							<motion.div
+								className="absolute bottom-10 right-10 w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"
+								animate={{ opacity: [0, 1, 0] }}
+								transition={{ repeat: Infinity, duration: 1.8, delay: 0.8 }}
+							/>
+							<motion.div
+								className="absolute top-16 right-8 w-1.5 h-1.5 rounded-full bg-blue-400 shadow-lg shadow-blue-400/50"
+								animate={{ opacity: [0, 1, 0] }}
+								transition={{ repeat: Infinity, duration: 1.2, delay: 0.5 }}
+							/>
+						</div>
+					</div>
+
+					<h3 className="text-xl font-bold tracking-tight text-white mb-2">
+						Analyzing Satellite Imagery
+					</h3>
+					
+					<p className="text-gray-400 text-sm max-w-md mb-6 leading-relaxed">
+						Object detection analysis is running in the background. The AI model is scanning the image for vehicles, buildings, and other targets.
+					</p>
+
+					<div className="w-full max-w-sm bg-gray-800 h-1.5 rounded-full overflow-hidden relative mb-4">
+						<motion.div
+							className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+							initial={{ width: "0%" }}
+							animate={{ width: ["10%", "90%"] }}
+							transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+						/>
+					</div>
+
+					<span className="text-xs text-gray-500 animate-pulse">
+						Polling for completion...
+					</span>
+				</div>
+			</div>
+		);
+	}
+
 	if (errorMessage || !detection) {
 		return (
-			<div className="min-h-screen bg-[#0B1120] text-white p-6">
-				<Button
-					variant="outline"
-					className="mb-6 bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-700/50"
-					onClick={() => navigate("/images")}
-				>
-					<ArrowLeft className="w-4 h-4 mr-2" />
-					Back to Image Center
-				</Button>
+			<div className="min-h-screen bg-[#0B1120] text-white p-6 flex flex-col items-center justify-center">
+				<div className="w-full max-w-2xl mb-8 flex justify-start">
+					<Button
+						variant="outline"
+						className="bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-700/50"
+						onClick={() => navigate("/images")}
+					>
+						<ArrowLeft className="w-4 h-4 mr-2" />
+						Back to Image Center
+					</Button>
+				</div>
 
-				<div className="rounded-lg border border-red-500/50 bg-red-500/10 p-8 text-center">
-					<p className="text-red-300">
+				<div className="rounded-2xl border border-red-500/30 bg-[#1e151d] p-8 text-center max-w-2xl w-full flex flex-col items-center shadow-xl animate-in fade-in-50 duration-500">
+					<div className="w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/20 mb-6">
+						<ScanSearch size={28} className="animate-pulse" />
+					</div>
+
+					<p className="text-red-300 mb-8 text-base font-medium">
 						{errorMessage || "No detection results found for this image."}
 					</p>
+					
+					<div className="flex gap-4">
+						<Button
+							variant="outline"
+							className="bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-700"
+							onClick={() => navigate("/images")}
+						>
+							Cancel
+						</Button>
+						
+						<motion.div
+							whileHover={{ scale: 1.05 }}
+							whileTap={{ scale: 0.95 }}
+						>
+							<Button
+								className="bg-blue-600 hover:bg-blue-500 text-white font-medium shadow-lg shadow-blue-600/20"
+								disabled={retrying}
+								onClick={handleRetry}
+							>
+								{retrying ? (
+									<span className="flex items-center gap-2">
+										<span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+										Retrying...
+									</span>
+								) : (
+									"Try Again"
+								)}
+							</Button>
+						</motion.div>
+					</div>
 				</div>
 			</div>
 		);

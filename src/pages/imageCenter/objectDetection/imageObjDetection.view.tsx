@@ -44,10 +44,16 @@ export default function ImageObjDetectionView() {
 		};
 
 		try {
-			await detectObjects(image.id, payload);
-			toast.success("Object detection completed successfully!", {
-				position: "bottom-right",
-			});
+			const res = await detectObjects(image.id, payload);
+			if (res && res.status === "processing") {
+				toast.info(res.message || "Object detection started in the background.", {
+					position: "bottom-right",
+				});
+			} else {
+				toast.success("Object detection completed successfully!", {
+					position: "bottom-right",
+				});
+			}
 			navigate(`/images/detection/${image.id}`);
 		} catch (error) {
 			const message = isAxiosError(error)
