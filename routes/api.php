@@ -8,6 +8,7 @@ use App\Http\Controllers\TelemetryController;
 use App\Http\Controllers\AnomalyExplainationController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\SatelliteController;
+use App\Http\Controllers\HtnGoalController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -30,6 +31,10 @@ Route::prefix('mcc/command')->group(function () {
     Route::get('/log/{id}/image', [CommandController::class, 'downloadImage']);
     Route::post('/macro-goals', [CommandController::class, 'sendMacroGoal']);
     Route::post('/schedule-atc', [CommandController::class, 'scheduleIndividualCommand'])->name('commands.schedule-atc');
+});
+
+Route::prefix('mcc/htn')->group(function () {
+    Route::get('/goals', [HtnGoalController::class, 'index']);
 });
 
 Route::prefix('mcc/telemetry')->group(function () {
