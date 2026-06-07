@@ -2,7 +2,7 @@ import { apiClient } from "@/services/api";
 import type {
 	DetectObjectsPayload,
 	DetectObjectsResponse,
-	DetectionData,
+	DetectionDetailsResponse,
 } from "../types/objectDetection.types";
 
 export async function detectObjects(
@@ -19,11 +19,10 @@ export async function detectObjects(
 
 export async function getDetections(
 	id: number,
-): Promise<DetectionData | null> {
+): Promise<DetectionDetailsResponse> {
 	const response = await apiClient.get(
 		`/mcc/images/${id}/detections`,
 	);
 
-	const data = response.data as { status: string; data: DetectionData };
-	return data?.data ?? null;
+	return response.data as DetectionDetailsResponse;
 }
