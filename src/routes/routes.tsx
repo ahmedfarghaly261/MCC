@@ -14,6 +14,8 @@ import FaultsDiagnosticsView from "@/pages/faults-diagnostics/FaultsDiagnosticsV
 import ImageIndexView from "@/pages/imageCenter/index/imageIndex.view";
 import DetectionResultsView from "@/pages/imageCenter/objectDetection/composables/DetectionResultsView";
 import PanoramaResultsView from "@/pages/imageCenter/panorama/composables/PanoramaResultsView";
+import ScheduledCommandsView from "@/pages/command/scheduledCommands/scheduledCommandsView";
+import AtcCommandView from "@/pages/command/atcCommand/Atccommandview";
 
 export default function AppRoutes() {
   return (
@@ -29,25 +31,35 @@ export default function AppRoutes() {
 
         {/* Telemetry */}
         <Route path="/telemetry/replies" element={<TelemetryRepliesView />} />
-        <Route path="/telemetry-replies/:commandLogId" element={<TelemetryRepliesView />} />
+        <Route
+          path="/telemetry-replies/:commandLogId"
+          element={<TelemetryRepliesView />}
+        />
 
         {/* Manual Decoder */}
         <Route path="/manual-decoder" element={<ManualDecoder />} />
 
         {/* Satellites */}
-        <Route path="/satellites/overview" element={<SatelliteOverviewView />} />
+        <Route
+          path="/satellites/overview"
+          element={<SatelliteOverviewView />}
+        />
 
         {/* Image Center */}
         <Route path="/images" element={<ImageIndexView />} />
-        <Route path="/images/detection/:id" element={<DetectionResultsView />} />
+        <Route
+          path="/images/detection/:id"
+          element={<DetectionResultsView />}
+        />
         <Route path="/images/panoramas" element={<PanoramaResultsView />} />
-        
+
         {/* Logs */}
         <Route path="/logs" element={<LogPage />} />
         {/* Faults & Diagnostics */}
         <Route path="/faults" element={<FaultsDiagnosticsView />} />
         {/* Future routes */}
-
+        <Route path="/commands/scheduled" element={<ScheduledCommandsView />} />
+        <Route path="/commands/atc" element={<AtcCommandView />} />
         {/* <Route path="/commands/scheduled" element={<ScheduledCommands />} /> */}
         {/* <Route path="/commands/templates" element={<CommandTemplates />} /> */}
         {/* <Route path="/ai-insights" element={<AIInsights />} /> */}
