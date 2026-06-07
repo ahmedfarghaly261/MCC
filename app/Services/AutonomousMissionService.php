@@ -152,6 +152,7 @@ class AutonomousMissionService
     /**
      * 2. Digital Twin Layer: Validate power, communication segments, and logical constraints
      */
+
     public function runDigitalTwinSimulation(array $primitives): array
     {
         // Sandbox environmental state tracking
@@ -163,21 +164,27 @@ class AutonomousMissionService
             $name = $primitive['cmd_name'];
             $data = $primitive['data'];
 
-            // Track Payload 3V3 line status (PWRL5)
-            if ($name === 'SON' && ($data['pwrl_id'] ?? null) == 0xE5) {
+            $pwrlId = $data['pwrl_id'] ?? null;
+            if ($pwrlId instanceof PowerLine) {
+                $pwrlId = $pwrlId->value;
+            }
+
+            // Track Payload line status
+            // (Replaced magic numbers with clean Enum definitions)
+            if ($name === 'SON' && $pwrlId === PowerLine::PWRL5->value) {
                 $payloadIsOn = true;
                 $simulatedVbat -= 60; // Predict typical startup transient draw drop
             }
-            if ($name === 'SOFF' && ($data['pwrl_id'] ?? null) == 0xE5) {
+            if ($name === 'SOFF' && $pwrlId === PowerLine::PWRL5->value) {
                 $payloadIsOn = false;
             }
 
-            // Track S-Band/Comm 5V line status (PWRL4)
-            if ($name === 'SON' && ($data['pwrl_id'] ?? null) == 0xE4) {
+            // Track S-Band/Comm line status
+            if ($name === 'SON' && $pwrlId === PowerLine::PWRL4->value) {
                 $commsSegmentIsOn = true;
                 $simulatedVbat -= 80; // High transient drop for radio transmitters
             }
-            if ($name === 'SOFF' && ($data['pwrl_id'] ?? null) == 0xE4) {
+            if ($name === 'SOFF' && $pwrlId === PowerLine::PWRL4->value) {
                 $commsSegmentIsOn = false;
             }
 
