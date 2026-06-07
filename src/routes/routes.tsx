@@ -13,6 +13,7 @@ import NotFound from "@/components/layout/NotFound";
 import FaultsDiagnosticsView from "@/pages/faults-diagnostics/FaultsDiagnosticsView";
 import ImageIndexView from "@/pages/imageCenter/index/imageIndex.view";
 import DetectionResultsView from "@/pages/imageCenter/objectDetection/composables/DetectionResultsView";
+import ScheduledCommandsView from "@/pages/command/scheduledCommands/scheduledCommandsView";
 
 export default function AppRoutes() {
   return (
@@ -46,7 +47,7 @@ export default function AppRoutes() {
         <Route path="/faults" element={<FaultsDiagnosticsView />} />
         {/* Future routes */}
 
-        {/* <Route path="/commands/scheduled" element={<ScheduledCommands />} /> */}
+        <Route path="/commands/scheduled" element={<ScheduledCommandsView />} />
         {/* <Route path="/commands/templates" element={<CommandTemplates />} /> */}
         {/* <Route path="/ai-insights" element={<AIInsights />} /> */}
         {/* <Route path="/faults" element={<Faults />} /> */}

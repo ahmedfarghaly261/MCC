@@ -43,7 +43,7 @@ const navItems: NavItem[] = [
         icon: <FilePlus size={18} />,
       },
       {
-        label: "Scheduled Commands",
+        label: "Scheduled Macro Goals",
         path: "/commands/scheduled",
         icon: <Clock size={18} />,
       },
