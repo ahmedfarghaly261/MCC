@@ -4,53 +4,45 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\Client\ConnectionException;
-use Exception;
-use App\Models\Image;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Exception\ConnectException;
-use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+use App\Models\Image;
+use Exception;
 
 class ImageService
 {
     protected string $enhancementUrl;
     protected string $detectionUrl;
     protected string $panoramaUrl;
+    protected string $disk;
 
     public function __construct()
     {
         $this->enhancementUrl = config('services.enhancement_api.url');
         $this->detectionUrl   = config('services.object_detection_api.url');
         $this->panoramaUrl    = config('services.panorama_api.url');
+        $this->disk           = 'public'; // Abstracted disk config
     }
 
     // -------------------------------------------------------------------------
     // Image CRUD
     // -------------------------------------------------------------------------
 
-    /**
-     * Paginate all images ordered by newest first.
-     */
-    public function listImages(int $perPage = 20): \Illuminate\Pagination\LengthAwarePaginator
+    public function listImages(int $perPage = 20): LengthAwarePaginator
     {
         return Image::query()
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }
 
-    /**
-     * Find a single image by ID or throw ModelNotFoundException.
-     */
     public function findImage($id): Image
     {
         return Image::findOrFail($id);
     }
 
-    /**
-     * Return all images linked to a given command log, newest first.
-     */
-    public function getImagesByCommandLog(int $logId): \Illuminate\Database\Eloquent\Collection
+    public function getImagesByCommandLog(int $logId): Collection
     {
         return Image::where('command_log_id', $logId)
             ->orderBy('created_at', 'desc')
@@ -58,14 +50,19 @@ class ImageService
     }
 
     /**
-     * Delete the image record and its physical file from disk.
+     * Safely delete the image record and its physical file using Storage drivers.
      */
     public function deleteImage($id): void
     {
         $image = Image::findOrFail($id);
 
-        if ($image->original_path && file_exists($image->original_path)) {
-            unlink($image->original_path);
+        if ($image->original_path && Storage::disk($this->disk)->exists($image->original_path)) {
+            Storage::disk($this->disk)->delete($image->original_path);
+        }
+
+        // Clean up enhanced/detected files if they exist
+        if ($image->enhanced_path && Storage::disk($this->disk)->exists($image->enhanced_path)) {
+            Storage::disk($this->disk)->delete($image->enhanced_path);
         }
 
         $image->delete();
@@ -75,21 +72,18 @@ class ImageService
     // Enhancement
     // -------------------------------------------------------------------------
 
-     public function enhanceInternalFile(string $relativePath)
+    public function enhanceInternalFile(string $relativePath): string
     {
-        if (!Storage::disk('public')->exists($relativePath)) {
+        if (!Storage::disk($this->disk)->exists($relativePath)) {
             throw new Exception("Source image not found: " . $relativePath);
         }
-        $fullPath = Storage::disk('public')->path($relativePath);
+
+        $fullPath = Storage::disk($this->disk)->path($relativePath);
         $fileStream = fopen($fullPath, 'r');
 
         try {
             $response = Http::timeout(120) 
-                ->attach(
-                    'file',          
-                    $fileStream,     
-                    basename($relativePath)
-                )
+                ->attach('file', $fileStream, basename($relativePath))
                 ->post("{$this->enhancementUrl}/enhance");
 
             if ($response->successful()) {
@@ -110,17 +104,13 @@ class ImageService
     // Object Detection
     // -------------------------------------------------------------------------
 
-    /**
-     * Call FastAPI to run object detection.
-     * Returns the raw ZIP archive binary payload.
-     */
     public function detectObjects(string $relativePath, array $options = []): string
     {
-        if (!Storage::disk('public')->exists($relativePath)) {
+        if (!Storage::disk($this->disk)->exists($relativePath)) {
             throw new Exception("Satellite image not found: " . $relativePath);
         }
 
-        $fullPath   = Storage::disk('public')->path($relativePath);
+        $fullPath   = Storage::disk($this->disk)->path($relativePath);
         $fileStream = fopen($fullPath, 'r');
 
         $queryParams = array_merge([
@@ -153,44 +143,30 @@ class ImageService
     // Panorama
     // -------------------------------------------------------------------------
 
-    /**
-     * Collect sibling tiles for the given seed image, stitch them via FastAPI,
-     * persist the result, and record it in the database.
-     *
-     * @return array{message: string, panorama_id: int, download_url: string}
-     * @throws Exception
-     */
     public function generatePanorama($seedImageId): array
     {
         $seedImage = Image::findOrFail($seedImageId);
         $seedMeta  = $seedImage->meta_data;
 
         if (empty($seedMeta) || !isset($seedMeta['image_source'])) {
-            throw new Exception(
-                'The selected seed image does not have an "image_source" identifier in its metadata.'
-            );
+            throw new Exception('The selected seed image does not have an "image_source" identifier.');
         }
 
         $sourceSession = $seedMeta['image_source'];
-
         $siblingImages = Image::where('meta_data->image_source', $sourceSession)->get();
 
         if ($siblingImages->count() < 2) {
-            throw new Exception(
-                "Only found {$siblingImages->count()} tile for source '{$sourceSession}'. " .
-                    "At least 2 tiles are required to stitch a panorama."
-            );
+            throw new Exception("Only found {$siblingImages->count()} tile. Need >= 2 to stitch.");
         }
 
-        $imagesData    = [];
-        $collectedIds  = [];
+        $imagesData  = [];
+        $collectedIds = [];
 
         foreach ($siblingImages as $imageRecord) {
-            $meta        = $imageRecord->meta_data;
-            $pixelBounds = $meta['pixel'] ?? null;
+            $pixelBounds = $imageRecord->meta_data['pixel'] ?? null;
 
             if (!$pixelBounds || !isset($pixelBounds['x1'], $pixelBounds['y1'], $pixelBounds['x2'], $pixelBounds['y2'])) {
-                Log::warning("Skipping image #{$imageRecord->id} during panorama creation: missing nested pixel bounds.");
+                Log::warning("Skipping image #{$imageRecord->id}: missing nested pixel bounds.");
                 continue;
             }
 
@@ -209,7 +185,8 @@ class ImageService
 
         $filename = 'panorama_' . $sourceSession . '_' . time() . '.jpg';
         $savePath = 'satellite_images/panoramas/' . $filename;
-        Storage::disk('public')->put($savePath, $stitchedBinary);
+        
+        Storage::disk($this->disk)->put($savePath, $stitchedBinary);
 
         $panoramaImage = Image::create([
             'original_path'  => $savePath,
@@ -223,80 +200,65 @@ class ImageService
         ]);
 
         return [
-            'message'      => "Successfully auto-collected " . count($collectedIds) . " tiles for session '{$sourceSession}' and stitched panorama.",
+            'message'      => "Successfully auto-collected " . count($collectedIds) . " tiles and stitched panorama.",
             'panorama_id'  => $panoramaImage->id,
-            'download_url' => asset('storage/' . ltrim($savePath, '/')),
+            'download_url' => $this->resolveDownloadUrl($savePath),
         ];
     }
 
     /**
-     * Send tile files to the FastAPI stitching endpoint and return the raw image binary.
+     * Completely rewritten using uniform Laravel HTTP attachments instead of raw Guzzle handles.
      */
     public function stitchPanorama(array $imagesData): string
     {
         $metadataArray = [];
-        $multipart     = [];
-        $openHandles   = [];
+        $fileHandles   = [];
+        
+        // Build the native HTTP client builder
+        $request = Http::timeout(300);
 
         foreach ($imagesData as $item) {
             $metadataArray[] = [
-                'x1' => (int) $item['x1'],
-                'y1' => (int) $item['y1'],
-                'x2' => (int) $item['x2'],
-                'y2' => (int) $item['y2'],
+                'x1' => (int) $item['x1'], 'y1' => (int) $item['y1'],
+                'x2' => (int) $item['x2'], 'y2' => (int) $item['y2'],
             ];
-        }
 
-        $multipart[] = [
-            'name'     => 'metadata',
-            'contents' => json_encode($metadataArray),
-        ];
-
-        foreach ($imagesData as $item) {
             $imagePath = $item['image_path'];
-
-            if (!Storage::disk('public')->exists($imagePath)) {
+            if (!Storage::disk($this->disk)->exists($imagePath)) {
                 throw new Exception("Source tile image not found: " . $imagePath);
             }
 
-            $fullPath      = Storage::disk('public')->path($imagePath);
+            $fullPath      = Storage::disk($this->disk)->path($imagePath);
             $handle        = fopen($fullPath, 'r');
-            $openHandles[] = $handle;
+            $fileHandles[] = $handle;
 
-            $multipart[] = [
-                'name'     => 'files',
-                'contents' => $handle,
-                'filename' => basename($imagePath),
-            ];
+            // Build sequential multi-file payload matching FastAPI standard array notation
+            $request->attach('files', $handle, basename($imagePath));
         }
 
+        // Attach metadata string payload
+        $request->attach('metadata', json_encode($metadataArray));
+
         try {
-            $client   = new Client(['timeout' => 300]);
-            $response = $client->post("{$this->panoramaUrl}/stitch", ['multipart' => $multipart]);
+            $response = $request->post("{$this->panoramaUrl}/stitch");
+            $body     = $response->body();
 
-            $body        = (string) $response->getBody();
-            $contentType = $response->getHeaderLine('Content-Type');
-
-            if (str_contains($contentType, 'application/json')) {
-                $errData = json_decode($body, true);
+            if (str_contains($response->header('Content-Type'), 'application/json')) {
+                $errData = $response->json();
                 if (isset($errData['error'])) {
                     throw new Exception("FastAPI Processing Rejected: " . $errData['error']);
                 }
             }
 
-            return $body;
-        } catch (ConnectException $e) {
-            throw new Exception("FastAPI Panorama Service unreachable: " . $this->panoramaUrl);
-        } catch (RequestException $e) {
-            $responseBody = $e->hasResponse()
-                ? (string) $e->getResponse()->getBody()
-                : $e->getMessage();
+            if (!$response->successful()) {
+                throw new Exception("FastAPI Engine Error: Status Code " . $response->status());
+            }
 
-            throw new Exception(
-                "FastAPI Panorama Engine Error: " . $e->getResponse()->getStatusCode() . " - " . $responseBody
-            );
+            return $body;
+        } catch (ConnectionException $e) {
+            throw new Exception("FastAPI Panorama Service unreachable: " . $this->panoramaUrl);
         } finally {
-            foreach ($openHandles as $handle) {
+            foreach ($fileHandles as $handle) {
                 if (is_resource($handle)) {
                     fclose($handle);
                 }
@@ -304,10 +266,7 @@ class ImageService
         }
     }
 
-    /**
-     * Paginate panorama images ordered by newest first.
-     */
-    public function getPanoramas(int $perPage = 20): \Illuminate\Pagination\LengthAwarePaginator
+    public function getPanoramas(int $perPage = 20): LengthAwarePaginator
     {
         return Image::where('meta_data->type', 'automated_panorama')
             ->orderBy('created_at', 'desc')
@@ -315,7 +274,7 @@ class ImageService
     }
 
     // -------------------------------------------------------------------------
-    // Formatters  (public so the controller can call them)
+    // Formatters
     // -------------------------------------------------------------------------
 
     public function formatImage(Image $image): array
@@ -344,8 +303,8 @@ class ImageService
             'original_url'     => $this->resolveDownloadUrl($image->original_path),
             'enhanced_path'    => $image->enhanced_path,
             'enhanced_url'     => $this->resolveDownloadUrl($image->enhanced_path),
-            'detected_obj_path' => $image->detected_obj_path,
-            'detected_obj_url'  => $this->resolveDownloadUrl($image->detected_obj_path),
+            'detected_obj_path'=> $image->detected_obj_path,
+            'detected_obj_url' => $this->resolveDownloadUrl($image->detected_obj_path),
             'elapsed_seconds'  => $image->detections['elapsed_seconds'] ?? null,
             'description'      => $image->detections['description']     ?? '',
             'summary'          => $image->detections['summary']         ?? null,
@@ -375,8 +334,18 @@ class ImageService
 
     private function resolveDownloadUrl(?string $path): ?string
     {
-        if (!$path) return null;
+        if (!$path) {
+            return null;
+        }
 
-        return asset('storage/' . ltrim($path, '/'));
+        // Fallback safety if full URL already persists inside path string
+        if (filter_var($path, FILTER_VALIDATE_URL)) {
+            return $path;
+        }
+
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        $disk = Storage::disk($this->disk);
+
+        return $disk->url($path);
     }
 }
