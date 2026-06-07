@@ -9,6 +9,7 @@ use Exception;
 use InvalidArgumentException;
 use App\Enums\PowerLine;
 use App\Enums\HtnGoalType;
+use App\Enums\SatelliteMode;
 
 class AutonomousMissionService
 {
@@ -38,7 +39,8 @@ class AutonomousMissionService
                     'cmd_name' => 'SMODE',
                     'dest'     => 0xA3, // ADCS Subsystem address 
                     'execute'  => $startTime->copy()->addSeconds(10),
-                    'data'     => ['mode_id' => 0x03] // Normal mode 
+                
+                    'data'     => ['mode_id' => SatelliteMode::Normal->value]
                 ];
 
                 // Task C: Execute optical image capture
@@ -61,13 +63,8 @@ class AutonomousMissionService
                 break;
 
             case HtnGoalType::DOWNLOAD_MISSION_TELEMETRY:
-                /**
-                 * GOAL: DOWNLOAD_MISSION_TELEMETRY
-                 * Sequence: Ensure OBC power rail active -> Fetch historical window block from flash memory
-                 */
-                $rawSubsystem = $parameters['subsystem_addr'] ?? 0xA2; // Default to EPS address 
+                $rawSubsystem = $parameters['subsystem_addr'] ?? 0xA2;
 
-                // 🌟 Convert human string inputs like "0xA2" dynamically to integers (162)
                 $targetSubsystem = is_string($rawSubsystem) && str_starts_with($rawSubsystem, '0x')
                     ? hexdec($rawSubsystem)
                     : (int) $rawSubsystem;
@@ -77,7 +74,7 @@ class AutonomousMissionService
                 // Task A: Ensure OBC 5V Rail is explicitly ON (PWRL2) 
                 $primitives[] = [
                     'cmd_name' => 'SON',
-                    'dest'     => 0xA2, // EPS Subsystem address 
+                    'dest'     => 0xA2,
                     'execute'  => $startTime->copy(),
                     'data'     => ['pwrl_id' => PowerLine::PWRL2]
                 ];
@@ -85,10 +82,10 @@ class AutonomousMissionService
                 // Task B: Get Stored Telemetry Window from OBC memory (0x08) 
                 $primitives[] = [
                     'cmd_name' => 'GSTLM',
-                    'dest'     => 0xA1, // OBC Subsystem address 
+                    'dest'     => 0xA1,
                     'execute'  => $startTime->copy()->addSeconds(15),
                     'data'     => [
-                        'subsystem_addr'   => $targetSubsystem, // Passed safely as a standard integer byte
+                        'subsystem_addr'   => $targetSubsystem,
                         'tlm_frame_seq_no' => $sequenceStart
                     ]
                 ];
@@ -98,7 +95,7 @@ class AutonomousMissionService
                 // Task A: Check ADCS status via Ping 
                 $primitives[] = [
                     'cmd_name' => 'Ping',
-                    'dest'     => 0xA3, // ADCS Subsystem address 
+                    'dest'     => 0xA3,
                     'execute'  => $startTime->copy(),
                     'data'     => []
                 ];
@@ -106,15 +103,15 @@ class AutonomousMissionService
                 // Task B: Force ADCS into safe Detumbling state 
                 $primitives[] = [
                     'cmd_name' => 'SMODE',
-                    'dest'     => 0xA3, // ADCS Subsystem address
+                    'dest'     => 0xA3,
                     'execute'  => $startTime->copy()->addSeconds(5),
-                    'data'     => ['mode_id' => 0x02] // Detumbling Mode
+                    'data'     => ['mode_id' => SatelliteMode::DeTumbling->value]
                 ];
 
                 // Task C: Kill power to Payload 5V rail (PWRL6)
                 $primitives[] = [
                     'cmd_name' => 'SOFF',
-                    'dest'     => 0xA2, // EPS Subsystem address 
+                    'dest'     => 0xA2,
                     'execute'  => $startTime->copy()->addSeconds(15),
                     'data'     => ['pwrl_id' => \App\Enums\PowerLine::PWRL6] // Pass Enum Case Directly 
                 ];
@@ -128,7 +125,7 @@ class AutonomousMissionService
                 // Task A: Power on the S-Band transmitter (PWRL4 - 5V Comm) 
                 $primitives[] = [
                     'cmd_name' => 'SON',
-                    'dest'     => 0xA2, // EPS Subsystem address
+                    'dest'     => 0xA2,
                     'execute'  => $startTime->copy(),
                     'data'     => ['pwrl_id' => \App\Enums\PowerLine::PWRL4] // Pass Enum Case Directly 
                 ];
@@ -136,7 +133,7 @@ class AutonomousMissionService
                 // Task B: Command the S-Band transmitter to stream data down
                 $primitives[] = [
                     'cmd_name' => 'GIMG',
-                    'dest'     => 0xA5, // S-Band Subsystem address 
+                    'dest'     => 0xA5,
                     'execute'  => $startTime->copy()->addSeconds(20),
                     'data'     => [
                         'image_id'        => $parameters['image_id'],
