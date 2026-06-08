@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bd3bc758f85f7da8888448bb65c9265a",
+    "content-hash": "535588cee9c7597253609c4cb4495f60",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -9355,6 +9355,66 @@
             "time": "2025-08-08T12:00:00+00:00"
         },
         {
+            "name": "genericmilk/docudoodle",
+            "version": "2.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/genericmilk/docudoodle.git",
+                "reference": "0e185606c4b7b68868c3bedbeca41f9f1ae016c7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/genericmilk/docudoodle/zipball/0e185606c4b7b68868c3bedbeca41f9f1ae016c7",
+                "reference": "0e185606c4b7b68868c3bedbeca41f9f1ae016c7",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/console": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/support": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+                "php": "^7.3|^8.0"
+            },
+            "require-dev": {
+                "php-mock/php-mock-phpunit": "^2.13",
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Docudoodle\\DocudoodleServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Docudoodle\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Peter Day",
+                    "email": "peterday.main@gmail.com"
+                }
+            ],
+            "description": "Generate documentation for your Laravel application using OpenAI",
+            "homepage": "https://github.com/genericmilk/docudoodle",
+            "keywords": [
+                "documentation",
+                "generator",
+                "openai",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/genericmilk/docudoodle/issues",
+                "source": "https://github.com/genericmilk/docudoodle/tree/v2.3.0"
+            },
+            "time": "2026-04-29T12:39:27+00:00"
+        },
+        {
             "name": "hamcrest/hamcrest-php",
             "version": "v2.1.1",
             "source": {
@@ -10654,6 +10714,74 @@
                 "source": "https://github.com/php-fig/cache/tree/3.0.0"
             },
             "time": "2021-02-03T23:26:27+00:00"
+        },
+        {
+            "name": "saeedvir/laravel-project-markdown",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/saeedvir/laravel-project-markdown.git",
+                "reference": "1a3eda64adaec61d1c96a19965eeaaf2cfe59286"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/saeedvir/laravel-project-markdown/zipball/1a3eda64adaec61d1c96a19965eeaaf2cfe59286",
+                "reference": "1a3eda64adaec61d1c96a19965eeaaf2cfe59286",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/console": "^10.0|^11.0|^12.0",
+                "illuminate/database": "^10.0|^11.0|^12.0",
+                "illuminate/support": "^10.0|^11.0|^12.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Saeedvir\\LaravelProjectMarkdown\\LaravelProjectMarkdownServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Saeedvir\\LaravelProjectMarkdown\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "saeedvir",
+                    "email": "saeed.es91@gmail.com"
+                }
+            ],
+            "description": "Laravel package to generate comprehensive markdown documentation for project files and database schema with AI-readable output",
+            "homepage": "https://github.com/saeedvir/laravel-project-markdown",
+            "keywords": [
+                "ai-readable",
+                "artisan",
+                "commands",
+                "database",
+                "documentation",
+                "erd",
+                "laravel",
+                "markdown",
+                "mermaid",
+                "project-structure",
+                "schema"
+            ],
+            "support": {
+                "issues": "https://github.com/saeedvir/laravel-project-markdown/issues",
+                "source": "https://github.com/saeedvir/laravel-project-markdown"
+            },
+            "time": "2025-09-20T03:24:58+00:00"
         },
         {
             "name": "sebastian/cli-parser",
