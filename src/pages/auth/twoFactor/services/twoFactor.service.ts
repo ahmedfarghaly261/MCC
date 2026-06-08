@@ -1,5 +1,4 @@
-import axios from 'axios';
-import { apiClient, SANCTUM_CSRF_URL } from '@/services/api';
+import { apiClient, ensureCsrfCookie } from '@/services/api';
 import type {
   ConfirmPasswordRequest,
   PasswordConfirmedStatusResponse,
@@ -9,10 +8,6 @@ import type {
   TwoFactorSecretKeyResponse,
   TwoFactorSetupData,
 } from '../types/twoFactor.types';
-
-async function ensureCsrfCookie(): Promise<void> {
-  await axios.get(SANCTUM_CSRF_URL, { withCredentials: true });
-}
 
 export async function getPasswordConfirmedStatus(): Promise<PasswordConfirmedStatusResponse> {
   const response = await apiClient.get<PasswordConfirmedStatusResponse>(
