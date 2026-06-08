@@ -259,7 +259,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-in-out ${
                     isExpanded
-                      ? "max-h-96 opacity-100 mt-2"
+                      ? "max-h-[800px] opacity-100 mt-2"
                       : "max-h-0 opacity-0"
                   }`}
                 >
