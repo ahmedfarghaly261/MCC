@@ -1,4 +1,4 @@
-import { Fingerprint, Loader2, CheckCircle2 } from 'lucide-react';
+import { Fingerprint, Loader2, CheckCircle2, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 type PasskeyStepProps = {
@@ -7,51 +7,58 @@ type PasskeyStepProps = {
   onSkip: () => void;
 };
 
+const BENEFITS = [
+  'Resistant to phishing attempts',
+  'Works with fingerprint, face, or security key',
+  'Keeps operator access fast and passwordless',
+];
+
 export default function PasskeyStep({ loading, onCreatePasskey, onSkip }: PasskeyStepProps) {
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <div className="inline-flex p-4 bg-blue-500/10 rounded-2xl border border-blue-500/30 mb-4">
-          <Fingerprint
-            className="w-16 h-16 text-blue-400"
-            style={{ filter: 'drop-shadow(0 0 12px rgb(59 130 246 / 0.6))' }}
-          />
+      <div className="space-y-4 text-center">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-blue-300/30 bg-blue-500/10 shadow-[0_0_40px_rgba(59,130,246,0.22)]">
+          <Fingerprint className="h-11 w-11 text-blue-300" strokeWidth={1.6} />
         </div>
-        <h2 className="text-white text-2xl mb-2">Secure Your Account</h2>
-        <p className="text-gray-400 text-sm">Create a passkey for passwordless authentication</p>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-300/80">
+            Passwordless layer
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold text-white">Secure Your Account</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Add a passkey before configuring two-factor authentication.
+          </p>
+        </div>
       </div>
 
-      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-        <h3 className="text-blue-400 text-sm font-medium mb-3">Why use a passkey?</h3>
-        <ul className="space-y-2 text-xs text-gray-400">
-          <li className="flex items-start gap-2">
-            <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
-            <span>More secure than passwords - resistant to phishing</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
-            <span>Faster login with fingerprint, face, or security key</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
-            <span>Works across all your devices automatically</span>
-          </li>
+      <div className="rounded-xl border border-blue-400/20 bg-blue-400/10 p-4">
+        <div className="mb-3 flex items-center gap-2 text-sm font-medium text-blue-200">
+          <KeyRound className="h-4 w-4" />
+          Passkey benefits
+        </div>
+        <ul className="space-y-2">
+          {BENEFITS.map((benefit) => (
+            <li key={benefit} className="flex items-start gap-2 text-sm text-slate-300">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
+              <span>{benefit}</span>
+            </li>
+          ))}
         </ul>
       </div>
 
       <Button
         onClick={onCreatePasskey}
         disabled={loading}
-        className="w-full bg-gradient-to-r from-blue-500/20 to-cyan-500/20 hover:from-blue-500/30 hover:to-cyan-500/30 border border-blue-500/50 text-white h-14"
+        className="h-12 w-full rounded-lg border border-blue-300/40 bg-gradient-to-r from-blue-500 to-cyan-500 font-semibold text-white shadow-lg shadow-blue-950/40 hover:from-blue-400 hover:to-cyan-400"
       >
         {loading ? (
           <>
-            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             Creating Passkey...
           </>
         ) : (
           <>
-            <Fingerprint className="w-5 h-5 mr-2" />
+            <Fingerprint className="mr-2 h-5 w-5" />
             Create Passkey
           </>
         )}
@@ -60,7 +67,7 @@ export default function PasskeyStep({ loading, onCreatePasskey, onSkip }: Passke
       <button
         onClick={onSkip}
         disabled={loading}
-        className="w-full text-gray-400 hover:text-gray-300 text-sm transition-colors"
+        className="w-full rounded-lg border border-slate-700/70 bg-slate-950/40 px-4 py-3 text-sm text-slate-400 transition-colors hover:border-slate-600 hover:text-slate-200 disabled:pointer-events-none disabled:opacity-50"
       >
         Skip for now
       </button>

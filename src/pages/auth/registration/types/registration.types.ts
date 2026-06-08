@@ -5,7 +5,6 @@ export type RegisterFormData = {
   email: string;
   password: string;
   password_confirmation: string;
-  organization: string;
 };
 
 export type RegisterRequest = {
