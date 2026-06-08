@@ -16,10 +16,13 @@ import DetectionResultsView from "@/pages/imageCenter/objectDetection/composable
 import PanoramaResultsView from "@/pages/imageCenter/panorama/composables/PanoramaResultsView";
 import ScheduledCommandsView from "@/pages/command/scheduledCommands/scheduledCommandsView";
 import AtcCommandView from "@/pages/command/atcCommand/Atccommandview";
+import RegistrationView from "@/pages/auth/registration/registrationView";
 
 export default function AppRoutes() {
   return (
     <Routes>
+      {/* Auth */}
+      <Route path="/register" element={<RegistrationView />} />
       <Route element={<Layout />}>
         <Route path="/" element={<DashboardView />} />
 
