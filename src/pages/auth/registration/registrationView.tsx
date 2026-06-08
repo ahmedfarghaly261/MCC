@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -18,7 +18,6 @@ const INITIAL_FORM: RegisterFormData = {
   email: '',
   password: '',
   password_confirmation: '',
-  organization: '',
 };
 
 export default function RegistrationView() {
@@ -33,7 +32,7 @@ export default function RegistrationView() {
     setError(null);
   };
 
-  const handleSubmitInfo = async (e: React.FormEvent) => {
+  const handleSubmitInfo = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -56,9 +55,6 @@ export default function RegistrationView() {
         password_confirmation: formData.password_confirmation,
       });
 
-      // Auto-login to establish an authenticated session.
-      // Without this, protected endpoints (2FA, confirm-password) reject requests
-      // because the backend has no session to identify the user.
       await loginUser(formData.email, formData.password);
 
       toast.success('Account registered successfully!');
@@ -74,6 +70,13 @@ export default function RegistrationView() {
     }
   };
 
+  const redirectToTwoFactor = (delay: number) => {
+    setTimeout(
+      () => navigate('/2fa-setup', { state: { registrationPassword: formData.password } }),
+      delay,
+    );
+  };
+
   const handleCreatePasskey = async () => {
     setError(null);
     setLoading(true);
@@ -83,13 +86,9 @@ export default function RegistrationView() {
         throw new Error('Passkeys are not supported in this browser');
       }
 
-      // Simulate passkey creation flow
       await new Promise((resolve) => setTimeout(resolve, 2500));
       setStep('success');
-      setTimeout(
-        () => navigate('/2fa-setup', { state: { registrationPassword: formData.password } }),
-        3000,
-      );
+      redirectToTwoFactor(3000);
     } catch (err: any) {
       setError(err.message || 'Failed to create passkey. Please try again.');
     } finally {
@@ -99,30 +98,24 @@ export default function RegistrationView() {
 
   const handleSkipPasskey = () => {
     setStep('success');
-    setTimeout(
-      () => navigate('/2fa-setup', { state: { registrationPassword: formData.password } }),
-      2000,
-    );
+    redirectToTwoFactor(2000);
   };
 
   return (
     <RegistrationLayout>
-      <div className="w-full max-w-md">
-
-        {/* Logo Section */}
-        <div className="text-center mb-8">
-          <div className="inline-flex p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/30 mb-4">
+      <div className="w-full max-w-lg">
+        <div className="mb-7 text-center">
+          <div className="mb-4 inline-flex rounded-2xl border border-emerald-300/30 bg-emerald-500/10 p-4 shadow-[0_0_42px_rgba(16,185,129,0.18)]">
             <Shield
-              className="w-12 h-12 text-emerald-400"
+              className="h-12 w-12 text-emerald-300"
               style={{ filter: 'drop-shadow(0 0 12px rgb(16 185 129 / 0.6))' }}
             />
           </div>
-          <h1 className="text-white text-3xl font-bold mb-2">Mission Control</h1>
-          <p className="text-gray-400">Register for satellite command access</p>
+          <h1 className="mb-2 text-3xl font-semibold text-white">Mission Control</h1>
+          <p className="text-sm text-slate-400">Register for satellite command access</p>
         </div>
 
-        {/* Registration Card */}
-        <div className="bg-[#1F2937]/90 border border-gray-700/60 rounded-lg p-8 space-y-6 shadow-2xl shadow-blue-950/30 backdrop-blur-xl">
+        <div className="space-y-6 rounded-2xl border border-slate-700/70 bg-slate-900/80 p-6 shadow-2xl shadow-blue-950/40 backdrop-blur-2xl sm:p-8">
           <StepIndicator step={step} />
 
           {error && <ErrorAlert message={error} />}
@@ -146,25 +139,23 @@ export default function RegistrationView() {
 
           {step === 'success' && <SuccessStep />}
 
-          {/* Security Badge */}
           {step !== 'success' && (
-            <div className="pt-6 border-t border-gray-700/50">
-              <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-                <Shield className="w-4 h-4 text-green-400" />
+            <div className="border-t border-slate-700/60 pt-5">
+              <div className="flex items-center justify-center gap-2 rounded-lg bg-slate-950/40 px-3 py-2 text-xs text-slate-500">
+                <Shield className="h-4 w-4 text-emerald-300" />
                 <span>Protected by WebAuthn Standard</span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Login Link */}
         {step === 'info' && (
-          <div className="text-center mt-6">
-            <p className="text-gray-400 text-sm">
+          <div className="mt-6 text-center">
+            <p className="text-sm text-slate-400">
               Already have an account?{' '}
               <button
                 onClick={() => navigate('/login')}
-                className="text-blue-400 hover:text-blue-300 transition-colors"
+                className="font-medium text-cyan-300 transition-colors hover:text-cyan-200"
               >
                 Sign in here
               </button>
@@ -172,9 +163,8 @@ export default function RegistrationView() {
           </div>
         )}
 
-        {/* Footer */}
-        <div className="text-center mt-8 text-xs text-gray-600">
-          <p>© 2026 Mission Control Center System</p>
+        <div className="mt-8 text-center text-xs text-slate-600">
+          <p>(c) 2026 Mission Control Center System</p>
           <p className="mt-1">Secure Satellite Command & Control Platform</p>
         </div>
       </div>
