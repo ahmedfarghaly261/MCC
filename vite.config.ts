@@ -16,14 +16,17 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost',
         changeOrigin: true,
+        autoRewrite: true,
       },
       '/sanctum': {
         target: 'http://localhost',
         changeOrigin: true,
+        autoRewrite: true,
       },
       '/storage': {
         target: 'http://localhost',
         changeOrigin: true,
+        autoRewrite: true,
       },
     },
   },
