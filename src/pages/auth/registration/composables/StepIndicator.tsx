@@ -6,7 +6,7 @@ type StepIndicatorProps = {
 };
 
 type StepConfig = {
-  key: RegistrationStep | string;
+  key: RegistrationStep;
   label: string;
   number: string;
 };
@@ -19,8 +19,8 @@ const STEPS: StepConfig[] = [
 
 const ORDER: RegistrationStep[] = ['info', 'passkey', 'success'];
 
-function getStepState(stepKey: string, currentStep: RegistrationStep) {
-  const stepIndex = ORDER.indexOf(stepKey as RegistrationStep);
+function getStepState(stepKey: RegistrationStep, currentStep: RegistrationStep) {
+  const stepIndex = ORDER.indexOf(stepKey);
   const currentIndex = ORDER.indexOf(currentStep);
 
   if (stepIndex < currentIndex) return 'done';
@@ -30,37 +30,40 @@ function getStepState(stepKey: string, currentStep: RegistrationStep) {
 
 export default function StepIndicator({ step }: StepIndicatorProps) {
   return (
-    <div className="flex items-center justify-between mb-6">
-      {STEPS.map((s, i) => {
-        const state = getStepState(s.key, step);
-        return (
-          <div key={s.key} className="flex items-center gap-2">
-            {i > 0 && <div className="flex-1 h-px bg-gray-700/50 mx-3 w-10" />}
+    <div className="rounded-xl border border-slate-700/60 bg-slate-950/40 p-3">
+      <div className="grid grid-cols-3 gap-2">
+        {STEPS.map((stepConfig) => {
+          const state = getStepState(stepConfig.key, step);
+          const isActive = state === 'active';
+          const isDone = state === 'done';
+
+          return (
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                state === 'active'
-                  ? 'bg-blue-500/20 border border-blue-500/50 text-blue-400'
-                  : state === 'done'
-                  ? 'bg-green-500/20 border border-green-500/50 text-green-400'
-                  : 'bg-gray-700/50 border border-gray-700/50 text-gray-500'
+              key={stepConfig.key}
+              className={`flex items-center justify-center gap-2 rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
+                isActive
+                  ? 'border border-cyan-400/40 bg-cyan-400/10 text-cyan-200'
+                  : isDone
+                    ? 'border border-emerald-400/30 bg-emerald-400/10 text-emerald-300'
+                    : 'border border-slate-800 bg-slate-900/60 text-slate-500'
               }`}
             >
-              {state === 'done' ? <CheckCircle2 className="w-4 h-4" /> : s.number}
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full ${
+                  isActive
+                    ? 'bg-cyan-400 text-slate-950'
+                    : isDone
+                      ? 'bg-emerald-400 text-slate-950'
+                      : 'bg-slate-800 text-slate-500'
+                }`}
+              >
+                {isDone ? <CheckCircle2 className="h-4 w-4" /> : stepConfig.number}
+              </span>
+              <span>{stepConfig.label}</span>
             </div>
-            <span
-              className={`text-sm ${
-                state === 'active'
-                  ? 'text-blue-400'
-                  : state === 'done'
-                  ? 'text-green-400'
-                  : 'text-gray-500'
-              }`}
-            >
-              {s.label}
-            </span>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
