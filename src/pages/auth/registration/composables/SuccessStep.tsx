@@ -2,29 +2,28 @@ import { CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function SuccessStep() {
   return (
-    <div className="space-y-6 text-center py-8">
-      <div className="inline-flex p-4 bg-green-500/10 rounded-2xl border border-green-500/30 mb-4">
-        <CheckCircle2
-          className="w-16 h-16 text-green-400"
-          style={{ filter: 'drop-shadow(0 0 12px rgb(16 185 129 / 0.6))' }}
-        />
+    <div className="space-y-6 py-8 text-center">
+      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-emerald-300/30 bg-emerald-500/10 shadow-[0_0_42px_rgba(16,185,129,0.22)]">
+        <CheckCircle2 className="h-12 w-12 text-emerald-300" strokeWidth={1.6} />
       </div>
 
       <div>
-        <h2 className="text-white text-2xl mb-2">Account Created!</h2>
-        <p className="text-gray-400 text-sm">Welcome to Mission Control Center</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300/80">
+          Access created
+        </p>
+        <h2 className="mt-2 text-2xl font-semibold text-white">Account Created</h2>
+        <p className="mt-2 text-sm text-slate-400">Preparing your two-factor setup.</p>
       </div>
 
-      <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-        <p className="text-green-400 text-sm">
-          Your account has been successfully created with passkey authentication.
-          Redirecting to dashboard...
+      <div className="rounded-xl border border-emerald-400/25 bg-emerald-400/10 p-4">
+        <p className="text-sm text-emerald-200">
+          Your operator profile is ready. You will be redirected to finish account security.
         </p>
       </div>
 
-      <div className="flex items-center justify-center gap-2">
-        <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
-        <span className="text-gray-400 text-sm">Redirecting...</span>
+      <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
+        <Loader2 className="h-4 w-4 animate-spin text-cyan-300" />
+        Redirecting...
       </div>
     </div>
   );
