@@ -140,29 +140,29 @@ export default function TwoFactorView() {
 
   return (
     <div className="flex min-h-screen justify-center bg-background px-6 py-8 text-white">
-      <div className="w-full max-w-xl">
-        <div className="mb-8 flex items-center gap-4">
-          <div className="shrink-0 text-emerald-400">
+      <div className="w-full max-w-3xl">
+        <div className="mx-auto mb-8 flex max-w-xl items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-emerald-300/30 bg-emerald-400/10 text-emerald-300 shadow-[0_0_28px_rgba(16,185,129,0.14)]">
             <Shield className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-white text-lg font-semibold">Two-Factor Authentication</h1>
-            <p className="text-gray-400 text-sm">
+            <h1 className="text-xl font-semibold text-white">Two-Factor Authentication</h1>
+            <p className="text-sm text-slate-400">
               Add an extra layer of security to your account
             </p>
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="mx-auto max-w-xl space-y-6">
           {step === 'idle' && (
-            <div className="rounded-xl border border-slate-700 bg-card p-6 space-y-4">
+            <div className="space-y-5 rounded-2xl border border-slate-700/70 bg-slate-900/80 p-6 shadow-2xl shadow-blue-950/30 backdrop-blur-xl">
               <div className="flex items-start gap-4">
-                <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                  <Shield className="h-5 w-5 text-emerald-400" />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-300/30 bg-emerald-400/10">
+                  <Shield className="h-5 w-5 text-emerald-300" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-white">2FA is not yet enabled</p>
-                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                  <p className="text-base font-semibold text-white">2FA is not yet enabled</p>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-400">
                     Two-factor authentication adds an extra layer of security by requiring a
                     verification code from your authenticator app each time you sign in.
                   </p>
@@ -171,7 +171,7 @@ export default function TwoFactorView() {
               <Button
                 onClick={() => void handleEnable()}
                 disabled={loading}
-                className="w-full h-11 bg-emerald-600 hover:bg-emerald-500 text-white font-medium"
+                className="h-12 w-full rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 font-semibold text-slate-950 shadow-lg shadow-cyan-950/30 hover:from-emerald-400 hover:to-cyan-400"
               >
                 {loading ? (
                   <>
@@ -197,15 +197,15 @@ export default function TwoFactorView() {
           )}
 
           {step === 'setup' && setupData && (
-            <>
+            <div className="-mx-0 space-y-5 sm:-mx-10 lg:-mx-20">
               <TwoFactorSetupCard data={setupData} />
               <Button
                 onClick={() => setStep('confirm')}
-                className="w-full h-11 bg-blue-600 hover:bg-blue-500 text-white font-medium"
+                className="h-12 w-full rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 font-semibold text-white shadow-lg shadow-blue-950/30 hover:from-blue-400 hover:to-cyan-400"
               >
                 I've saved my codes - Continue
               </Button>
-            </>
+            </div>
           )}
 
           {step === 'confirm' && (
@@ -217,15 +217,15 @@ export default function TwoFactorView() {
           )}
 
           {step === 'enabled' && (
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-6 flex items-start gap-4">
-              <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-500/30">
-                <ShieldCheck className="h-5 w-5 text-emerald-400" />
+            <div className="flex items-start gap-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-6 shadow-2xl shadow-emerald-950/20">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-300/30 bg-emerald-400/15">
+                <ShieldCheck className="h-5 w-5 text-emerald-300" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-emerald-300">
+                <p className="text-base font-semibold text-emerald-200">
                   Two-Factor Authentication is enabled
                 </p>
-                <p className="mt-1 text-xs text-emerald-400/80 leading-relaxed">
+                <p className="mt-1 text-sm leading-relaxed text-emerald-100/70">
                   Your account is now protected. You'll be asked for a verification code
                   each time you sign in.
                 </p>
