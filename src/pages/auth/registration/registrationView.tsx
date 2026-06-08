@@ -10,7 +10,7 @@ import PasskeyStep from './composables/PasskeyStep';
 import SuccessStep from './composables/SuccessStep';
 
 import RegistrationLayout from '@/components/layout/RegistrationLayout';
-import { registerUser } from './services/registration.service';
+import { registerUser, loginUser } from './services/registration.service';
 import type { RegisterFormData, RegistrationStep } from './types/registration.types';
 
 const INITIAL_FORM: RegisterFormData = {
@@ -55,6 +55,12 @@ export default function RegistrationView() {
         password: formData.password,
         password_confirmation: formData.password_confirmation,
       });
+
+      // Auto-login to establish an authenticated session.
+      // Without this, protected endpoints (2FA, confirm-password) reject requests
+      // because the backend has no session to identify the user.
+      await loginUser(formData.email, formData.password);
+
       toast.success('Account registered successfully!');
       setStep('passkey');
     } catch (err: any) {
@@ -80,7 +86,10 @@ export default function RegistrationView() {
       // Simulate passkey creation flow
       await new Promise((resolve) => setTimeout(resolve, 2500));
       setStep('success');
-      setTimeout(() => navigate('/'), 3000);
+      setTimeout(
+        () => navigate('/2fa-setup', { state: { registrationPassword: formData.password } }),
+        3000,
+      );
     } catch (err: any) {
       setError(err.message || 'Failed to create passkey. Please try again.');
     } finally {
@@ -90,7 +99,10 @@ export default function RegistrationView() {
 
   const handleSkipPasskey = () => {
     setStep('success');
-    setTimeout(() => navigate('/login'), 2000);
+    setTimeout(
+      () => navigate('/2fa-setup', { state: { registrationPassword: formData.password } }),
+      2000,
+    );
   };
 
   return (
