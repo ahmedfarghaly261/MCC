@@ -82,12 +82,12 @@ class ImageService
         $fileStream = fopen($fullPath, 'r');
 
         try {
-            $response = Http::timeout(120) 
+            $response = Http::timeout(120)
                 ->attach('file', $fileStream, basename($relativePath))
                 ->post("{$this->enhancementUrl}/enhance");
 
             if ($response->successful()) {
-                return $response->body(); 
+                return $response->body();
             }
 
             throw new Exception("FastAPI Processing Error: " . $response->status());
@@ -98,6 +98,29 @@ class ImageService
                 fclose($fileStream);
             }
         }
+    }
+
+    public function enhanceAndSave($id): Image
+    {
+        // 1. Find the DB record
+        $image = Image::findOrFail($id);
+        $relativePath = $image->original_path;
+
+        // 2. Call your existing internal service method to talk to the FastAPI engine
+        $enhancedBinary = $this->enhanceInternalFile($relativePath);
+
+        // 3. Generate path and store the file
+        $originalName = pathinfo($relativePath, PATHINFO_FILENAME);
+        $savePath = 'satellite_images/enhanced/' . $originalName . '_processed.png';
+
+        Storage::disk($this->disk)->put($savePath, $enhancedBinary);
+
+        // 4. Update the DB record directly inside the service layer
+        $image->update([
+            'enhanced_path' => $savePath
+        ]);
+
+        return $image;
     }
 
     // -------------------------------------------------------------------------
@@ -185,7 +208,7 @@ class ImageService
 
         $filename = 'panorama_' . $sourceSession . '_' . time() . '.jpg';
         $savePath = 'satellite_images/panoramas/' . $filename;
-        
+
         Storage::disk($this->disk)->put($savePath, $stitchedBinary);
 
         $panoramaImage = Image::create([
@@ -207,20 +230,22 @@ class ImageService
     }
 
     /**
-     * Completely rewritten using uniform Laravel HTTP attachments instead of raw Guzzle handles.
+     * Internal method to handle the multipart file upload and metadata formatting for panorama stitching.
      */
     public function stitchPanorama(array $imagesData): string
     {
         $metadataArray = [];
         $fileHandles   = [];
-        
+
         // Build the native HTTP client builder
         $request = Http::timeout(300);
 
         foreach ($imagesData as $item) {
             $metadataArray[] = [
-                'x1' => (int) $item['x1'], 'y1' => (int) $item['y1'],
-                'x2' => (int) $item['x2'], 'y2' => (int) $item['y2'],
+                'x1' => (int) $item['x1'],
+                'y1' => (int) $item['y1'],
+                'x2' => (int) $item['x2'],
+                'y2' => (int) $item['y2'],
             ];
 
             $imagePath = $item['image_path'];

@@ -21,22 +21,16 @@ class ImageController extends Controller
     public function enhanceImage(Request $request, ImageService $service)
     {
         $request->validate([
-            'image_path' => 'required|string'
+            'image_id' => 'required|integer|exists:images,id' 
         ]);
 
         try {
-            $enhancedBinary = $service->enhanceInternalFile($request->image_path);
+            $image = $service->enhanceAndSave($request->image_id);
 
-            $originalName = pathinfo($request->image_path, PATHINFO_FILENAME);
-            $savePath = 'satellite_images/enhanced/' . $originalName . '_processed.png';
-
-            Storage::disk('public')->put($savePath, $enhancedBinary);
-
+            // Utilize your existing service formatter to return the response uniformly
             return response()->json([
-                'status'        => 'success',
-                'original_path' => $request->image_path,
-                'enhanced_path' => $savePath,
-                'download_url'  => asset('storage/' . ltrim($savePath, '/')),
+                'status' => 'success',
+                'data'   => $service->formatImage($image)
             ]);
         } catch (\Exception $e) {
             return response()->json([
