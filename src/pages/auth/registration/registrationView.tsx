@@ -9,6 +9,7 @@ import InfoStep from './composables/InfoStep';
 import PasskeyStep from './composables/PasskeyStep';
 import SuccessStep from './composables/SuccessStep';
 
+import RegistrationLayout from '@/components/layout/RegistrationLayout';
 import { registerUser } from './services/registration.service';
 import type { RegisterFormData, RegistrationStep } from './types/registration.types';
 
@@ -93,7 +94,7 @@ export default function RegistrationView() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1120] flex items-center justify-center p-6">
+    <RegistrationLayout>
       <div className="w-full max-w-md">
 
         {/* Logo Section */}
@@ -109,7 +110,7 @@ export default function RegistrationView() {
         </div>
 
         {/* Registration Card */}
-        <div className="bg-[#1F2937] border border-gray-700/50 rounded-lg p-8 space-y-6">
+        <div className="bg-[#1F2937]/90 border border-gray-700/60 rounded-lg p-8 space-y-6 shadow-2xl shadow-blue-950/30 backdrop-blur-xl">
           <StepIndicator step={step} />
 
           {error && <ErrorAlert message={error} />}
@@ -165,6 +166,6 @@ export default function RegistrationView() {
           <p className="mt-1">Secure Satellite Command & Control Platform</p>
         </div>
       </div>
-    </div>
+    </RegistrationLayout>
   );
 }
