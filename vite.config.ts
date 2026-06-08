@@ -13,6 +13,14 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      '/api': {
+        target: 'http://localhost',
+        changeOrigin: true,
+      },
+      '/sanctum': {
+        target: 'http://localhost',
+        changeOrigin: true,
+      },
       '/storage': {
         target: 'http://localhost',
         changeOrigin: true,
