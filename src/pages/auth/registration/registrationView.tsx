@@ -70,9 +70,9 @@ export default function RegistrationView() {
     }
   };
 
-  const redirectToTwoFactor = (delay: number) => {
+  const redirectToHome = (delay: number) => {
     setTimeout(
-      () => navigate('/2fa-setup', { state: { registrationPassword: formData.password } }),
+      () => navigate('/'),
       delay,
     );
   };
@@ -88,7 +88,7 @@ export default function RegistrationView() {
 
       await new Promise((resolve) => setTimeout(resolve, 2500));
       setStep('success');
-      redirectToTwoFactor(3000);
+      redirectToHome(3000);
     } catch (err: any) {
       setError(err.message || 'Failed to create passkey. Please try again.');
     } finally {
@@ -98,7 +98,7 @@ export default function RegistrationView() {
 
   const handleSkipPasskey = () => {
     setStep('success');
-    redirectToTwoFactor(2000);
+    redirectToHome(2000);
   };
 
   return (
