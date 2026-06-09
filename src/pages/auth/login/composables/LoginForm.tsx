@@ -1,5 +1,5 @@
-import type { FormEvent, ReactNode } from 'react';
-import { LogIn, Loader2, Mail, Lock, type LucideIcon } from 'lucide-react';
+import { useState, type FormEvent, type ReactNode } from 'react';
+import { LogIn, Loader2, Mail, Lock, Eye, EyeOff, type LucideIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { LoginFormData } from '../types/login.types';
@@ -35,6 +35,8 @@ function Field({ icon: Icon, label, required = false, children }: FieldProps) {
 }
 
 export default function LoginForm({ formData, loading, onInputChange, onSubmit }: LoginFormProps) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       <div className="space-y-2 text-center">
@@ -59,16 +61,25 @@ export default function LoginForm({ formData, loading, onInputChange, onSubmit }
       </Field>
 
       <Field icon={Lock} label="Password" required>
-        <Input
-          id="login-password"
-          type="password"
-          placeholder="Enter your password"
-          value={formData.password}
-          onChange={(e) => onInputChange('password', e.target.value)}
-          className={inputClassName}
-          disabled={loading}
-          autoComplete="current-password"
-        />
+        <div className="relative">
+          <Input
+            id="login-password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Enter your password"
+            value={formData.password}
+            onChange={(e) => onInputChange('password', e.target.value)}
+            className={`${inputClassName} pr-10`}
+            disabled={loading}
+            autoComplete="current-password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-300 transition-colors"
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
       </Field>
 
       <Button
