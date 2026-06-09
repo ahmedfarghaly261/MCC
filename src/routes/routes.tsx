@@ -18,12 +18,14 @@ import ScheduledCommandsView from "@/pages/command/scheduledCommands/scheduledCo
 import AtcCommandView from "@/pages/command/atcCommand/Atccommandview";
 import RegistrationView from "@/pages/auth/registration/registrationView";
 import TwoFactorView from "@/pages/auth/twoFactor/twoFactorView";
+import LoginView from "@/pages/auth/login/loginView";
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Auth */}
       <Route path="/register" element={<RegistrationView />} />
+      <Route path="/login" element={<LoginView />} />
       <Route path="/2fa-setup" element={<TwoFactorView />} />
       <Route element={<Layout />}>
         <Route path="/" element={<DashboardView />} />
