@@ -1,5 +1,5 @@
-import type { FormEvent, ReactNode } from 'react';
-import { UserPlus, Loader2, Mail, User, Lock, type LucideIcon } from 'lucide-react';
+import { useState, type FormEvent, type ReactNode } from 'react';
+import { UserPlus, Loader2, Mail, User, Lock, Eye, EyeOff, type LucideIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { RegisterFormData } from '../types/registration.types';
@@ -35,6 +35,9 @@ function Field({ icon: Icon, label, required = false, children }: FieldProps) {
 }
 
 export default function InfoStep({ formData, loading, onInputChange, onSubmit }: InfoStepProps) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       <div className="space-y-2 text-center">
@@ -68,25 +71,43 @@ export default function InfoStep({ formData, loading, onInputChange, onSubmit }:
       </Field>
 
       <Field icon={Lock} label="Password" required>
-        <Input
-          type="password"
-          placeholder="Enter a strong password"
-          value={formData.password}
-          onChange={(e) => onInputChange('password', e.target.value)}
-          className={inputClassName}
-          disabled={loading}
-        />
+        <div className="relative">
+          <Input
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Enter a strong password"
+            value={formData.password}
+            onChange={(e) => onInputChange('password', e.target.value)}
+            className={`${inputClassName} pr-10`}
+            disabled={loading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-300 transition-colors"
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
       </Field>
 
       <Field icon={Lock} label="Confirm Password" required>
-        <Input
-          type="password"
-          placeholder="Re-enter password"
-          value={formData.password_confirmation}
-          onChange={(e) => onInputChange('password_confirmation', e.target.value)}
-          className={inputClassName}
-          disabled={loading}
-        />
+        <div className="relative">
+          <Input
+            type={showConfirmPassword ? 'text' : 'password'}
+            placeholder="Re-enter password"
+            value={formData.password_confirmation}
+            onChange={(e) => onInputChange('password_confirmation', e.target.value)}
+            className={`${inputClassName} pr-10`}
+            disabled={loading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-300 transition-colors"
+          >
+            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
       </Field>
       <Button
         type="submit"
