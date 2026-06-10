@@ -30,7 +30,7 @@ export default function NotFound() {
         
         <div className="flex flex-col sm:flex-row gap-4">
           <Link
-            to="/"
+            to="/dashboard"
             className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 px-8 py-2"
           >
             <Home className="w-4 h-4" />

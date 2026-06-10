@@ -1,7 +1,16 @@
-import { Bell, User } from "lucide-react";
+import { Bell, User, LogOut } from "lucide-react";
 import { memo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { clearAuthSession } from "@/services/api";
 
 function NavBar() {
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+      await clearAuthSession();
+      navigate("/");
+    };
+
     const TopBarClock = memo(function TopBarClock() {
       const [time, setTime] = useState(() => new Date());
     
@@ -47,6 +56,15 @@ function NavBar() {
               <p className="text-xs text-gray-400">Operator</p>
             </div>
           </div>
+
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            className="p-2 ml-2 rounded-lg bg-gray-800/50 hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors"
+            title="Log out"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
       </div>
     );
