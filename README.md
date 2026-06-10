@@ -1,22 +1,26 @@
-# MCC UI
+# 🛰️ MCC UI
 
 Modern Mission Control Center frontend for monitoring satellites, sending commands, reviewing telemetry, processing mission images, and securing operator access with two-factor authentication.
 
 MCC UI is a React, TypeScript, and Vite application built around an operations-focused dark interface. It connects to the MCC backend API through Vite proxy routes for authenticated command-and-control workflows, telemetry review, AI diagnostics, and image processing.
 
-## Highlights
+## 🤝 Sponsorship
 
-- Secure operator authentication with login, registration, Laravel Sanctum CSRF support, bearer-token session storage, protected routes, optional passkey onboarding, and 2FA setup.
-- Command Center for sending validated commands, scheduling macro goals, scheduling ATC commands, viewing command history, browsing the command dictionary, and reviewing command responses.
-- Telemetry Center for retrieving telemetry replies by command log ID and inspecting decoded telemetry readings.
-- Satellite Overview for fleet status, subsystem details, operational health, and satellite metadata.
-- Image Center for received image browsing, object detection, panorama generation, result previews, download actions, and image deletion.
-- Faults & Diagnostics page backed by AI anomaly insights.
-- Manual Decoder for single-frame and batch telemetry decoding.
-- Logs dashboard for system events and activity tracking.
-- Responsive sidebar layout with collapsible navigation, rich status cards, tables, filters, dialogs, toast feedback, and consistent shadcn-style UI primitives.
+This project is sponsored by the **Egyptian Space Agency (EgSA)**.
 
-## Tech Stack
+## ✨ Highlights
+
+- 🔐 Secure operator authentication with login, registration, Laravel Sanctum CSRF support, bearer-token session storage, protected routes, optional passkey onboarding, and 2FA setup.
+- 🧭 Command Center for sending validated commands, scheduling macro goals, scheduling ATC commands, viewing command history, browsing the command dictionary, and reviewing command responses.
+- 📡 Telemetry Center for retrieving telemetry replies by command log ID and inspecting decoded telemetry readings.
+- 🛰️ Satellite Overview for fleet status, subsystem details, operational health, and satellite metadata.
+- 🖼️ Image Center for received image browsing, object detection, panorama generation, result previews, download actions, and image deletion.
+- 🧠 Faults & Diagnostics page backed by AI anomaly insights.
+- 🧩 Manual Decoder for single-frame and batch telemetry decoding.
+- 📜 Logs dashboard for system events and activity tracking.
+- 🎛️ Responsive sidebar layout with collapsible navigation, rich status cards, tables, filters, dialogs, toast feedback, and consistent shadcn-style UI primitives.
+
+## 🛠️ Tech Stack
 
 | Layer | Technology |
 | --- | --- |
@@ -30,9 +34,9 @@ MCC UI is a React, TypeScript, and Vite application built around an operations-f
 | Feedback and motion | Sonner, Framer Motion |
 | Package manager | pnpm |
 
-## Core Features
+## 🚀 Core Features
 
-### Authentication & Security
+### 🔐 Authentication & Security
 
 - Login and logout flow using `/api/auth/login` and `/api/auth/logout`.
 - CSRF initialization through `/sanctum/csrf-cookie`.
@@ -48,7 +52,7 @@ MCC UI is a React, TypeScript, and Vite application built around an operations-f
   - TOTP code confirmation.
   - Success state after 2FA is enabled.
 
-### Dashboard
+### 📊 Dashboard
 
 - Fleet-level mission summary cards.
 - Active satellite, operational, warning, critical, active fault, and pending command counters.
@@ -57,7 +61,7 @@ MCC UI is a React, TypeScript, and Vite application built around an operations-f
 - Telemetry preview and live activity feed.
 - Bottom mission summary panels.
 
-### Command Center
+### 🧭 Command Center
 
 - Create Command:
   - Loads command catalog from the backend.
@@ -84,20 +88,20 @@ MCC UI is a React, TypeScript, and Vite application built around an operations-f
   - Displays command reply records from the backend.
   - Includes filtering and tabular review.
 
-### Telemetry
+### 📡 Telemetry
 
 - Retrieve telemetry replies by command log ID.
 - Supports direct route loading with `/telemetry-replies/:commandLogId`.
 - Displays command log metadata, command ID, response status, response time, telemetry count, and readings table.
 - Handles empty, loading, error, and success states.
 
-### Satellite Operations
+### 🛰️ Satellite Operations
 
 - Fetches satellite records from the MCC API.
 - Displays satellite overview cards, subsystem information, operational status, and health details.
 - Provides summary statistics for quick fleet scanning.
 
-### Image Center
+### 🖼️ Image Center
 
 - Lists received images and related command log IDs.
 - Supports pagination-aware image fetching.
@@ -112,26 +116,26 @@ MCC UI is a React, TypeScript, and Vite application built around an operations-f
   - Lists generated panoramas.
   - Provides preview, open, and download actions.
 
-### Faults & Diagnostics
+### 🧠 Faults & Diagnostics
 
 - Loads AI anomaly insight records from the backend.
 - Displays fault cards and diagnostic statistics.
 - Helps operators monitor and resolve system faults and anomalies.
 
-### Manual Decoder
+### 🧩 Manual Decoder
 
 - Decodes telemetry frames manually through backend decoder endpoints.
 - Supports single-frame and batch decoding.
 - Presents parsed output in structured result panels.
 - Includes frame input, mode controls, statistics, and validation feedback.
 
-### Logs
+### 📜 Logs
 
 - Central logs dashboard for system activity.
 - Summarizes total, info, warning, error, and critical log counts.
 - Provides table-based log review.
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```text
 src/
@@ -157,7 +161,7 @@ src/
   utils/             General utilities
 ```
 
-## API Integration
+## 🔌 API Integration
 
 The app uses a shared Axios client from `src/services/api.ts`.
 
@@ -177,7 +181,7 @@ During local development, Vite proxies backend paths to `http://localhost`:
 
 Make sure the MCC backend is running locally and exposes the expected API routes before using authenticated pages.
 
-## Getting Started
+## ⚙️ Getting Started
 
 ### Prerequisites
 
@@ -217,7 +221,7 @@ pnpm preview
 pnpm lint
 ```
 
-## Available Routes
+## 🧭 Available Routes
 
 | Route | Purpose |
 | --- | --- |
@@ -241,7 +245,7 @@ pnpm lint
 | `/faults` | Faults and diagnostics |
 | `/logs` | Logs dashboard |
 
-## Design System
+## 🎨 Design System
 
 The interface is built for operational clarity:
 
@@ -253,7 +257,7 @@ The interface is built for operational clarity:
 - Toast notifications for async feedback.
 - Lucide iconography for navigation and action clarity.
 
-## Notes
+## 📝 Notes
 
 - `Command Templates` and `AI Insights` appear in the sidebar, but their routes are not currently registered in `src/routes/routes.tsx`.
 - The frontend assumes the backend returns MCC resources from `/api/mcc/...`.
