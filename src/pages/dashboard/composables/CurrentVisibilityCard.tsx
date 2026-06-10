@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar,
@@ -35,20 +36,27 @@ type Telemetry = {
   gauge?: number;
 };
 
-type VisibilityData = {
-  isInZone: boolean;
-  satellite: {
-    name: string;
-    orbit: string;
-    altitude: string;
-    inclination: string;
-    velocity: string;
-    mission: string;
-  };
+type TrackedSatellite = {
+  name: string;
+  code: string;
+  orbit: string;
+  altitude: string;
+  inclination: string;
+  velocity: string;
+  mission: string;
   station: {
     code: string;
     location: string;
   };
+  passDurationSeconds: number;
+  signalPower: number;
+  telemetry: Telemetry[];
+};
+
+type VisibilityData = {
+  isInZone: boolean;
+  activeSatellite: TrackedSatellite;
+  nextSatellite: TrackedSatellite;
   pass: {
     enteredZone: string;
     remainingTime: string;
@@ -61,80 +69,128 @@ type VisibilityData = {
   telemetry: Telemetry[];
 };
 
-const isInZone = true;
-
-const VISIBILITY_DATA: VisibilityData = {
-  isInZone,
-  satellite: {
-    name: "SAT-7A",
+const SATELLITES: TrackedSatellite[] = [
+  {
+    name: "FUNcube-1",
+    code: "AO-73",
+    orbit: "LEO",
+    altitude: "635 KM",
+    inclination: "97.8 deg",
+    velocity: "7.54 KM/S",
+    mission: "Amateur Radio Education",
+    station: {
+      code: "GS-01",
+      location: "Cairo, Egypt",
+    },
+    passDurationSeconds: 501,
+    signalPower: 82,
+    telemetry: [
+      {
+        label: "Downlink Rate",
+        value: "125.4 Mbps",
+        accent: "green",
+        sparkline: [18, 20, 19, 26, 21, 34, 29, 37, 31, 48, 22, 43],
+      },
+      {
+        label: "Uplink Rate",
+        value: "32.7 Mbps",
+        accent: "blue",
+        sparkline: [15, 22, 17, 28, 19, 31, 23, 34, 20, 29, 25, 32],
+      },
+      {
+        label: "Latency",
+        value: "24 ms",
+        accent: "purple",
+        sparkline: [28, 22, 31, 24, 35, 27, 40, 25, 37, 21, 33, 30],
+      },
+      {
+        label: "Elevation",
+        value: "47.3 deg",
+        accent: "blue",
+        gauge: 63,
+      },
+      {
+        label: "Azimuth",
+        value: "213.8 deg",
+        accent: "green",
+        gauge: 72,
+      },
+      {
+        label: "Link Quality",
+        value: "Good",
+        accent: "green",
+        icon: ShieldCheck,
+      },
+    ],
+  },
+  {
+    name: "EGSACUB-ED",
+    code: "EGSACUB-ED",
     orbit: "LEO",
     altitude: "512 KM",
-    inclination: "97.6 deg",
+    inclination: "51.6 deg",
     velocity: "7.62 KM/S",
-    mission: "Earth Observation",
+    mission: "Educational CubeSat",
+    station: {
+      code: "GS-02",
+      location: "Cairo, Egypt",
+    },
+    passDurationSeconds: 583,
+    signalPower: 76,
+    telemetry: [
+      {
+        label: "Downlink Rate",
+        value: "98.7 Mbps",
+        accent: "green",
+        sparkline: [16, 24, 21, 29, 26, 36, 32, 41, 37, 45, 35, 39],
+      },
+      {
+        label: "Uplink Rate",
+        value: "28.3 Mbps",
+        accent: "blue",
+        sparkline: [12, 18, 16, 24, 19, 27, 22, 30, 24, 33, 26, 31],
+      },
+      {
+        label: "Latency",
+        value: "31 ms",
+        accent: "purple",
+        sparkline: [32, 27, 35, 29, 38, 31, 42, 33, 37, 28, 34, 30],
+      },
+      {
+        label: "Elevation",
+        value: "41.9 deg",
+        accent: "blue",
+        gauge: 57,
+      },
+      {
+        label: "Azimuth",
+        value: "188.4 deg",
+        accent: "green",
+        gauge: 64,
+      },
+      {
+        label: "Link Quality",
+        value: "Stable",
+        accent: "green",
+        icon: ShieldCheck,
+      },
+    ],
   },
-  station: {
-    code: "GS-01",
-    location: "Cairo, Egypt",
-  },
-  pass: {
-    enteredZone: "14:32 UTC",
-    remainingTime: "08m 21s",
-    remainingPercent: 56,
-    signalPower: 82,
-    nextPass: "16:07 UTC",
-    aosIn: "01h 26m",
-    maxDuration: "09m 43s",
-  },
-  telemetry: [
-    {
-      label: "Downlink Rate",
-      value: "125.4 Mbps",
-      accent: "green",
-      sparkline: [18, 20, 19, 26, 21, 34, 29, 37, 31, 48, 22, 43],
-    },
-    {
-      label: "Uplink Rate",
-      value: "32.7 Mbps",
-      accent: "blue",
-      sparkline: [15, 22, 17, 28, 19, 31, 23, 34, 20, 29, 25, 32],
-    },
-    {
-      label: "Latency",
-      value: "24 ms",
-      accent: "purple",
-      sparkline: [28, 22, 31, 24, 35, 27, 40, 25, 37, 21, 33, 30],
-    },
-    {
-      label: "Elevation",
-      value: "47.3 deg",
-      accent: "blue",
-      gauge: 63,
-    },
-    {
-      label: "Azimuth",
-      value: "213.8 deg",
-      accent: "green",
-      gauge: 72,
-    },
-    {
-      label: "Link Quality",
-      value: "Good",
-      accent: "green",
-      icon: ShieldCheck,
-    },
-  ],
-};
+];
+
+const CYCLE_START_MS = Date.now();
 
 export default function CurrentVisibilityCard({
   data,
 }: CurrentVisibilityCardProps) {
   void data;
 
-  return <SatelliteVisibilityZone data={VISIBILITY_DATA} />;
+  return <SatelliteVisibilityZone />;
 }
 
-function SatelliteVisibilityZone({ data }: { data: VisibilityData }) {
+function SatelliteVisibilityZone() {
+  const data = useSatelliteVisibilityCycle();
+
   return (
     <section className="mt-10 overflow-hidden rounded-2xl border border-blue-400/20 bg-[#020815] p-3 text-white shadow-[0_0_45px_rgba(14,165,233,0.08)]">
       <div className="relative rounded-xl border border-cyan-400/15 bg-[radial-gradient(circle_at_18%_10%,rgba(14,165,233,0.14),transparent_28%),linear-gradient(180deg,rgba(8,18,34,0.94),rgba(1,6,16,0.96))] p-4 sm:p-6">
@@ -167,6 +223,95 @@ function SatelliteVisibilityZone({ data }: { data: VisibilityData }) {
       </div>
     </section>
   );
+}
+
+function useSatelliteVisibilityCycle() {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timerId = window.setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(timerId);
+  }, []);
+
+  return useMemo(() => buildVisibilityData(now), [now]);
+}
+
+function buildVisibilityData(now: number): VisibilityData {
+  const totalCycleSeconds = SATELLITES.reduce(
+    (total, satellite) => total + satellite.passDurationSeconds,
+    0,
+  );
+  let elapsedInCycle = Math.floor((now - CYCLE_START_MS) / 1000);
+  elapsedInCycle =
+    ((elapsedInCycle % totalCycleSeconds) + totalCycleSeconds) %
+    totalCycleSeconds;
+
+  let activeIndex = 0;
+  let elapsedInPass = elapsedInCycle;
+
+  for (let index = 0; index < SATELLITES.length; index += 1) {
+    const duration = SATELLITES[index].passDurationSeconds;
+
+    if (elapsedInPass < duration) {
+      activeIndex = index;
+      break;
+    }
+
+    elapsedInPass -= duration;
+  }
+
+  const activeSatellite = SATELLITES[activeIndex];
+  const nextSatellite = SATELLITES[(activeIndex + 1) % SATELLITES.length];
+  const remainingSeconds =
+    activeSatellite.passDurationSeconds - elapsedInPass;
+  const passStartedAt = now - elapsedInPass * 1000;
+  const nextPassAt = now + remainingSeconds * 1000;
+
+  return {
+    isInZone: true,
+    activeSatellite,
+    nextSatellite,
+    pass: {
+      enteredZone: `${formatUtcTime(passStartedAt)} UTC`,
+      remainingTime: formatCountdown(remainingSeconds),
+      remainingPercent:
+        (remainingSeconds / activeSatellite.passDurationSeconds) * 100,
+      signalPower: activeSatellite.signalPower,
+      nextPass: `${formatUtcTime(nextPassAt)} UTC`,
+      aosIn: formatCountdown(remainingSeconds),
+      maxDuration: formatCountdown(nextSatellite.passDurationSeconds),
+    },
+    telemetry: activeSatellite.telemetry,
+  };
+}
+
+function formatCountdown(totalSeconds: number) {
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const seconds = safeSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours.toString().padStart(2, "0")}h ${minutes
+      .toString()
+      .padStart(2, "0")}m`;
+  }
+
+  return `${minutes.toString().padStart(2, "0")}m ${seconds
+    .toString()
+    .padStart(2, "0")}s`;
+}
+
+function formatUtcTime(timestamp: number) {
+  return new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+  }).format(timestamp);
 }
 
 function ActivePassVisualization({ data }: { data: VisibilityData }) {
@@ -206,11 +351,7 @@ function ActivePassVisualization({ data }: { data: VisibilityData }) {
     >
       <CardContent className="relative h-full min-h-[620px] p-4 sm:p-5">
         <div className="relative z-30 flex items-start justify-between gap-3">
-          <PanelTitle
-            active={data.isInZone}
-            title="Current Pass"
-            subtitle="In View"
-          />
+          <PanelTitle active={data.isInZone} title="Current Pass" subtitle="In View" />
           <StatusBadge
             className={data.isInZone ? "" : "opacity-40"}
             dotClassName="bg-green-400"
@@ -275,7 +416,7 @@ function OutOfZoneVisualization({ data }: { data: VisibilityData }) {
         <div className="relative z-20 flex items-start justify-between gap-3">
           <PanelTitle
             active={!data.isInZone}
-            title="Next Pass"
+            title={data.nextSatellite.name}
             subtitle="Out of Zone"
           />
           <StatusBadge
@@ -302,7 +443,7 @@ function OutOfZoneVisualization({ data }: { data: VisibilityData }) {
 
         <div className="relative z-20 mt-2 text-center">
           <p className="text-sm uppercase tracking-[0.08em] text-slate-300">
-            Satellite currently out of visibility zone
+            {data.nextSatellite.name} currently out of visibility zone
           </p>
           <p className="mt-2 text-sm text-slate-500">
             Waiting for next pass opportunity
@@ -394,16 +535,17 @@ function TelemetryCard({ telemetry }: { telemetry: Telemetry }) {
 
 function SummaryStrip({ data }: { data: VisibilityData }) {
   const summary = [
-    ["Satellite", data.satellite.name],
-    ["Orbit", data.satellite.orbit],
-    ["Altitude", data.satellite.altitude],
-    ["Inclination", data.satellite.inclination],
-    ["Velocity", data.satellite.velocity],
-    ["Mission", data.satellite.mission],
+    ["Satellite", data.activeSatellite.name],
+    ["Code", data.activeSatellite.code],
+    ["Orbit", data.activeSatellite.orbit],
+    ["Altitude", data.activeSatellite.altitude],
+    ["Inclination", data.activeSatellite.inclination],
+    ["Velocity", data.activeSatellite.velocity],
+    ["Mission", data.activeSatellite.mission],
   ];
 
   return (
-    <div className="relative z-10 mt-4 grid gap-0 overflow-hidden rounded-xl border border-cyan-400/15 bg-[#061629]/90 md:grid-cols-[repeat(3,minmax(0,1fr))] xl:grid-cols-[repeat(6,minmax(0,1fr))_220px]">
+    <div className="relative z-10 mt-4 grid gap-0 overflow-hidden rounded-xl border border-cyan-400/15 bg-[#061629]/90 md:grid-cols-[repeat(3,minmax(0,1fr))] xl:grid-cols-[repeat(7,minmax(0,1fr))_220px]">
       {summary.map(([label, value]) => (
         <div
           key={label}
@@ -655,7 +797,8 @@ function GroundStationLabel({ data }: { data: VisibilityData }) {
           Ground Station
         </p>
         <p className="mt-2 uppercase text-slate-400">
-          {data.station.code} &middot; {data.station.location}
+          {data.activeSatellite.station.code} &middot;{" "}
+          {data.activeSatellite.station.location}
         </p>
       </div>
     </div>
@@ -667,12 +810,13 @@ function SatelliteLabel({ data }: { data: VisibilityData }) {
     <div className="absolute right-[8%] top-[28%] z-30 rounded-lg border border-cyan-400/20 bg-slate-950/65 px-4 py-3 text-xs backdrop-blur">
       <p className="flex items-center gap-2 font-semibold text-slate-100">
         <span className="h-2 w-2 rounded-full bg-green-400" />
-        {data.satellite.name}
+        {data.activeSatellite.name}
       </p>
       <p className="mt-2 text-slate-400">
-        {data.satellite.orbit} &middot; {data.satellite.altitude}
+        {data.activeSatellite.code} &middot; {data.activeSatellite.orbit}{" "}
+        &middot; {data.activeSatellite.altitude}
       </p>
-      <p className="mt-1 text-slate-400">{data.satellite.velocity}</p>
+      <p className="mt-1 text-slate-400">{data.activeSatellite.velocity}</p>
     </div>
   );
 }
