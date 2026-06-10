@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
+import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import DashboardView from "@/pages/dashboard/dashboardView";
 import CreateCommand from "@/pages/command/sendCommand/createCommand";
 import LogPage from "@/pages/logPage/logpage";
@@ -17,12 +18,20 @@ import PanoramaResultsView from "@/pages/imageCenter/panorama/composables/Panora
 import EnhancedResultView from "@/pages/imageCenter/enhancedImages/composables/EnhancedResultView";
 import ScheduledCommandsView from "@/pages/command/scheduledCommands/scheduledCommandsView";
 import AtcCommandView from "@/pages/command/atcCommand/Atccommandview";
+import RegistrationView from "@/pages/auth/registration/registrationView";
+import TwoFactorView from "@/pages/auth/twoFactor/twoFactorView";
+import LoginView from "@/pages/auth/login/loginView";
 
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<DashboardView />} />
+      {/* Auth */}
+      <Route path="/register" element={<RegistrationView />} />
+      <Route path="/" element={<LoginView />} />
+      <Route path="/2fa-setup" element={<TwoFactorView />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<DashboardView />} />
 
         {/* Command Center */}
         <Route path="/commands/create" element={<CreateCommand />} />
@@ -68,6 +77,7 @@ export default function AppRoutes() {
         {/* <Route path="/faults" element={<Faults />} /> */}
 
         <Route path="*" element={<NotFound />} />
+        </Route>
       </Route>
     </Routes>
   );
