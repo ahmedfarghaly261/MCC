@@ -30,6 +30,7 @@ export async function ensureCsrfCookie(): Promise<void> {
 
 export async function clearAuthSession(): Promise<void> {
   setAuthToken(null);
+  sessionStorage.removeItem("mcc_is_authenticated");
 
   try {
     await ensureCsrfCookie();
