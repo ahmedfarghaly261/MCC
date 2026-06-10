@@ -24,4 +24,5 @@ export async function loginUser(email: string, password: string): Promise<void> 
   });
 
   setAuthTokenFromResponse(response.data);
+  sessionStorage.setItem("mcc_is_authenticated", "true");
 }
