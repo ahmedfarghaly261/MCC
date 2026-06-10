@@ -72,7 +72,7 @@ export default function RegistrationView() {
 
   const redirectToHome = (delay: number) => {
     setTimeout(
-      () => navigate('/'),
+      () => navigate('/dashboard'),
       delay,
     );
   };
@@ -154,7 +154,7 @@ export default function RegistrationView() {
             <p className="text-sm text-slate-400">
               Already have an account?{' '}
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/')}
                 className="font-medium text-cyan-300 transition-colors hover:text-cyan-200"
               >
                 Sign in here

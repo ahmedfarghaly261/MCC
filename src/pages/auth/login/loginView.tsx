@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -21,6 +21,12 @@ export default function LoginView() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (sessionStorage.getItem('mcc_auth_token') || sessionStorage.getItem('mcc_is_authenticated')) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setError(null);
@@ -39,7 +45,7 @@ export default function LoginView() {
     try {
       await loginUser({ email: formData.email, password: formData.password });
       toast.success('Signed in successfully!');
-      navigate('/');
+      navigate('/dashboard');
     } catch (err: any) {
       const message =
         err?.response?.data?.message ||
