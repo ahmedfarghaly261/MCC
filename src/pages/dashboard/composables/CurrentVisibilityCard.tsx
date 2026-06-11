@@ -75,7 +75,7 @@ const SATELLITES: TrackedSatellite[] = [
     code: "EGSACUB-ED",
     orbit: "LEO",
     altitude: "512 KM",
-    inclination: "51.6 deg",
+    inclination: "51.6 DEG",
     velocity: "7.62 KM/S",
     mission: "Educational CubeSat",
     station: {
@@ -114,6 +114,59 @@ const SATELLITES: TrackedSatellite[] = [
         value: "213.8 deg",
         accent: "green",
         gauge: 72,
+      },
+      {
+        label: "Link Quality",
+        value: "Good",
+        accent: "green",
+        icon: ShieldCheck,
+      },
+    ],
+  },
+  {
+    name: "FUNcube-1",
+    code: "AO-73",
+    orbit: "LEO",
+    altitude: "635 KM",
+    inclination: "97.8 DEG",
+    velocity: "7.54 KM/S",
+    mission: "Amateur Radio Education",
+    station: {
+      code: "GS-01",
+      location: "Cairo, Egypt",
+    },
+    passDurationSeconds: 501,
+    signalPower: 79,
+    telemetry: [
+      {
+        label: "Downlink Rate",
+        value: "112.8 Mbps",
+        accent: "green",
+        sparkline: [16, 19, 18, 25, 23, 31, 28, 35, 30, 41, 26, 37],
+      },
+      {
+        label: "Uplink Rate",
+        value: "29.6 Mbps",
+        accent: "blue",
+        sparkline: [13, 20, 16, 24, 18, 28, 22, 30, 21, 27, 24, 31],
+      },
+      {
+        label: "Latency",
+        value: "28 ms",
+        accent: "purple",
+        sparkline: [30, 24, 34, 26, 37, 29, 39, 27, 36, 25, 33, 29],
+      },
+      {
+        label: "Elevation",
+        value: "43.8 deg",
+        accent: "blue",
+        gauge: 58,
+      },
+      {
+        label: "Azimuth",
+        value: "198.6 deg",
+        accent: "green",
+        gauge: 66,
       },
       {
         label: "Link Quality",
@@ -722,45 +775,15 @@ function StarField() {
 }
 
 function EarthHorizon() {
-  const cityLights = [
-    ["54%", "37%", "h-1.5 w-1.5"],
-    ["60%", "45%", "h-1 w-1"],
-    ["67%", "39%", "h-1.5 w-1.5"],
-    ["72%", "49%", "h-1 w-1"],
-    ["49%", "54%", "h-1 w-1"],
-    ["78%", "57%", "h-1.5 w-1.5"],
-    ["38%", "48%", "h-1 w-1"],
-    ["84%", "42%", "h-1 w-1"],
-    ["57%", "62%", "h-1.5 w-1.5"],
-    ["70%", "68%", "h-1 w-1"],
-  ];
-
   return (
-    <div className="absolute inset-x-[-18%] bottom-[-38%] h-[78%] overflow-hidden rounded-t-[100%]">
-      <div className="absolute inset-x-[-3%] top-[-7%] h-20 rounded-[100%] bg-sky-300/30 blur-2xl" />
-      <div className="absolute inset-x-[2%] top-[2%] h-10 rounded-[100%] border-t-2 border-sky-300/80 shadow-[0_-12px_36px_rgba(96,165,250,0.85)]" />
-      <div className="absolute inset-0 rounded-t-[100%] border-t border-sky-200/50 bg-[radial-gradient(circle_at_30%_32%,rgba(30,64,175,0.85),transparent_22%),radial-gradient(circle_at_58%_34%,rgba(14,116,144,0.66),transparent_18%),radial-gradient(circle_at_72%_48%,rgba(15,23,42,0.82),transparent_29%),linear-gradient(180deg,rgba(74,144,226,0.84),rgba(11,52,84,0.88)_24%,rgba(5,22,38,0.96)_66%,rgba(2,8,23,1))]" />
-      <div className="absolute inset-x-[10%] top-[28%] h-[48%] rounded-[100%] border border-green-300/18 bg-[linear-gradient(90deg,rgba(34,197,94,0.14)_1px,transparent_1px),linear-gradient(180deg,rgba(34,197,94,0.1)_1px,transparent_1px)] bg-[size:32px_32px] opacity-80 [mask-image:linear-gradient(180deg,black,transparent_85%)]" />
-      <div className="absolute inset-x-[15%] top-[33%] h-[38%] rounded-[100%] border-t border-cyan-300/15" />
-      <div className="absolute inset-x-[22%] top-[45%] h-[28%] rounded-[100%] border-t border-cyan-300/12" />
-      {cityLights.map(([left, top, size]) => (
-        <motion.span
-          key={`${left}-${top}`}
-          className={cn(
-            "absolute rounded-full bg-amber-200 shadow-[0_0_9px_rgba(251,191,36,0.85)]",
-            size,
-          )}
-          style={{ left, top }}
-          animate={{ opacity: [0.35, 1, 0.45] }}
-          transition={{
-            duration: 2.6,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: Number.parseInt(left, 10) / 80,
-          }}
-        />
-      ))}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_54%_35%,rgba(255,255,255,0.16),transparent_9%),linear-gradient(180deg,transparent,rgba(2,6,23,0.52)_72%)]" />
+    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+      <div className="earth-horizon-real absolute inset-0">
+        <div className="earth-scene-overlay absolute inset-0" />
+        <div className="earth-city-overlay absolute inset-0" />
+        <div className="earth-grid-overlay absolute inset-x-[8%] bottom-[2%] h-[42%]" />
+      </div>
+      <div className="earth-atmosphere-glow absolute inset-x-[-8%] bottom-[30%] h-24 rounded-[100%]" />
+      <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#020617]/88 via-[#020617]/34 to-transparent" />
     </div>
   );
 }
@@ -1010,12 +1033,11 @@ function SatelliteLabel({ data }: { data: VisibilityData }) {
 
 function EarthGlobe() {
   return (
-    <div className="absolute left-1/2 top-1/2 z-20 h-60 w-60 -translate-x-1/2 -translate-y-1/2 rounded-full border border-sky-200/45 bg-[radial-gradient(circle_at_26%_32%,rgba(255,255,255,0.9),transparent_8%),radial-gradient(circle_at_35%_43%,rgba(59,130,246,0.9),transparent_24%),radial-gradient(circle_at_62%_35%,rgba(34,197,94,0.28),transparent_13%),radial-gradient(circle_at_48%_66%,rgba(15,23,42,0.92),transparent_40%),linear-gradient(135deg,#2563eb,#020617_70%)] shadow-[0_0_38px_rgba(96,165,250,0.62),0_0_90px_rgba(14,165,233,0.22),inset_-22px_-18px_34px_rgba(0,0,0,0.58)]">
-      <div className="absolute inset-[-8px] rounded-full border border-sky-300/25 shadow-[0_0_32px_rgba(125,211,252,0.45)]" />
-      <div className="absolute inset-0 rounded-full bg-[radial-gradient(ellipse_at_42%_35%,rgba(22,163,74,0.34),transparent_18%),radial-gradient(ellipse_at_60%_58%,rgba(22,101,52,0.3),transparent_16%),radial-gradient(ellipse_at_51%_47%,rgba(250,204,21,0.18),transparent_3%),radial-gradient(ellipse_at_65%_50%,rgba(250,204,21,0.22),transparent_2%),radial-gradient(ellipse_at_57%_63%,rgba(250,204,21,0.17),transparent_2%)]" />
-      <div className="absolute inset-0 rounded-full bg-[linear-gradient(90deg,transparent_46%,rgba(255,255,255,0.08)_48%,transparent_50%),linear-gradient(180deg,transparent_48%,rgba(255,255,255,0.08)_50%,transparent_52%)] opacity-80" />
-      <div className="absolute inset-y-0 right-0 w-[56%] rounded-r-full bg-black/42" />
-      <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_18%_30%,rgba(255,255,255,0.24),transparent_16%),linear-gradient(120deg,rgba(255,255,255,0.16),transparent_32%)]" />
+    <div className="earth-globe-real absolute left-1/2 top-1/2 z-20 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full border border-sky-200/45">
+      <div className="globe-atmosphere absolute inset-[-10px] rounded-full" />
+      <div className="globe-shadow-overlay absolute inset-0 rounded-full" />
+      <div className="absolute inset-0 rounded-full bg-[linear-gradient(90deg,transparent_46%,rgba(255,255,255,0.075)_48%,transparent_50%),linear-gradient(180deg,transparent_48%,rgba(255,255,255,0.065)_50%,transparent_52%)] opacity-70" />
+      <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_22%_28%,rgba(255,255,255,0.34),transparent_16%),linear-gradient(120deg,rgba(255,255,255,0.15),transparent_32%)]" />
     </div>
   );
 }
