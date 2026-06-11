@@ -5,7 +5,7 @@ export default function ProtectedRoute() {
   const isAuthenticated = sessionStorage.getItem("mcc_is_authenticated");
 
   if (!token && !isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth/login" replace />;
   }
 
   return <Outlet />;

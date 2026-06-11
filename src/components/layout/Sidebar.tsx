@@ -31,7 +31,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   {
     label: "Home",
-    path: "/",
+    path: "/dashboard",
     icon: <Home size={20} />,
   },
   {

@@ -8,7 +8,7 @@ function NavBar() {
 
     const handleLogout = async () => {
       await clearAuthSession();
-      navigate("/");
+      navigate("/auth/login");
     };
 
     const TopBarClock = memo(function TopBarClock() {
