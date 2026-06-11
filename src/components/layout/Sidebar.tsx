@@ -18,6 +18,9 @@ import {
   Activity,
   Code,
   CalendarClock,
+  Images,
+  Nfc ,
+ MessageSquareReply,
 } from "lucide-react";
 
 interface NavItem {
@@ -40,7 +43,7 @@ const navItems: NavItem[] = [
       {
         label: "send Command",
         path: "/commands/create",
-        icon: <FilePlus size={18} />,
+        icon: <Nfc size={18} />,
       },
       {
         label: "Scheduled Macro Goals",
@@ -65,7 +68,7 @@ const navItems: NavItem[] = [
       , {
         label: "Command Responses",
         path: "/commands/responses",
-        icon: <FileText size={18} />,
+        icon: <MessageSquareReply  size={18} />,
       }
     ],
   },
@@ -94,7 +97,7 @@ const navItems: NavItem[] = [
 	{
 		label: "Image Center",
 		path: "/images",
-		icon: <FileText size={20} />,
+		icon: <Images size={20} />,
 	},
       {
         label: "Manual Decoder",
