@@ -4,15 +4,17 @@ import {
   CheckCircle2,
   Loader2,
 } from "lucide-react";
+import { formatAsHex } from "../Utils/commandCatalog.util";
+import type { CommandCatalogItem } from "../types/commandCatalog.types";
 
-type ValidationState = "idle" | "valid" | "invalid" | "loading";
+export type ValidationState = "idle" | "valid" | "invalid" | "loading";
 
 interface CommandValidationPanelProps {
   validationState: ValidationState;
   satellite: string;
-  type?: string;
-  command?: string;
+  command?: CommandCatalogItem | null;
   priority: "low" | "normal" | "high";
+  message?: string;
 }
 
 const StatusIcon = ({ state }: { state: ValidationState }) => {
@@ -70,20 +72,39 @@ const CommandValidationPanel: React.FC<
 > = ({
   validationState,
   satellite,
-  type,
   command,
   priority,
+  message,
 }) => {
+  const subsystems =
+    command?.subsystems
+      ?.map((subsystem) => `${subsystem.name} (${subsystem.hex_code})`)
+      .join(", ") || "-";
+  const destinations =
+    command?.allowed_destinations?.length
+      ? command.allowed_destinations.join(", ")
+      : "-";
+  const requiredFields =
+    command?.required_data_fields?.length
+      ? command.required_data_fields
+          .filter((field) => field !== null && field !== undefined)
+          .join(", ")
+      : "None";
+
   const getMessage = () => {
+    if (message) {
+      return message;
+    }
+
     switch (validationState) {
       case "valid":
-        return "Command validated successfully";
+        return "Command dispatched successfully";
       case "invalid":
-        return "Command validation failed";
+        return "Command dispatch failed";
       case "loading":
-        return "Validating command...";
+        return "Sending command...";
       default:
-        return "Fill in command details and click validate";
+        return "Fill in command details and send command";
     }
   };
 
@@ -116,13 +137,37 @@ const CommandValidationPanel: React.FC<
           </div>
 
           <div className="flex justify-between">
-            <span className="text-gray-400">Type:</span>
-            <span>{type || "-"}</span>
+            <span className="text-gray-400">Command ID:</span>
+            <span className="font-mono text-cyan-300">
+              {command ? formatAsHex(command.cmd_id) : "-"}
+            </span>
           </div>
 
           <div className="flex justify-between">
             <span className="text-gray-400">Command:</span>
-            <span>{command || "-"}</span>
+            <span className="text-right font-medium">
+              {command?.name || "-"}
+            </span>
+          </div>
+
+          <div className="flex justify-between">
+            <span className="text-gray-400">Catalog ID:</span>
+            <span>{command?.id ?? "-"}</span>
+          </div>
+
+          <div className="flex justify-between gap-4">
+            <span className="text-gray-400">Subsystems:</span>
+            <span className="text-right">{subsystems}</span>
+          </div>
+
+          <div className="flex justify-between gap-4">
+            <span className="text-gray-400">Destinations:</span>
+            <span className="text-right">{destinations}</span>
+          </div>
+
+          <div className="flex justify-between gap-4">
+            <span className="text-gray-400">Required Data:</span>
+            <span className="text-right">{requiredFields}</span>
           </div>
 
           <div className="flex justify-between items-center">

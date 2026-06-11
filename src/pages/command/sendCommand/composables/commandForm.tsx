@@ -25,7 +25,12 @@ import {
 
 import { CheckCircle, Send } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Controller, useForm, type SubmitHandler } from "react-hook-form";
+import {
+  Controller,
+  useForm,
+  type SubmitErrorHandler,
+  type SubmitHandler,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isAxiosError } from "axios";
 import {
@@ -74,10 +79,16 @@ function toPayload(values: CommandSchema): SendCommandPayload {
 
 interface Props {
   onCommandSent: (log: CommandLog) => void;
+  onCommandSendStart: () => void;
+  onCommandSendError: (message: string) => void;
+  onCommandSelectionChange: (command: CommandCatalogItem | null) => void;
 }
 
 export default function CommandForm({
   onCommandSent,
+  onCommandSendStart,
+  onCommandSendError,
+  onCommandSelectionChange,
 }: Props) {
   const [commands, setCommands] = useState<CommandCatalogItem[]>([]);
   const [commandsLoading, setCommandsLoading] = useState(true);
@@ -117,6 +128,10 @@ export default function CommandForm({
 
     return normalizeRequiredFields(fields);
   }, [selectedCommand]);
+
+  useEffect(() => {
+    onCommandSelectionChange(selectedCommand ?? null);
+  }, [onCommandSelectionChange, selectedCommand]);
 
   useEffect(() => {
     const fetchCommands = async () => {
@@ -230,6 +245,9 @@ export default function CommandForm({
           values.dataFields ?? {},
         )
       ) {
+        onCommandSendError(
+          "Complete all required command data fields before sending.",
+        );
         return;
       }
 
@@ -240,6 +258,8 @@ export default function CommandForm({
           requiredDataFields,
         ),
       };
+
+      onCommandSendStart();
 
       const response =
         (await sendCommand(
@@ -296,10 +316,18 @@ export default function CommandForm({
           ? error.message
           : "Failed to send command. Please try again.";
 
+      onCommandSendError(message);
+
       toast.error(message, {
         position: "bottom-right",
       });
     }
+  };
+
+  const onInvalidSubmit: SubmitErrorHandler<CommandSchema> = () => {
+    onCommandSendError(
+      "Command validation failed. Check the highlighted fields and try again.",
+    );
   };
 
   const isSubmitting =
@@ -335,6 +363,7 @@ export default function CommandForm({
             id="create-command-form"
             onSubmit={form.handleSubmit(
               onsubmit,
+              onInvalidSubmit,
             )}
           >
             <FieldGroup>
