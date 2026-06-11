@@ -1,16 +1,39 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { FileText } from "lucide-react";
 import CommandForm from "./composables/commandForm";
-import CommandValidationPanel from "./composables/CommandValidationPanel";
+import CommandValidationPanel, {
+  type ValidationState,
+} from "./composables/CommandValidationPanel";
 import LastCommandRow from "./composables/lastCommandRow";
 
 import type {
   CommandLog,
 } from "./services/commandLogService";
+import type { CommandCatalogItem } from "./types/commandCatalog.types";
 
 export default function CreateCommand() {
   const [lastCommand, setLastCommand] =
     useState<CommandLog | null>(null);
+  const [validationState, setValidationState] =
+    useState<ValidationState>("idle");
+  const [validationMessage, setValidationMessage] =
+    useState<string | undefined>();
+  const [selectedCommand, setSelectedCommand] =
+    useState<CommandCatalogItem | null>(null);
+
+  const handleCommandSelectionChange = useCallback(
+    (command: CommandCatalogItem | null) => {
+      setSelectedCommand((currentCommand) => {
+        if (command && command.id !== currentCommand?.id) {
+          setValidationState("idle");
+          setValidationMessage(undefined);
+        }
+
+        return command;
+      });
+    },
+    [],
+  );
 
   return (
     <div className="min-h-screen bg-background text-white">
@@ -36,15 +59,28 @@ export default function CreateCommand() {
         {/* Form + Validation */}
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 mt-8 items-start">
           <CommandForm
-            onCommandSent={setLastCommand}
+            onCommandSendStart={() => {
+              setValidationState("loading");
+              setValidationMessage("Sending command to MCC backend...");
+            }}
+            onCommandSent={(log) => {
+              setLastCommand(log);
+              setValidationState("valid");
+              setValidationMessage("Command dispatched successfully.");
+            }}
+            onCommandSendError={(message) => {
+              setValidationState("invalid");
+              setValidationMessage(message);
+            }}
+            onCommandSelectionChange={handleCommandSelectionChange}
           />
 
           <CommandValidationPanel
-            validationState="valid"
+            validationState={validationState}
             satellite="EGSA Satellite-02"
-            type="Telemetry"
-            command="TELEMETRY_COLLECT"
+            command={selectedCommand}
             priority="normal"
+            message={validationMessage}
           />
         </div>
 
