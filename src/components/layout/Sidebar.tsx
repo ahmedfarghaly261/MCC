@@ -10,7 +10,6 @@ import {
   Clock,
   History,
   LayoutTemplate,
-  BrainCircuit,
   AlertTriangle,
   TerminalIcon,
   SatelliteDish,
@@ -39,7 +38,7 @@ const navItems: NavItem[] = [
     icon: <TerminalIcon size={20} />,
     children: [
       {
-        label: "Create Command",
+        label: "send Command",
         path: "/commands/create",
         icon: <FilePlus size={18} />,
       },
@@ -57,11 +56,6 @@ const navItems: NavItem[] = [
         label: "Command History",
         path: "/commands/history",
         icon: <History size={18} />,
-      },
-      {
-        label: "Command Templates",
-        path: "/commands/templates",
-        icon: <LayoutTemplate size={18} />,
       },
       {
         label: "Command Dictionary",
@@ -107,11 +101,6 @@ const navItems: NavItem[] = [
         path: "/manual-decoder",
         icon: <Code size={18} />,
       },
-  {
-    label: "AI Insights",
-    path: "/ai-insights",
-    icon: <BrainCircuit size={20} />,
-  },
   {
     label: "Faults & Diagnostics",
     path: "/faults",
