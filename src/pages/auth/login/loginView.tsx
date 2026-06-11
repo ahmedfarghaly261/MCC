@@ -94,7 +94,7 @@ export default function LoginView() {
             Don&apos;t have an account?{' '}
             <button
               id="go-to-register"
-              onClick={() => navigate('/register')}
+              onClick={() => navigate('/auth/Registration')}
               className="font-medium text-cyan-300 transition-colors hover:text-cyan-200"
             >
               Register here

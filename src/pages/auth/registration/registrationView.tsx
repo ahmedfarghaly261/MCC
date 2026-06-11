@@ -154,7 +154,7 @@ export default function RegistrationView() {
             <p className="text-sm text-slate-400">
               Already have an account?{' '}
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/auth/login')}
                 className="font-medium text-cyan-300 transition-colors hover:text-cyan-200"
               >
                 Sign in here
