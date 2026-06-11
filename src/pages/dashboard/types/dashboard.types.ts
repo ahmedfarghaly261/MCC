@@ -18,12 +18,34 @@ export type TelemetryItem = {
   status: TelemetryStatus;
 };
 
-export type FeedEventType = "command" | "alert" | "anomaly";
+export type FeedEventType =
+  | "command"
+  | "telemetry"
+  | "dictionary"
+  | "decoder"
+  | "alert"
+  | "link"
+  | "anomaly";
 
 export type FeedEvent = {
   type: FeedEventType;
   text: string;
   time: string;
+};
+
+export type OperationStatus =
+  | "Online"
+  | "Live"
+  | "Ready"
+  | "Secured"
+  | "Monitoring";
+
+export type OperationModule = {
+  title: string;
+  description: string;
+  status: OperationStatus;
+  route: string;
+  icon: LucideIcon;
 };
 
 export type SummaryCardData = {

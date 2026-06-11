@@ -3,48 +3,119 @@
 import { motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import {
+  AlertTriangle,
+  BookOpen,
   Clock,
   Battery,
+  Code2,
+  FileText,
+  MessageSquareText,
+  Radio,
   Signal,
+  Terminal,
 } from "lucide-react";
 import GroundStationVisibility from "./composables/GroundStationVisibility";
 import CurrentVisibilityCard from "./composables/CurrentVisibilityCard";
-import TelemetryPreview from "./composables/TelemetryPreview";
+import MissionControlOperations from "./composables/MissionControlOperations";
 import LiveActivityFeed from "./composables/LiveActivityFeed";
 import BottomSummary from "./composables/BottomSummary";
 import type {
   CurrentVisibility,
   FeedEvent,
+  OperationModule,
   SummaryCardData,
-  TelemetryItem,
 } from "./types/dashboard.types";
 
-
-
-const TELEMETRY: TelemetryItem[] = [
-  { id: "01", battery: 78, temp: 23, signal: 92, status: "operational" },
-  { id: "02", battery: 45, temp: 31, signal: 85, status: "warning" },
-  { id: "03", battery: 92, temp: 21, signal: 95, status: "operational" },
-  { id: "04", battery: 88, temp: 24, signal: 89, status: "operational" },
-  { id: "05", battery: 18, temp: 35, signal: 67, status: "critical" },
-  { id: "06", battery: 95, temp: 22, signal: 98, status: "operational" },
-];
 
 const FEED_EVENTS: FeedEvent[] = [
   {
     type: "command",
-    text: "Battery optimization command executed successfully",
+    text: "Command executed successfully",
     time: "4m ago",
   },
   {
-    type: "alert",
-    text: "Temperature threshold exceeded",
-    time: "7m ago",
+    type: "telemetry",
+    text: "Telemetry frame received",
+    time: "6m ago",
+  },
+  {
+    type: "dictionary",
+    text: "Dictionary updated",
+    time: "11m ago",
+  },
+  {
+    type: "decoder",
+    text: "Manual decode completed",
+    time: "14m ago",
   },
   {
     type: "anomaly",
-    text: "Critical battery level detected",
-    time: "17m ago",
+    text: "Battery warning detected",
+    time: "18m ago",
+  },
+  {
+    type: "link",
+    text: "Ground station link established",
+    time: "22m ago",
+  },
+];
+
+const OPERATION_MODULES: OperationModule[] = [
+  {
+    title: "Command Center",
+    description: "Transmit secured commands to active satellites.",
+    status: "Secured",
+    route: "/command-center",
+    icon: Terminal,
+  },
+  {
+    title: "Telemetry Monitor",
+    description: "Monitor live decoded telemetry and satellite health.",
+    status: "Live",
+    route: "/telemetry",
+    icon: Signal,
+  },
+  {
+    title: "Command Responses",
+    description: "Track command execution, ACK/NACK, and failures.",
+    status: "Monitoring",
+    route: "/command-responses",
+    icon: MessageSquareText,
+  },
+  {
+    title: "Telemetry Replies",
+    description: "Inspect received satellite telemetry reply frames.",
+    status: "Online",
+    route: "/telemetry-replies",
+    icon: Radio,
+  },
+  {
+    title: "Dictionary Manager",
+    description: "Manage command and telemetry definitions.",
+    status: "Ready",
+    route: "/dictionary",
+    icon: BookOpen,
+  },
+  {
+    title: "Manual Decoder",
+    description: "Decode raw satellite frames manually.",
+    status: "Ready",
+    route: "/manual-decoder",
+    icon: Code2,
+  },
+  {
+    title: "Anomaly Detection",
+    description: "Review warnings, alerts, and abnormal behavior.",
+    status: "Monitoring",
+    route: "/anomaly-detection",
+    icon: AlertTriangle,
+  },
+  {
+    title: "Mission Logs",
+    description: "Browse system activity, command history, and operator events.",
+    status: "Online",
+    route: "/mission-logs",
+    icon: FileText,
   },
 ];
 
@@ -120,8 +191,8 @@ export default function DashboardView() {
 
         <CurrentVisibilityCard data={CURRENT_VISIBILITY} />
 
-        <div className="mt-14 grid lg:grid-cols-3 gap-8">
-          <TelemetryPreview telemetry={TELEMETRY} />
+        <div className="mt-14 grid gap-8 xl:grid-cols-[minmax(0,2fr)_390px]">
+          <MissionControlOperations modules={OPERATION_MODULES} />
           <LiveActivityFeed events={FEED_EVENTS} />
         </div>
 

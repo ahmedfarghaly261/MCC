@@ -34,12 +34,17 @@ export default function AppRoutes() {
           <Route path="/dashboard" element={<DashboardView />} />
 
         {/* Command Center */}
+        <Route path="/command-center" element={<CreateCommand />} />
         <Route path="/commands/create" element={<CreateCommand />} />
         <Route path="/commands/history" element={<CommandHistoryView />} />
+        <Route path="/dictionary" element={<CommandDictionary />} />
         <Route path="/commands/dictionary" element={<CommandDictionary />} />
+        <Route path="/command-responses" element={<CommandResponses />} />
         <Route path="/commands/responses" element={<CommandResponses />} />
 
         {/* Telemetry */}
+        <Route path="/telemetry" element={<TelemetryRepliesView />} />
+        <Route path="/telemetry-replies" element={<TelemetryRepliesView />} />
         <Route path="/telemetry/replies" element={<TelemetryRepliesView />} />
         <Route
           path="/telemetry-replies/:commandLogId"
@@ -65,8 +70,10 @@ export default function AppRoutes() {
         <Route path="/images/panoramas" element={<PanoramaResultsView />} />
 
         {/* Logs */}
+        <Route path="/mission-logs" element={<LogPage />} />
         <Route path="/logs" element={<LogPage />} />
         {/* Faults & Diagnostics */}
+        <Route path="/anomaly-detection" element={<FaultsDiagnosticsView />} />
         <Route path="/faults" element={<FaultsDiagnosticsView />} />
         {/* Future routes */}
         <Route path="/commands/scheduled" element={<ScheduledCommandsView />} />
