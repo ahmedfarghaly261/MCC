@@ -39,8 +39,8 @@ import {
 } from "@/models/command/commandSchema";
 import { toast } from "sonner";
 import SatCard from "./satCard";
-import CommandDataFields from "./CommandDataFields";
 import type { SatelliteData } from "./satCard";
+import CommandDataFields from "./CommandDataFields";
 import { getDestinationOptions, formatAsHex } from "../Utils/commandCatalog.util";
 import { getDestinationButtonClass } from "../Utils/destinationStyles.util";
 import {
@@ -61,14 +61,6 @@ import type {
 } from "../types/command.types";
 
 
-const defaultSatellite: SatelliteData = {
-  name: "EGSA Satellite-02",
-  code: "EGSA-SAT-02",
-  visibilityStatus: "IN VISIBILITY ZONE",
-  visibilityRemaining: "12:34",
-  communicationStatus: "active",
-};
-
 function toPayload(values: CommandSchema): SendCommandPayload {
   return {
     command_id: Number(values.commandId.trim()),
@@ -78,6 +70,7 @@ function toPayload(values: CommandSchema): SendCommandPayload {
 }
 
 interface Props {
+  satellite: SatelliteData;
   onCommandSent: (log: CommandLog) => void;
   onCommandSendStart: () => void;
   onCommandSendError: (message: string) => void;
@@ -85,6 +78,7 @@ interface Props {
 }
 
 export default function CommandForm({
+  satellite,
   onCommandSent,
   onCommandSendStart,
   onCommandSendError,
@@ -370,7 +364,7 @@ export default function CommandForm({
 
               <SatCard
                 satellite={
-                  defaultSatellite
+                  satellite
                 }
               />
 

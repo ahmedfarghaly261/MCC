@@ -16,6 +16,8 @@ interface SatCardProps {
 }
 
 export default function SatCard({ satellite }: SatCardProps) {
+  const isActive = satellite.communicationStatus === "active";
+
   return (
     <>
     <Field>
@@ -23,10 +25,18 @@ export default function SatCard({ satellite }: SatCardProps) {
         Target Satellite (Auto-Linked)
       </FieldLabel>
 
-      <div className="rounded-lg border border-green-500/40 bg-[#0B1220] p-4">
+      <div
+        className={`rounded-lg border bg-[#0B1220] p-4 ${
+          isActive ? "border-green-500/40" : "border-yellow-500/40"
+        }`}
+      >
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <Satellite className="w-5 h-5 text-green-400" />
+            <Satellite
+              className={`w-5 h-5 ${
+                isActive ? "text-green-400" : "text-yellow-400"
+              }`}
+            />
             <div>
               <p className="font-semibold text-white">
                 {satellite.name}
@@ -37,7 +47,13 @@ export default function SatCard({ satellite }: SatCardProps) {
             </div>
           </div>
 
-          <span className="px-3 py-1 text-xs font-semibold border border-green-500/40 text-green-400 rounded-full">
+          <span
+            className={`px-3 py-1 text-xs font-semibold border rounded-full ${
+              isActive
+                ? "border-green-500/40 text-green-400"
+                : "border-yellow-500/40 text-yellow-400"
+            }`}
+          >
             {satellite.visibilityStatus}
           </span>
         </div>
@@ -48,7 +64,11 @@ export default function SatCard({ satellite }: SatCardProps) {
           </span>
 
           <div className="flex items-center gap-4">
-            <span className="text-green-400 font-mono font-semibold">
+            <span
+              className={`font-mono font-semibold ${
+                isActive ? "text-green-400" : "text-yellow-400"
+              }`}
+            >
               {satellite.visibilityRemaining}
             </span>
 
@@ -56,7 +76,13 @@ export default function SatCard({ satellite }: SatCardProps) {
               Communication
             </span>
 
-            <span className="px-2 py-0.5 text-xs bg-green-500/20 text-green-400 rounded-full border border-green-500/40">
+            <span
+              className={`px-2 py-0.5 text-xs rounded-full border ${
+                isActive
+                  ? "border-green-500/40 bg-green-500/20 text-green-400"
+                  : "border-yellow-500/40 bg-yellow-500/20 text-yellow-400"
+              }`}
+            >
               {satellite.communicationStatus}
             </span>
           </div>

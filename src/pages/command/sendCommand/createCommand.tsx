@@ -1,14 +1,16 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { FileText } from "lucide-react";
 import CommandForm from "./composables/commandForm";
 import CommandValidationPanel, {
   type ValidationState,
 } from "./composables/CommandValidationPanel";
 import LastCommandRow from "./composables/lastCommandRow";
+import { useSatelliteVisibilityCycle } from "@/pages/dashboard/composables/CurrentVisibilityCard";
 
 import type {
   CommandLog,
 } from "./services/commandLogService";
+import type { SatelliteData } from "./composables/satCard";
 import type { CommandCatalogItem } from "./types/commandCatalog.types";
 
 export default function CreateCommand() {
@@ -20,6 +22,20 @@ export default function CreateCommand() {
     useState<string | undefined>();
   const [selectedCommand, setSelectedCommand] =
     useState<CommandCatalogItem | null>(null);
+  const currentVisibility = useSatelliteVisibilityCycle();
+
+  const linkedSatellite = useMemo<SatelliteData>(
+    () => ({
+      name: currentVisibility.activeSatellite.name,
+      code: currentVisibility.activeSatellite.code,
+      visibilityStatus: currentVisibility.isInZone
+        ? "IN VISIBILITY ZONE"
+        : "OUT OF RANGE",
+      visibilityRemaining: currentVisibility.pass.remainingTime,
+      communicationStatus: currentVisibility.isInZone ? "active" : "inactive",
+    }),
+    [currentVisibility],
+  );
 
   const handleCommandSelectionChange = useCallback(
     (command: CommandCatalogItem | null) => {
@@ -59,6 +75,7 @@ export default function CreateCommand() {
         {/* Form + Validation */}
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 mt-8 items-start">
           <CommandForm
+            satellite={linkedSatellite}
             onCommandSendStart={() => {
               setValidationState("loading");
               setValidationMessage("Sending command to MCC backend...");
@@ -77,7 +94,7 @@ export default function CreateCommand() {
 
           <CommandValidationPanel
             validationState={validationState}
-            satellite="EGSA Satellite-02"
+            satellite={linkedSatellite.name}
             command={selectedCommand}
             priority="normal"
             message={validationMessage}

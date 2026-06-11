@@ -36,7 +36,7 @@ type Telemetry = {
   gauge?: number;
 };
 
-type TrackedSatellite = {
+export type TrackedSatellite = {
   name: string;
   code: string;
   orbit: string;
@@ -53,7 +53,7 @@ type TrackedSatellite = {
   telemetry: Telemetry[];
 };
 
-type VisibilityData = {
+export type VisibilityData = {
   isInZone: boolean;
   activeSatellite: TrackedSatellite;
   nextSatellite: TrackedSatellite;
@@ -233,7 +233,7 @@ function SatelliteVisibilityZone() {
   );
 }
 
-function useSatelliteVisibilityCycle() {
+export function useSatelliteVisibilityCycle() {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
