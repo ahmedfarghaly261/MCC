@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
 import {
   Clock,
   Battery,
@@ -90,8 +92,17 @@ const SUMMARY_CARDS: SummaryCardData[] = [
 ];
 
 export default function DashboardView() {
+  const location = useLocation();
+  const shouldAnimateEntry =
+    Boolean((location.state as { bootComplete?: boolean } | null)?.bootComplete);
+
   return (
-    <div className="min-h-screen bg-[#0B1220] text-white">
+    <motion.div
+      className="min-h-screen bg-[#0B1220] text-white"
+      initial={shouldAnimateEntry ? { opacity: 0, scale: 0.985 } : false}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.65, ease: "easeOut" }}
+    >
       <div className="px-8 py-10">
         <h1 className="text-2xl font-bold mb-2">
           Mission Overview Dashboard
@@ -116,6 +127,6 @@ export default function DashboardView() {
 
         <BottomSummary summary={SUMMARY_CARDS} />
       </div>
-    </div>
+    </motion.div>
   );
 }
