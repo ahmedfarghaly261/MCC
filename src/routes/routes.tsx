@@ -26,8 +26,8 @@ export default function AppRoutes() {
   return (
     <Routes>
       {/* Auth */}
-      <Route path="/register" element={<RegistrationView />} />
-      <Route path="/" element={<LoginView />} />
+      <Route path="/auth/Registration" element={<RegistrationView />} />
+      <Route path="/auth/login" element={<LoginView />} />
       <Route path="/2fa-setup" element={<TwoFactorView />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
