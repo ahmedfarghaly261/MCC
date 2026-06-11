@@ -1,16 +1,10 @@
 "use client";
 
 import {
-  Satellite,
-  CheckCircle2,
-  AlertTriangle,
-  Siren,
-  Wrench,
   Clock,
   Battery,
   Signal,
 } from "lucide-react";
-import DashboardStats from "./composables/DashboardStats";
 import GroundStationVisibility from "./composables/GroundStationVisibility";
 import CurrentVisibilityCard from "./composables/CurrentVisibilityCard";
 import TelemetryPreview from "./composables/TelemetryPreview";
@@ -19,55 +13,11 @@ import BottomSummary from "./composables/BottomSummary";
 import type {
   CurrentVisibility,
   FeedEvent,
-  StatCardData,
   SummaryCardData,
   TelemetryItem,
 } from "./types/dashboard.types";
 
-const STAT_CARDS: StatCardData[] = [
-  {
-    title: "Active Satellites",
-    value: 6,
-    valueColor: "text-blue-400",
-    icon: Satellite,
-    iconClassName: "text-blue-400",
-  },
-  {
-    title: "Operational",
-    value: 4,
-    valueColor: "text-green-400",
-    icon: CheckCircle2,
-    iconClassName: "text-green-400",
-  },
-  {
-    title: "Warnings",
-    value: 1,
-    valueColor: "text-yellow-400",
-    icon: AlertTriangle,
-    iconClassName: "text-yellow-400",
-  },
-  {
-    title: "Critical",
-    value: 1,
-    valueColor: "text-red-500",
-    icon: Siren,
-    iconClassName: "text-red-500",
-  },
-  {
-    title: "Active Faults",
-    value: 2,
-    valueColor: "text-orange-400",
-    icon: Wrench,
-    iconClassName: "text-orange-400",
-  },
-  {
-    title: "Pending Commands",
-    value: 5,
-    valueColor: "text-purple-400",
-    icon: Clock,
-    iconClassName: "text-purple-400",
-  },
-];
+
 
 const TELEMETRY: TelemetryItem[] = [
   { id: "01", battery: 78, temp: 23, signal: 92, status: "operational" },
@@ -150,7 +100,7 @@ export default function DashboardView() {
           Real-time satellite fleet monitoring and control
         </p>
 
-        <DashboardStats stats={STAT_CARDS} />
+        {/* <DashboardStats stats={STAT_CARDS} /> */}
 
         <GroundStationVisibility
           stationName="Cairo Station"
