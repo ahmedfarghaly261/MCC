@@ -225,8 +225,8 @@ pnpm lint
 
 | Route | Purpose |
 | --- | --- |
-| `/` | Login |
-| `/register` | Operator registration |
+| `/auth/login` | Login |
+| `/auth/Registration` | Operator registration |
 | `/2fa-setup` | Two-factor authentication setup |
 | `/dashboard` | Mission dashboard |
 | `/commands/create` | Create and send command |
