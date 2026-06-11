@@ -86,6 +86,7 @@ class CommandController extends Controller
 
             $log = CommandLog::create([
                 'command_id'      => $command->id,
+                'satellite_id'    => 1,// Assuming a single satellite for now
                 'dest_address'    => sprintf('0x%02X', $request->input('dest_address')),
                 'src_address'     => sprintf('0x%02X', 0xB0),
                 'raw_binary_sent' => null,

@@ -43,6 +43,9 @@ class CommandService
     /**
      * Formats the 9-field CSSP frame according to ICD Rev 2.0
      */
+    /**
+     * Formats the 9-field CSSP frame according to ICD Rev 3.2
+     */
     public function buildCsspFrame(Command $command, int $dest, array $data): string
     {
         $requiredFieldsByCommand = [
@@ -68,16 +71,59 @@ class CommandService
                             $payload .= pack('J', $value);
                             $byteCount += 8;
                             break;
+
                         case 'sequence_number':
                             $payload .= pack('N', $value);
                             $byteCount += 4;
                             break;
+
                         case 'image_id':
                         case 'tlm_frame_seq_no':
                         case 'window_size':
                             $payload .= pack('n', $value);
                             $byteCount += 2;
                             break;
+
+                        case 'mode_id':
+                            $rawValue = $data['mode_id'] ?? $data['mode'] ?? $value;
+
+                            $modeValue = $rawValue;
+
+                            // 1. If it's an Enum class instance, get its backing integer value
+                            if ($rawValue instanceof SatelliteMode) {
+                                $modeValue = $rawValue->value;
+                            }
+                            // 2. If it's a hex string like "0x01", convert it to decimal safely
+                            elseif (is_string($rawValue) && str_starts_with(strtolower($rawValue), '0x')) {
+                                $modeValue = hexdec($rawValue);
+                            }
+
+                            elseif (is_string($rawValue) && !is_numeric($rawValue)) {
+                                $modeValue = match (strtolower($rawValue)) {
+                                    'initialization' => 1, // 0x01 
+                                    'detumbling'     => 2, // 0x02 
+                                    'normal'         => 3, // 0x03 
+                                    default          => (int)$rawValue,
+                                };
+                            }
+
+                            $payload .= pack('C', (int)$modeValue);
+                            $byteCount += 1;
+                            break;
+                        case 'pwrl_id':
+                            $powerValue = $value;
+
+                            if ($value instanceof PowerLine) {
+                                $powerValue = $value->value;
+                            }
+                            elseif (is_string($value) && str_starts_with(strtolower($value), '0x')) {
+                                $powerValue = hexdec($value);
+                            }
+
+                            $payload .= pack('C', (int)$powerValue);
+                            $byteCount += 1;
+                            break;
+
                         default:
                             $payload .= pack('C', $value);
                             $byteCount += 1;
