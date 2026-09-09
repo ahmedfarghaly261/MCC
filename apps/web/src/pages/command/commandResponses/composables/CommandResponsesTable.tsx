@@ -1,0 +1,144 @@
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronRight, Copy } from "lucide-react";
+import { toast } from "sonner";
+import { type CommandReply } from "../types/CommandResponses.types";
+import {
+  formatDateTime,
+  formatReplyDataForDisplay,
+  formatStatusLabel,
+  getStatusBadgeClass,
+} from "../Utils/commandResponses.util";
+
+interface Props {
+  data: CommandReply[];
+  loading: boolean;
+  expandedRow: number | null;
+  setExpandedRow: (id: number | null) => void;
+}
+
+export default function CommandResponsesTable({
+  data,
+  loading,
+  expandedRow,
+  setExpandedRow,
+}: Props) {
+  const handleCopy = async (replyData: string | null | undefined) => {
+    if (!replyData) {
+      toast.error("No reply data to copy.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(replyData.trim());
+      toast.success("Reply data copied.");
+    } catch (error) {
+      console.error("Failed to copy reply data", error);
+      toast.error("Failed to copy reply data.");
+    }
+  };
+
+  return (
+    <Card className="bg-[#1A2333] border border-gray-700">
+      <CardContent className="p-0 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-[#0B1220] text-gray-400">
+            <tr>
+              <th className="text-left p-4"></th>
+              <th className="text-left p-4">Reply ID</th>
+              <th className="text-left p-4">Command Log ID</th>
+              <th className="text-left p-4">Status</th>
+              <th className="text-left p-4">Created Time</th>
+              <th className="text-left p-4">Copy</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="p-6 text-center">
+                  Loading...
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="p-6 text-center">
+                  No replies found
+                </td>
+              </tr>
+            ) : (
+              data.map((reply) => (
+                <>
+                  <tr
+                    key={reply.id}
+                    className="border-t border-gray-700 hover:bg-[#0B1220]/50"
+                  >
+                    <td className="p-4">
+                      <button
+                        onClick={() =>
+                          setExpandedRow(
+                            expandedRow === reply.id
+                              ? null
+                              : reply.id
+                          )
+                        }
+                      >
+                        {expandedRow === reply.id ? (
+                          <ChevronDown size={16} />
+                        ) : (
+                          <ChevronRight size={16} />
+                        )}
+                      </button>
+                    </td>
+
+                    <td className="p-4 font-medium">
+                      {reply.id}
+                    </td>
+
+                    <td className="p-4">
+                      {reply.command_log_id}
+                    </td>
+
+                    <td className="p-4">
+                      <Badge className={getStatusBadgeClass(reply.command_log?.status)}>
+                        {formatStatusLabel(reply.command_log?.status)}
+                      </Badge>
+                    </td>
+
+                    <td className="p-4 text-gray-400">
+                      {formatDateTime(reply.created_at)}
+                    </td>
+
+                    <td className="p-4">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="text-gray-300 hover:text-white"
+                        onClick={() => void handleCopy(reply.reply_data)}
+                        aria-label={`Copy reply ${reply.id}`}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+
+                  {expandedRow === reply.id && (
+                    <tr className="bg-[#0B1220]">
+                      <td colSpan={6} className="p-6">
+                        <pre className="bg-black/40 border border-gray-800 rounded-lg p-4 text-xs whitespace-pre-wrap break-all">
+                          {formatReplyDataForDisplay(reply.reply_data)}
+                        </pre>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              ))
+            )}
+          </tbody>
+        </table>
+      </CardContent>
+    </Card>
+  );
+}

@@ -1,0 +1,80 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import SatelliteImagesSection from "../index/composables/SatelliteImagesSection";
+import ImageObjDetectionView from "../objectDetection/imageObjDetection.view";
+import ImagePanoramaView from "../panorama/imagePanorama.view";
+import ImageEnhancedView from "../enhancedImages/imageEnhanced.view";
+import type { ImageRecord } from "../index/types/images.types";
+
+interface ImageCenterTabsViewProps {
+	activeTab: string;
+	onTabChange: (value: string) => void;
+	images: ImageRecord[];
+	loading: boolean;
+	onView: (image: ImageRecord) => void;
+	onDownload: (image: ImageRecord) => void;
+	onDelete: (image: ImageRecord) => void;
+}
+
+export default function ImageCenterTabsView({
+	activeTab,
+	onTabChange,
+	images,
+	loading,
+	onView,
+	onDownload,
+	onDelete,
+}: ImageCenterTabsViewProps) {
+	return (
+		<Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+			<TabsList className="bg-[#1F2937] border border-gray-700/50 mb-6">
+				<TabsTrigger
+					value="images"
+					className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400"
+				>
+					Satellite Images
+				</TabsTrigger>
+				<TabsTrigger
+					value="enhanced"
+					className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400"
+				>
+					Enhanced Images
+				</TabsTrigger>
+				<TabsTrigger
+					value="object-detection"
+					className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400"
+				>
+					Object Detection
+				</TabsTrigger>
+				<TabsTrigger
+					value="panorama"
+					className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400"
+				>
+					Panorama
+				</TabsTrigger>
+			</TabsList>
+
+			<TabsContent value="images">
+				<SatelliteImagesSection
+					images={images}
+					loading={loading}
+					onView={onView}
+					onDownload={onDownload}
+					onDelete={onDelete}
+				/>
+			</TabsContent>
+
+			<TabsContent value="enhanced">
+				<ImageEnhancedView />
+			</TabsContent>
+
+			<TabsContent value="object-detection">
+				<ImageObjDetectionView />
+			</TabsContent>
+
+			<TabsContent value="panorama">
+				<ImagePanoramaView />
+			</TabsContent>
+		</Tabs>
+	);
+}
