@@ -23,6 +23,33 @@ else
     fi
 fi
 
+# The built-in Laravel development server starts a child PHP process. Persist
+# Compose-provided connection settings into .env so that child process uses the
+# same database and Redis configuration as the container entrypoint.
+sync_env_value() {
+    local key="$1"
+    local value="${!key:-}"
+    local escaped_value
+
+    [ -n "$value" ] || return 0
+    escaped_value=$(printf '%s' "$value" | sed 's/[\\&|]/\\&/g')
+
+    if grep -q "^${key}=" .env; then
+        sed -i "s|^${key}=.*|${key}=${escaped_value}|" .env
+    else
+        printf '\n%s=%s\n' "$key" "$value" >> .env
+    fi
+}
+
+sync_env_value DB_HOST
+sync_env_value DB_PORT
+sync_env_value DB_DATABASE
+sync_env_value DB_USERNAME
+sync_env_value DB_PASSWORD
+sync_env_value REDIS_HOST
+sync_env_value REDIS_PORT
+sync_env_value REDIS_PASSWORD
+
 CONTAINER_ROLE="${CONTAINER_ROLE:-app}"
 if [ "$CONTAINER_ROLE" = "app" ]; then
     php artisan migrate --force
