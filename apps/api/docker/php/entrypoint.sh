@@ -7,10 +7,20 @@ if [ ! -f .env ]; then
     cp .env.example .env
 fi
 
-if [ -z "${APP_KEY:-}" ]; then
-    echo "First run detected: Generating application key..."
-    php artisan key:generate --force
-    unset APP_KEY
+if [ -n "${APP_KEY:-}" ]; then
+    if grep -q '^APP_KEY=' .env; then
+        sed -i "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" .env
+    else
+        printf '\nAPP_KEY=%s\n' "$APP_KEY" >> .env
+    fi
+else
+    if grep -q '^APP_KEY=base64:' .env; then
+        unset APP_KEY
+    else
+        echo "First run detected: Generating application key..."
+        php artisan key:generate --force
+        unset APP_KEY
+    fi
 fi
 
 CONTAINER_ROLE="${CONTAINER_ROLE:-app}"
