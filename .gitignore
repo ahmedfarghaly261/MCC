@@ -1,0 +1,46 @@
+# Environment files and local secrets
+.env
+.env.*
+!.env.example
+apps/api/.env
+apps/web/.env
+
+# JavaScript dependencies and build output
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+coverage/
+**/coverage/
+.vite/
+**/.vite/
+
+# PHP dependencies and Laravel runtime files
+vendor/
+**/vendor/
+apps/api/storage/logs/*
+apps/api/storage/framework/cache/data/*
+apps/api/storage/framework/sessions/*
+apps/api/storage/framework/testing/*
+apps/api/bootstrap/cache/*.php
+
+# Local Docker files and overrides
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Logs and local tooling
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.phpunit.result.cache
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
