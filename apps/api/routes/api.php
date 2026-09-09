@@ -1,0 +1,69 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TelemetryParameterController;
+use App\Http\Controllers\CommandController;
+use App\Http\Controllers\TelemetryController;
+use App\Http\Controllers\AnomalyExplainationController;
+use App\Http\Controllers\ImageController;
+use App\Http\Controllers\SatelliteController;
+use App\Http\Controllers\HtnGoalController;
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
+
+// Route::apiResource('telemetry-parameters', TelemetryParameterController::class);
+
+Route::prefix('mcc/command')->group(function () {
+    Route::get('/history', [CommandController::class, 'history']);
+    Route::post('/send', [CommandController::class, 'send']);
+    Route::get('/log/{id}', [CommandController::class, 'getCommandLog']);
+    Route::get('/replies', [CommandController::class, 'getReplies']);
+    Route::get('/', [CommandController::class, 'index']);
+    Route::get('/{id}', [CommandController::class, 'show']);
+    Route::get('/log/{id}/image', [CommandController::class, 'downloadImage']);
+    Route::post('/macro-goals', [CommandController::class, 'sendMacroGoal']);
+    Route::post('/schedule-atc', [CommandController::class, 'scheduleIndividualCommand'])->name('commands.schedule-atc');
+});
+
+Route::prefix('mcc/htn')->group(function () {
+    Route::get('/goals', [HtnGoalController::class, 'index']);
+});
+
+Route::prefix('mcc/telemetry')->group(function () {
+    Route::get('/command-log/{commandLog}', [TelemetryController::class, 'showTelemetryByCommandLog']);
+    Route::get('/last', [TelemetryController::class, 'GetLastTelemetry']);
+    Route::post('/decode', [TelemetryController::class, 'decode']);
+    Route::post('/decode/batch', [TelemetryController::class, 'decodeBatch']);
+});
+
+Route::prefix('mcc/ai-insights/anomalies')->group(function () {
+    Route::get('/', [AnomalyExplainationController::class, 'index']);
+    Route::get('/command-log/{commandLog}', [AnomalyExplainationController::class, 'showByCommandLog']);
+});
+
+Route::prefix('mcc/satellite')->group(function () {
+    Route::get('/', [SatelliteController::class, 'index']);
+    Route::get('/status', [SatelliteController::class, 'getStatus']);
+    Route::get('/next-pass', [SatelliteController::class, 'getNextPass']);
+    Route::get('/visibility-check', [SatelliteController::class, 'checkVisibility']);
+});
+
+Route::prefix('mcc/images')->group(function () {
+    Route::get('/',                       [ImageController::class, 'index']);
+    Route::get('/panorama',               [ImageController::class, 'getPanoramas']);
+    Route::post('/panorama',              [ImageController::class, 'generateAutomationPanorama']);
+    Route::post('/enhance',               [ImageController::class, 'enhanceImage']);
+    Route::get('/by-log/{logId}',         [ImageController::class, 'byCommandLog']);
+    Route::get('/{id}',                   [ImageController::class, 'show']);
+    Route::delete('/{id}',                [ImageController::class, 'destroy']);
+    Route::post('/{id}/detect',           [ImageController::class, 'detectObjects']);
+    Route::get('/{id}/detections',        [ImageController::class, 'getDetections']);
+});
