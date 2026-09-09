@@ -1,0 +1,225 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-80}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+      reverb:
+        condition: service_started
+    networks:
+      - mcc
+
+  api:
+    image: mcc-api:local
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_NAME: ${APP_NAME:-MCCS-Backend}
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_KEY: ${APP_KEY:-}
+      APP_URL: ${APP_URL:-http://localhost}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-mccs}
+      DB_USERNAME: ${DB_USERNAME:-mcc}
+      DB_PASSWORD: ${DB_PASSWORD:-mcc_password}
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      CACHE_STORE: ${CACHE_STORE:-redis}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      SESSION_DOMAIN: ${SESSION_DOMAIN:-}
+      SANCTUM_STATEFUL_DOMAINS: ${SANCTUM_STATEFUL_DOMAINS:-localhost,127.0.0.1}
+      BROADCAST_CONNECTION: reverb
+      REVERB_APP_ID: ${REVERB_APP_ID:-mcc-local}
+      REVERB_APP_KEY: ${REVERB_APP_KEY:-mcc-local-key}
+      REVERB_APP_SECRET: ${REVERB_APP_SECRET:-mcc-local-secret}
+      REVERB_HOST: reverb
+      REVERB_PORT: 8080
+      REVERB_SERVER_HOST: 0.0.0.0
+      REVERB_SERVER_PORT: 8080
+      CONTAINER_ROLE: app
+      ANOMALY_API_URL: ${ANOMALY_API_URL:-}
+      ANOMALY_API_KEY: ${ANOMALY_API_KEY:-}
+      ENHANCEMENT_API_URL: ${ENHANCEMENT_API_URL:-}
+      OBJECT_DETECTION_API_URL: ${OBJECT_DETECTION_API_URL:-}
+      PANORAMA_API_URL: ${PANORAMA_API_URL:-}
+      SATELLITE_API_URL: ${SATELLITE_API_URL:-}
+      COMMAND_API_URL: ${COMMAND_API_URL:-}
+      DECODER_API_URL: ${DECODER_API_URL:-}
+    expose:
+      - "8000"
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    volumes:
+      - api-storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/up || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    networks:
+      - mcc
+
+  horizon:
+    image: mcc-api:local
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_KEY: ${APP_KEY:-}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-mccs}
+      DB_USERNAME: ${DB_USERNAME:-mcc}
+      DB_PASSWORD: ${DB_PASSWORD:-mcc_password}
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      CACHE_STORE: ${CACHE_STORE:-redis}
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      BROADCAST_CONNECTION: reverb
+      REVERB_HOST: reverb
+      REVERB_PORT: 8080
+      CONTAINER_ROLE: worker
+    command: php artisan horizon
+    volumes:
+      - api-storage:/var/www/html/storage
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - mcc
+
+  scheduler:
+    image: mcc-api:local
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_KEY: ${APP_KEY:-}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-mccs}
+      DB_USERNAME: ${DB_USERNAME:-mcc}
+      DB_PASSWORD: ${DB_PASSWORD:-mcc_password}
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      CACHE_STORE: ${CACHE_STORE:-redis}
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      CONTAINER_ROLE: worker
+    command: >-
+      sh -c "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
+    volumes:
+      - api-storage:/var/www/html/storage
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - mcc
+
+  reverb:
+    image: mcc-api:local
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_KEY: ${APP_KEY:-}
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REVERB_APP_ID: ${REVERB_APP_ID:-mcc-local}
+      REVERB_APP_KEY: ${REVERB_APP_KEY:-mcc-local-key}
+      REVERB_APP_SECRET: ${REVERB_APP_SECRET:-mcc-local-secret}
+      REVERB_HOST: reverb
+      REVERB_PORT: 8080
+      REVERB_SERVER_HOST: 0.0.0.0
+      REVERB_SERVER_PORT: 8080
+      CONTAINER_ROLE: worker
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - mcc
+
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-mccs}
+      MYSQL_USER: ${DB_USERNAME:-mcc}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-mcc_password}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-change_me_root_password}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    networks:
+      - mcc
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - mcc
+
+  phpmyadmin:
+    image: phpmyadmin:5.2-apache
+    profiles: [tools]
+    restart: unless-stopped
+    ports:
+      - "${PHPMYADMIN_PORT:-8081}:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mcc
+
+networks:
+  mcc:
+    driver: bridge
+
+volumes:
+  api-storage:
+  db-data:
+  redis-data:
