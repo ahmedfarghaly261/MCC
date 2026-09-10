@@ -2,9 +2,17 @@ import { Bell, User, LogOut } from "lucide-react";
 import { memo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { clearAuthSession } from "@/services/api";
+import { getCurrentUser } from "@/pages/profile/services/profile.service";
 
 function NavBar() {
     const navigate = useNavigate();
+    const [operatorName, setOperatorName] = useState("Operator");
+
+    useEffect(() => {
+      getCurrentUser()
+        .then((user) => setOperatorName(user.name))
+        .catch(() => setOperatorName("Operator"));
+    }, []);
 
     const handleLogout = async () => {
       await clearAuthSession();
@@ -47,15 +55,20 @@ function NavBar() {
           </div>
 
           {/* User */}
-          <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate("/profile")}
+            className="flex items-center gap-3 rounded-lg p-1 text-left transition-colors hover:bg-slate-800/70"
+            title="Open profile"
+          >
             <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center">
               <User className="w-5 h-5" />
             </div>
             <div>
-              <p className="font-medium">Mission Control</p>
+              <p className="font-medium">{operatorName}</p>
               <p className="text-xs text-gray-400">Operator</p>
             </div>
-          </div>
+          </button>
 
           {/* Logout */}
           <button
