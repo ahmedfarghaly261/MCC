@@ -21,6 +21,7 @@ import AtcCommandView from "@/pages/command/atcCommand/Atccommandview";
 import RegistrationView from "@/pages/auth/registration/registrationView";
 import TwoFactorView from "@/pages/auth/twoFactor/twoFactorView";
 import LoginView from "@/pages/auth/login/loginView";
+import ProfileView from "@/pages/profile/profileView";
 
 export default function AppRoutes() {
   return (
@@ -32,6 +33,7 @@ export default function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<DashboardView />} />
+          <Route path="/profile" element={<ProfileView />} />
 
         {/* Command Center */}
         <Route path="/command-center" element={<CreateCommand />} />
