@@ -41,6 +41,20 @@ sync_env_value() {
     fi
 }
 
+sync_env_value_allow_empty() {
+    local key="$1"
+    local value="${!key:-}"
+    local escaped_value
+
+    escaped_value=$(printf '%s' "$value" | sed 's/[\\&|]/\\&/g')
+
+    if grep -q "^${key}=" .env; then
+        sed -i "s|^${key}=.*|${key}=${escaped_value}|" .env
+    else
+        printf '\n%s=%s\n' "$key" "$value" >> .env
+    fi
+}
+
 sync_env_value DB_HOST
 sync_env_value DB_PORT
 sync_env_value DB_DATABASE
@@ -49,6 +63,11 @@ sync_env_value DB_PASSWORD
 sync_env_value REDIS_HOST
 sync_env_value REDIS_PORT
 sync_env_value REDIS_PASSWORD
+sync_env_value APP_URL
+sync_env_value FRONTEND_URL
+sync_env_value SESSION_DRIVER
+sync_env_value SANCTUM_STATEFUL_DOMAINS
+sync_env_value_allow_empty SESSION_DOMAIN
 
 CONTAINER_ROLE="${CONTAINER_ROLE:-app}"
 if [ "$CONTAINER_ROLE" = "app" ]; then
