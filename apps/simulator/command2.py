@@ -3,6 +3,7 @@ import struct
 import logging
 import httpx
 import base64  
+import os
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Response  
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -27,6 +28,9 @@ class SatelliteState:
         self.next_image_id = 1
 
 STATE = SatelliteState()
+
+TELEMETRY_API_URL = os.getenv("TELEMETRY_API_URL", "http://127.0.0.1:8080").rstrip("/")
+IMAGE_API_URL = os.getenv("IMAGE_API_URL", "http://127.0.0.1:8084").rstrip("/")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Frame Helpers (Strictly matching the ICD)
@@ -180,7 +184,7 @@ async def radio_link(websocket: WebSocket):
                 logger.info("📊 GOTLM received. Fetching real telemetry from internal sensors...")
                 try:
                     async with httpx.AsyncClient() as client:
-                        response = await client.get("http://127.0.0.1:8080/telemetry/frames/next")
+                        response = await client.get(f"{TELEMETRY_API_URL}/telemetry/frames/next")
                         response.raise_for_status()
                         tlm_data_json = response.json()
                         
@@ -209,7 +213,7 @@ async def radio_link(websocket: WebSocket):
                 await send_ack()
                 try:
                     async with httpx.AsyncClient() as client:
-                        response = await client.get("http://127.0.0.1:8080/telemetry/frames?limit=7")
+                        response = await client.get(f"{TELEMETRY_API_URL}/telemetry/frames?limit=7")
                         response.raise_for_status()
                         data_json = response.json()
                         
@@ -250,7 +254,7 @@ async def radio_link(websocket: WebSocket):
                     logger.info("📸 CIMG: Requesting Payload to capture next image...")
                     try:
                         async with httpx.AsyncClient() as client:
-                            response = await client.get("http://127.0.0.1:8084/images/frames/next")
+                            response = await client.get(f"{IMAGE_API_URL}/images/frames/next")
                             response.raise_for_status()
                             data_json = response.json()
                             
@@ -258,9 +262,16 @@ async def radio_link(websocket: WebSocket):
                             logger.warning("⚠️ Camera out of storage (dataset exhausted).")
                             await send_nack()
                             continue
-                        img_b64 = data_json["frame"]["image"]["data"]
-                        
-                        img_metadata = data_json["frame"].get("metadata", {})
+                        frame = data_json.get("frame", {})
+                        image = frame.get("image") or {}
+                        img_b64 = image.get("data")
+                        if not image.get("available") or not img_b64:
+                            reason = image.get("reason", "The image simulator returned no image data.")
+                            logger.error(f"❌ CIMG: Image capture failed: {reason}")
+                            await send_nack()
+                            continue
+
+                        img_metadata = frame.get("metadata", {})
                         
                         img_id = STATE.next_image_id
                         
