@@ -202,7 +202,17 @@ class CommandService
     public function sendToGateway(string $binary, string $commandName): mixed
     {
         Log::info("MCC SENDING CSSP FRAME: " . bin2hex($binary));
-        $commandUrl = "ws://host.docker.internal:8081/ws/radio";
+        $commandUrl = rtrim($this->commandUrl, '/');
+
+        if (str_starts_with($commandUrl, 'http://')) {
+            $commandUrl = 'ws://' . substr($commandUrl, 7);
+        } elseif (str_starts_with($commandUrl, 'https://')) {
+            $commandUrl = 'wss://' . substr($commandUrl, 8);
+        }
+
+        if (!str_ends_with($commandUrl, '/ws/radio')) {
+            $commandUrl .= '/ws/radio';
+        }
 
         $timeout = ($commandName === 'GIMG') ? 1000 : 10;
 
