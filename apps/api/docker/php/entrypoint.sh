@@ -63,6 +63,9 @@ sync_env_value DB_PASSWORD
 sync_env_value REDIS_HOST
 sync_env_value REDIS_PORT
 sync_env_value REDIS_PASSWORD
+sync_env_value SATELLITE_API_URL
+sync_env_value COMMAND_API_URL
+sync_env_value DECODER_API_URL
 sync_env_value APP_URL
 sync_env_value FRONTEND_URL
 sync_env_value SESSION_DRIVER

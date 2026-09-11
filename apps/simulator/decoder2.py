@@ -29,6 +29,7 @@ Run:
 import struct
 import requests
 import logging
+import os
 import numpy as np
 from datetime import datetime, timezone
 from typing import Optional
@@ -66,7 +67,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-SIMULATOR_API = "http://localhost:8080"
+SIMULATOR_API = os.getenv("SIMULATOR_API", "http://127.0.0.1:8080")
 
 # ─── Frame type lookup (same as AO-73 spec) ───────────────────────────────────
 FRAME_KINDS = {

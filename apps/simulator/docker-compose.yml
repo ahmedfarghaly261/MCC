@@ -1,26 +1,69 @@
 services:
   telemetry-api:
-    build: .
-    container_name: telemetry_api_service
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    image: mcc-simulator:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn main:app --host 0.0.0.0 --port 8080
     ports:
-      - "8000:8000"
+      - "8080:8080"
     volumes:
-      - ./:/app
       - skyfield_data:/root/skyfield-data
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  image-sim:
+    image: mcc-simulator:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    pull_policy: never
+    command: uvicorn image_simulator:app --host 0.0.0.0 --port 8084
+    ports:
+      - "8084:8084"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import json, urllib.request; data = json.load(urllib.request.urlopen('http://localhost:8084/images/stats', timeout=3)); raise SystemExit(0 if data.get('missing_images') == 0 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
 
   command-sim:
-    build: .
-    container_name: command_simulator_service
-    command: uvicorn command2:app --host 0.0.0.0 --port 8001
+    image: mcc-simulator:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    pull_policy: never
+    command: uvicorn command2:app --host 0.0.0.0 --port 8081
+    environment:
+      TELEMETRY_API_URL: http://telemetry-api:8080
+      IMAGE_API_URL: http://image-sim:8084
     ports:
-      - "8001:8001"
-    volumes:
-      - ./:/app
+      - "8081:8081"
     depends_on:
-      - telemetry-api
-    restart: unless-stopped
+      telemetry-api:
+        condition: service_healthy
+      image-sim:
+        condition: service_healthy
+
+  decoder:
+    image: mcc-simulator:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    pull_policy: never
+    command: uvicorn decoder2:app --host 0.0.0.0 --port 8082
+    environment:
+      SIMULATOR_API: http://telemetry-api:8080
+    ports:
+      - "8082:8082"
+    depends_on:
+      telemetry-api:
+        condition: service_healthy
 
 volumes:
   skyfield_data:

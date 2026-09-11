@@ -61,7 +61,7 @@ return [
     ],
 
     'command' => [
-        'url'     => env('COMMAND_API_URL', 'http://host.docker.internal:8081'),
+        'url'     => env('COMMAND_API_URL', 'ws://host.docker.internal:8081/ws/radio'),
         'timeout' => env('COMMAND_API_TIMEOUT', 15),
     ],
 
