@@ -56,6 +56,7 @@ import mimetypes
 from datetime import datetime, timezone
 from typing import Optional
 import logging
+from pathlib import Path
 
 # ─── Logging ─────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -65,8 +66,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ─── Config ──────────────────────────────────────────────────────────────────
-DATA_FILE_PATH          = "./image_dataset_1.csv"   # pipe-delimited CSV index
-IMAGE_DIR               = "./tiles_with_metadata (1)"               # folder containing image files
+BASE_DIR                = Path(__file__).resolve().parent
+DEFAULT_DATASET         = BASE_DIR / "image_dataset_1.csv"
+if not DEFAULT_DATASET.exists():
+    DEFAULT_DATASET = BASE_DIR / "image_dataset.csv"
+DATA_FILE_PATH          = os.getenv("IMAGE_DATASET", str(DEFAULT_DATASET))
+IMAGE_DIR               = os.getenv("IMAGE_DIR", str(BASE_DIR / "tiles_with_metadata (1)"))
 DEFAULT_STREAM_INTERVAL = 3.0                      # seconds between WebSocket frames
 MAX_B64_SIZE_MB         = 5                        # skip inline payload above this size
 
@@ -133,15 +138,26 @@ def _reset_cursor() -> None:
 # Image helpers
 # ══════════════════════════════════════════════════════════════════════════════
 
+def _resolve_image_path(filename: str) -> Path:
+    """Resolve generated relative paths and older basename-only CSV rows."""
+    image_root = Path(IMAGE_DIR)
+    filepath = image_root / filename
+    if filepath.exists():
+        return filepath
+
+    matches = list(image_root.rglob(Path(filename).name))
+    return matches[0] if matches else filepath
+
+
 def _load_image_b64(filename: str) -> dict:
     """
     Attempt to load an image from IMAGE_DIR and return a base64 payload dict.
     Returns a dict with 'data', 'media_type', 'size_bytes', and 'available' flag.
     Gracefully handles missing files without raising.
     """
-    filepath = os.path.join(IMAGE_DIR, filename)
+    filepath = _resolve_image_path(filename)
 
-    if not os.path.exists(filepath):
+    if not filepath.exists():
         return {
             "available":  False,
             "reason":     f"File not found: {filepath}",
@@ -348,8 +364,8 @@ def compute_stats(filepath: str) -> dict:
             if frame["bounding_box"] is not None:
                 annotated += 1
 
-            img_path = os.path.join(IMAGE_DIR, frame["filename"])
-            if not os.path.exists(img_path):
+            img_path = _resolve_image_path(frame["filename"])
+            if not img_path.exists():
                 missing += 1
 
     return {
@@ -412,7 +428,7 @@ def enrich_frame_with_image(frame: dict) -> dict:
     # إذا كان اسم الصورة P2759_tile_000_002.jpg سيتم البحث عن P2759_tile_000_002_meta.json
     base_name = os.path.splitext(filename)[0]
     meta_filename = f"{base_name}_meta.json"
-    meta_filepath = os.path.join(IMAGE_DIR, meta_filename)
+    meta_filepath = _resolve_image_path(meta_filename)
     
     metadata_dict = {}
     if os.path.exists(meta_filepath):
