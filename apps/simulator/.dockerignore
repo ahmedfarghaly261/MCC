@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.git/
+.gitignore
+Dockerfile
+docker-compose.yml
+client_test.py
+test_images.py
+generate_csv.py
+image_test.html
+*.log

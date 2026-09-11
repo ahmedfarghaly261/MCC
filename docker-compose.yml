@@ -56,9 +56,9 @@ services:
       ENHANCEMENT_API_URL: ${ENHANCEMENT_API_URL:-}
       OBJECT_DETECTION_API_URL: ${OBJECT_DETECTION_API_URL:-}
       PANORAMA_API_URL: ${PANORAMA_API_URL:-}
-      SATELLITE_API_URL: ${SATELLITE_API_URL:-}
-      COMMAND_API_URL: ${COMMAND_API_URL:-}
-      DECODER_API_URL: ${DECODER_API_URL:-}
+      SATELLITE_API_URL: ${SATELLITE_API_URL:-http://simulator-telemetry:8080}
+      COMMAND_API_URL: ${COMMAND_API_URL:-ws://simulator-command:8081/ws/radio}
+      DECODER_API_URL: ${DECODER_API_URL:-http://simulator-decoder:8082}
     expose:
       - "8000"
     command: php artisan serve --host=0.0.0.0 --port=8000
@@ -98,6 +98,9 @@ services:
       CACHE_STORE: ${CACHE_STORE:-redis}
       QUEUE_CONNECTION: redis
       SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      SATELLITE_API_URL: ${SATELLITE_API_URL:-http://simulator-telemetry:8080}
+      COMMAND_API_URL: ${COMMAND_API_URL:-ws://simulator-command:8081/ws/radio}
+      DECODER_API_URL: ${DECODER_API_URL:-http://simulator-decoder:8082}
       BROADCAST_CONNECTION: reverb
       REVERB_HOST: reverb
       REVERB_PORT: 8080
@@ -168,6 +171,75 @@ services:
     networks:
       - mcc
 
+  simulator-telemetry:
+    image: mcc-simulator:local
+    build:
+      context: ./apps/simulator
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: uvicorn main:app --host 0.0.0.0 --port 8080
+    ports:
+      - "${SIMULATOR_TELEMETRY_PORT:-8080}:8080"
+    volumes:
+      - simulator-skyfield-data:/root/skyfield-data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - mcc
+
+  simulator-images:
+    image: mcc-simulator:local
+    pull_policy: never
+    restart: unless-stopped
+    command: uvicorn image_simulator:app --host 0.0.0.0 --port 8084
+    ports:
+      - "${SIMULATOR_IMAGES_PORT:-8084}:8084"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8084/', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - mcc
+
+  simulator-command:
+    image: mcc-simulator:local
+    pull_policy: never
+    restart: unless-stopped
+    command: uvicorn command2:app --host 0.0.0.0 --port 8081
+    environment:
+      TELEMETRY_API_URL: http://simulator-telemetry:8080
+      IMAGE_API_URL: http://simulator-images:8084
+    ports:
+      - "${SIMULATOR_COMMAND_PORT:-8081}:8081"
+    depends_on:
+      simulator-telemetry:
+        condition: service_healthy
+      simulator-images:
+        condition: service_healthy
+    networks:
+      - mcc
+
+  simulator-decoder:
+    image: mcc-simulator:local
+    pull_policy: never
+    restart: unless-stopped
+    command: uvicorn decoder2:app --host 0.0.0.0 --port 8082
+    environment:
+      SIMULATOR_API: http://simulator-telemetry:8080
+    ports:
+      - "${SIMULATOR_DECODER_PORT:-8082}:8082"
+    depends_on:
+      simulator-telemetry:
+        condition: service_healthy
+    networks:
+      - mcc
+
   db:
     image: mysql:8.4
     restart: unless-stopped
@@ -205,7 +277,7 @@ services:
     profiles: [tools]
     restart: unless-stopped
     ports:
-      - "${PHPMYADMIN_PORT:-8081}:80"
+      - "${PHPMYADMIN_PORT:-8090}:80"
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
@@ -223,3 +295,4 @@ volumes:
   api-storage:
   db-data:
   redis-data:
+  simulator-skyfield-data:
