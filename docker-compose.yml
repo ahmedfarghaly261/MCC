@@ -71,13 +71,13 @@ services:
       redis:
         condition: service_healthy
       ml-anomaly:
-        condition: service_started
+        condition: service_healthy
       ml-enhancement:
-        condition: service_started
+        condition: service_healthy
       ml-object-detection:
-        condition: service_started
+        condition: service_healthy
       ml-panorama:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/up || exit 1"]
       interval: 10s
