@@ -1,0 +1,757 @@
+{
+  "model_name": "Isolation Forest",
+  "features": [
+    "EPS_Solar_1_V",
+    "EPS_Solar_2_V",
+    "EPS_Solar_3_V",
+    "EPS_Solar_1_C",
+    "EPS_Solar_2_C",
+    "EPS_Solar_3_C",
+    "EPS_VBAT",
+    "EPS_IBAT",
+    "EPS_BUS_1_V",
+    "EPS_BUS_2_V",
+    "EPS_BUS_1_C",
+    "EPS_BUS_2_C",
+    "EPS_Temp",
+    "OBC_Latitude",
+    "OBC_Longitude",
+    "OBC_velN",
+    "OBC_velE",
+    "OBC_velD",
+    "OBC_RX_CMD_Count",
+    "OBC_TX_CMD_Count",
+    "OBC_EPS_SRecords",
+    "OBC_ADCS_SRecords",
+    "ADCS_Sun_X",
+    "ADCS_Sun_Y",
+    "ADCS_Sun_Z",
+    "ADCS_accel_x",
+    "ADCS_accel_y",
+    "ADCS_accel_z",
+    "ADCS_Gyro_X",
+    "ADCS_Gyro_Y",
+    "ADCS_Gyro_Z",
+    "ADCS_MM_X",
+    "ADCS_MM_Y",
+    "ADCS_MM_Z",
+    "ADCS_RW_RPM",
+    "COMM_Total_RX",
+    "COMM_Correct_RX",
+    "COMM_RF_Power",
+    "COMM_RSSI",
+    "COMM_RF_Temp",
+    "COMM_RX_Current",
+    "COMM_TX_I_3V3",
+    "COMM_TX_I_5V",
+    "EPS_Solar_1_Power",
+    "EPS_Solar_2_Power",
+    "EPS_Solar_3_Power",
+    "ADCS_Gyro_Magnitude",
+    "ADCS_MM_Magnitude",
+    "COMM_Success_Rate"
+  ],
+  "contamination": 0.05,
+  "n_train_samples": 656,
+  "n_features": 49,
+  "anomaly_count": 33,
+  "anomaly_rate_%": 5.03,
+  "score_mean": -0.0514,
+  "score_std": 0.0272,
+  "threshold_95pct": -0.0,
+  "anomaly_explanations": [
+    {
+      "frame_index": 0,
+      "root_cause": "COMM_Success_Rate",
+      "top_3": [
+        {
+          "feature": "COMM_Success_Rate",
+          "shap": -0.8383,
+          "value": 0.0
+        },
+        {
+          "feature": "EPS_Solar_2_Power",
+          "shap": -0.1425,
+          "value": 2838808.0
+        },
+        {
+          "feature": "ADCS_MM_X",
+          "shap": -0.1413,
+          "value": -0.862
+        }
+      ]
+    },
+    {
+      "frame_index": 1,
+      "root_cause": "COMM_Success_Rate",
+      "top_3": [
+        {
+          "feature": "COMM_Success_Rate",
+          "shap": -0.8465,
+          "value": 0.0
+        },
+        {
+          "feature": "COMM_TX_I_3V3",
+          "shap": -0.1817,
+          "value": 1.0
+        },
+        {
+          "feature": "ADCS_MM_X",
+          "shap": -0.1508,
+          "value": 0.545
+        }
+      ]
+    },
+    {
+      "frame_index": 5,
+      "root_cause": "COMM_Success_Rate",
+      "top_3": [
+        {
+          "feature": "COMM_Success_Rate",
+          "shap": -0.2792,
+          "value": 0.8571
+        },
+        {
+          "feature": "ADCS_Sun_Y",
+          "shap": -0.203,
+          "value": 977.0
+        },
+        {
+          "feature": "ADCS_Sun_X",
+          "shap": -0.1846,
+          "value": 980.0
+        }
+      ]
+    },
+    {
+      "frame_index": 7,
+      "root_cause": "COMM_Success_Rate",
+      "top_3": [
+        {
+          "feature": "COMM_Success_Rate",
+          "shap": -0.2989,
+          "value": 0.8
+        },
+        {
+          "feature": "COMM_TX_I_3V3",
+          "shap": -0.2154,
+          "value": 1.0
+        },
+        {
+          "feature": "COMM_RX_Current",
+          "shap": -0.2063,
+          "value": 126.0
+        }
+      ]
+    },
+    {
+      "frame_index": 12,
+      "root_cause": "COMM_RSSI",
+      "top_3": [
+        {
+          "feature": "COMM_RSSI",
+          "shap": -0.3746,
+          "value": 76.0
+        },
+        {
+          "feature": "COMM_RX_Current",
+          "shap": -0.2009,
+          "value": 126.0
+        },
+        {
+          "feature": "COMM_Success_Rate",
+          "shap": -0.174,
+          "value": 0.9167
+        }
+      ]
+    },
+    {
+      "frame_index": 16,
+      "root_cause": "COMM_Success_Rate",
+      "top_3": [
+        {
+          "feature": "COMM_Success_Rate",
+          "shap": -0.2915,
+          "value": 0.9375
+        },
+        {
+          "feature": "OBC_ADCS_SRecords",
+          "shap": -0.1506,
+          "value": 16.0
+        },
+        {
+          "feature": "OBC_velE",
+          "shap": -0.1461,
+          "value": 64036.0
+        }
+      ]
+    },
+    {
+      "frame_index": 19,
+      "root_cause": "COMM_Success_Rate",
+      "top_3": [
+        {
+          "feature": "COMM_Success_Rate",
+          "shap": -0.2386,
+          "value": 0.9474
+        },
+        {
+          "feature": "EPS_Solar_3_C",
+          "shap": -0.1506,
+          "value": 16.0
+        },
+        {
+          "feature": "EPS_Solar_1_V",
+          "shap": -0.1409,
+          "value": 201.0
+        }
+      ]
+    },
+    {
+      "frame_index": 20,
+      "root_cause": "EPS_Solar_3_C",
+      "top_3": [
+        {
+          "feature": "EPS_Solar_3_C",
+          "shap": -0.1716,
+          "value": 165.0
+        },
+        {
+          "feature": "COMM_Success_Rate",
+          "shap": -0.1708,
+          "value": 0.9545
+        },
+        {
+          "feature": "EPS_Solar_3_V",
+          "shap": -0.1659,
+          "value": 1101.0
+        }
+      ]
+    },
+    {
+      "frame_index": 21,
+      "root_cause": "EPS_Solar_3_Power",
+      "top_3": [
+        {
+          "feature": "EPS_Solar_3_Power",
+          "shap": -0.1847,
+          "value": 319152.0
+        },
+        {
+          "feature": "EPS_Solar_1_C",
+          "shap": -0.1761,
+          "value": 293.0
+        },
+        {
+          "feature": "COMM_Success_Rate",
+          "shap": -0.1567,
+          "value": 0.9444
+        }
+      ]
+    },
+    {
+      "frame_index": 22,
+      "root_cause": "EPS_Solar_3_Power",
+      "top_3": [
+        {
+          "feature": "EPS_Solar_3_Power",
+          "shap": -0.2564,
+          "value": 654192.0
+        },
+        {
+          "feature": "EPS_Solar_3_V",
+          "shap": -0.1859,
+          "value": 2124.0
+        },
+        {
+          "feature": "EPS_Solar_3_C",
+          "shap": -0.1735,
+          "value": 308.0
+        }
+      ]
+    },
+    {
+      "frame_index": 23,
+      "root_cause": "EPS_Solar_3_Power",
+      "top_3": [
+        {
+          "feature": "EPS_Solar_3_Power",
+          "shap": -0.2611,
+          "value": 1606854.0
+        },
+        {
+          "feature": "EPS_Solar_3_C",
+          "shap": -0.1799,
+          "value": 489.0
+        },
+        {
+          "feature": "EPS_Solar_1_C",
+          "shap": -0.1652,
+          "value": 375.0
+        }
+      ]
+    },
+    {
+      "frame_index": 41,
+      "root_cause": "COMM_RSSI",
+      "top_3": [
+        {
+          "feature": "COMM_RSSI",
+          "shap": -0.3367,
+          "value": 76.0
+        },
+        {
+          "feature": "COMM_RX_Current",
+          "shap": -0.2055,
+          "value": 126.0
+        },
+        {
+          "feature": "EPS_Solar_2_Power",
+          "shap": -0.1711,
+          "value": 3359656.0
+        }
+      ]
+    },
+    {
+      "frame_index": 58,
+      "root_cause": "EPS_Solar_1_C",
+      "top_3": [
+        {
+          "feature": "EPS_Solar_1_C",
+          "shap": -0.2158,
+          "value": 162.0
+        },
+        {
+          "feature": "EPS_Solar_3_C",
+          "shap": -0.1904,
+          "value": 180.0
+        },
+        {
+          "feature": "EPS_BUS_2_V",
+          "shap": -0.1845,
+          "value": 5073.0
+        }
+      ]
+    },
+    {
+      "frame_index": 59,
+      "root_cause": "EPS_Solar_3_Power",
+      "top_3": [
+        {
+          "feature": "EPS_Solar_3_Power",
+          "shap": -0.3323,
+          "value": 619219.0
+        },
+        {
+          "feature": "EPS_Solar_1_C",
+          "shap": -0.2541,
+          "value": 325.0
+        },
+        {
+          "feature": "EPS_Solar_3_C",
+          "shap": -0.177,
+          "value": 307.0
+        }
+      ]
+    },
+    {
+      "frame_index": 61,
+      "root_cause": "ADCS_Gyro_Z",
+      "top_3": [
+        {
+          "feature": "ADCS_Gyro_Z",
+          "shap": -0.2131,
+          "value": 0.0026
+        },
+        {
+          "feature": "EPS_BUS_1_C",
+          "shap": -0.1647,
+          "value": 4.0
+        },
+        {
+          "feature": "EPS_BUS_2_C",
+          "shap": -0.1585,
+          "value": 3.0
+        }
+      ]
+    },
+    {
+      "frame_index": 71,
+      "root_cause": "EPS_Solar_3_C",
+      "top_3": [
+        {
+          "feature": "EPS_Solar_3_C",
+          "shap": -0.2249,
+          "value": 127.0
+        },
+        {
+          "feature": "EPS_Solar_3_V",
+          "shap": -0.2036,
+          "value": 860.0
+        },
+        {
+          "feature": "ADCS_RW_RPM",
+          "shap": -0.1577,
+          "value": 516.0
+        }
+      ]
+    },
+    {
+      "frame_index": 72,
+      "root_cause": "EPS_Solar_3_Power",
+      "top_3": [
+        {
+          "feature": "EPS_Solar_3_Power",
+          "shap": -0.2713,
+          "value": 673524.0
+        },
+        {
+          "feature": "ADCS_Gyro_Z",
+          "shap": -0.2141,
+          "value": 0.0026
+        },
+        {
+          "feature": "EPS_Solar_3_C",
+          "shap": -0.1744,
+          "value": 318.0
+        }
+      ]
+    },
+    {
+      "frame_index": 74,
+      "root_cause": "EPS_Temp",
+      "top_3": [
+        {
+          "feature": "EPS_Temp",
+          "shap": -0.3954,
+          "value": 10.0
+        },
+        {
+          "feature": "COMM_RF_Temp",
+          "shap": -0.3799,
+          "value": 50.0
+        },
+        {
+          "feature": "COMM_RX_Current",
+          "shap": -0.2391,
+          "value": 126.0
+        }
+      ]
+    },
+    {
+      "frame_index": 75,
+      "root_cause": "EPS_Temp",
+      "top_3": [
+        {
+          "feature": "EPS_Temp",
+          "shap": -0.411,
+          "value": 9.0
+        },
+        {
+          "feature": "COMM_RF_Temp",
+          "shap": -0.2959,
+          "value": 82.0
+        },
+        {
+          "feature": "COMM_RX_Current",
+          "shap": -0.2852,
+          "value": 126.0
+        }
+      ]
+    },
+    {
+      "frame_index": 93,
+      "root_cause": "EPS_Solar_3_C",
+      "top_3": [
+        {
+          "feature": "EPS_Solar_3_C",
+          "shap": -0.2084,
+          "value": 517.0
+        },
+        {
+          "feature": "EPS_Solar_1_Power",
+          "shap": -0.1922,
+          "value": 2701728.0
+        },
+        {
+          "feature": "EPS_Solar_1_C",
+          "shap": -0.1755,
+          "value": 636.0
+        }
+      ]
+    },
+    {
+      "frame_index": 581,
+      "root_cause": "COMM_RSSI",
+      "top_3": [
+        {
+          "feature": "COMM_RSSI",
+          "shap": -0.411,
+          "value": 76.0
+        },
+        {
+          "feature": "ADCS_Sun_Y",
+          "shap": -0.2029,
+          "value": 974.0
+        },
+        {
+          "feature": "ADCS_Gyro_Magnitude",
+          "shap": -0.1632,
+          "value": 0.0476
+        }
+      ]
+    },
+    {
+      "frame_index": 586,
+      "root_cause": "COMM_RSSI",
+      "top_3": [
+        {
+          "feature": "COMM_RSSI",
+          "shap": -0.4322,
+          "value": 76.0
+        },
+        {
+          "feature": "ADCS_RW_RPM",
+          "shap": -0.3406,
+          "value": 519.0
+        },
+        {
+          "feature": "ADCS_Sun_Y",
+          "shap": -0.2303,
+          "value": 978.0
+        }
+      ]
+    },
+    {
+      "frame_index": 612,
+      "root_cause": "EPS_BUS_2_V",
+      "top_3": [
+        {
+          "feature": "EPS_BUS_2_V",
+          "shap": -0.3274,
+          "value": 5088.0
+        },
+        {
+          "feature": "EPS_Solar_3_Power",
+          "shap": -0.1584,
+          "value": 2864520.0
+        },
+        {
+          "feature": "OBC_Latitude",
+          "shap": -0.1245,
+          "value": -125063864.0
+        }
+      ]
+    },
+    {
+      "frame_index": 618,
+      "root_cause": "COMM_RSSI",
+      "top_3": [
+        {
+          "feature": "COMM_RSSI",
+          "shap": -0.4097,
+          "value": 76.0
+        },
+        {
+          "feature": "OBC_Latitude",
+          "shap": -0.2173,
+          "value": -156088697.0
+        },
+        {
+          "feature": "COMM_TX_I_5V",
+          "shap": -0.1714,
+          "value": 213.0
+        }
+      ]
+    },
+    {
+      "frame_index": 621,
+      "root_cause": "OBC_Latitude",
+      "top_3": [
+        {
+          "feature": "OBC_Latitude",
+          "shap": -0.2377,
+          "value": -171542953.0
+        },
+        {
+          "feature": "OBC_RX_CMD_Count",
+          "shap": -0.1798,
+          "value": 62.0
+        },
+        {
+          "feature": "ADCS_Sun_X",
+          "shap": -0.1698,
+          "value": 980.0
+        }
+      ]
+    },
+    {
+      "frame_index": 624,
+      "root_cause": "OBC_Latitude",
+      "top_3": [
+        {
+          "feature": "OBC_Latitude",
+          "shap": -0.2078,
+          "value": -186953138.0
+        },
+        {
+          "feature": "OBC_TX_CMD_Count",
+          "shap": -0.2015,
+          "value": 62.0
+        },
+        {
+          "feature": "OBC_RX_CMD_Count",
+          "shap": -0.1818,
+          "value": 62.0
+        }
+      ]
+    },
+    {
+      "frame_index": 632,
+      "root_cause": "OBC_TX_CMD_Count",
+      "top_3": [
+        {
+          "feature": "OBC_TX_CMD_Count",
+          "shap": -0.1845,
+          "value": 63.0
+        },
+        {
+          "feature": "ADCS_accel_x",
+          "shap": -0.1687,
+          "value": -2.3724
+        },
+        {
+          "feature": "OBC_Latitude",
+          "shap": -0.1606,
+          "value": -227801440.0
+        }
+      ]
+    },
+    {
+      "frame_index": 638,
+      "root_cause": "OBC_Latitude",
+      "top_3": [
+        {
+          "feature": "OBC_Latitude",
+          "shap": -0.2511,
+          "value": -258168643.0
+        },
+        {
+          "feature": "ADCS_accel_x",
+          "shap": -0.19,
+          "value": -2.5991
+        },
+        {
+          "feature": "ADCS_Sun_Y",
+          "shap": -0.1566,
+          "value": 975.0
+        }
+      ]
+    },
+    {
+      "frame_index": 639,
+      "root_cause": "OBC_Latitude",
+      "top_3": [
+        {
+          "feature": "OBC_Latitude",
+          "shap": -0.213,
+          "value": -263204891.0
+        },
+        {
+          "feature": "ADCS_Sun_Y",
+          "shap": -0.1667,
+          "value": 977.0
+        },
+        {
+          "feature": "ADCS_accel_x",
+          "shap": -0.155,
+          "value": -2.6863
+        }
+      ]
+    },
+    {
+      "frame_index": 651,
+      "root_cause": "OBC_Latitude",
+      "top_3": [
+        {
+          "feature": "OBC_Latitude",
+          "shap": -0.296,
+          "value": -323012922.0
+        },
+        {
+          "feature": "ADCS_accel_x",
+          "shap": -0.228,
+          "value": -3.2661
+        },
+        {
+          "feature": "OBC_TX_CMD_Count",
+          "shap": -0.1967,
+          "value": 65.0
+        }
+      ]
+    },
+    {
+      "frame_index": 652,
+      "root_cause": "OBC_Latitude",
+      "top_3": [
+        {
+          "feature": "OBC_Latitude",
+          "shap": -0.2275,
+          "value": -327940364.0
+        },
+        {
+          "feature": "ADCS_accel_x",
+          "shap": -0.2228,
+          "value": -3.2884
+        },
+        {
+          "feature": "OBC_TX_CMD_Count",
+          "shap": -0.2102,
+          "value": 65.0
+        }
+      ]
+    },
+    {
+      "frame_index": 653,
+      "root_cause": "OBC_Latitude",
+      "top_3": [
+        {
+          "feature": "OBC_Latitude",
+          "shap": -0.2387,
+          "value": -332858444.0
+        },
+        {
+          "feature": "ADCS_accel_x",
+          "shap": -0.2249,
+          "value": -3.385
+        },
+        {
+          "feature": "OBC_TX_CMD_Count",
+          "shap": -0.2202,
+          "value": 65.0
+        }
+      ]
+    },
+    {
+      "frame_index": 655,
+      "root_cause": "ADCS_accel_x",
+      "top_3": [
+        {
+          "feature": "ADCS_accel_x",
+          "shap": -0.22,
+          "value": -3.461
+        },
+        {
+          "feature": "EPS_BUS_2_V",
+          "shap": -0.2136,
+          "value": 4936.0
+        },
+        {
+          "feature": "OBC_Latitude",
+          "shap": -0.2111,
+          "value": -342665959.0
+        }
+      ]
+    }
+  ]
+}
