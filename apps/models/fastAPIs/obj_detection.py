@@ -6,6 +6,7 @@ Returns: detection JSON + annotated image + raw image — all in one ZIP.
 import gc
 import io
 import json
+import os
 import time
 import zipfile
 import tempfile
@@ -34,6 +35,14 @@ DOTA_IMGSZ     = 640
 BUILDING_IMGSZ = 416
 DOTA_CONF      = 0.2
 BUILDING_CONF  = 0.25
+
+# Resolve artifacts from this source file instead of the process working
+# directory. Environment variables still allow deployment-specific overrides.
+MODEL_ROOT = Path(__file__).resolve().parents[1] / "pkls"
+DOTA_PKL = Path(os.getenv("DOTA_PKL", str(MODEL_ROOT / "object_detection" / "my_model.pkl")))
+DOTA_WEIGHTS = Path(os.getenv("DOTA_WEIGHTS", str(MODEL_ROOT / "object_detection" / "best(DOTA).pt")))
+BUILDING_WEIGHTS = Path(os.getenv("BUILDING_WEIGHTS", str(MODEL_ROOT / "object_detection" / "best(Buildings).pt")))
+BUILDING_DIR = BUILDING_WEIGHTS.parent
 
 DOTA_CLASSES = [
     "plane", "ship", "storage-tank", "baseball-diamond",
@@ -225,7 +234,7 @@ class ModelManager:
     @classmethod
     def building(cls) -> YOLO:
         if cls._building is None:
-            weights = BUILDING_DIR / "best.pt"
+            weights = BUILDING_WEIGHTS
             if not weights.exists():
                 print("Downloading building model …")
                 weights = hf_hub_download(
@@ -272,7 +281,7 @@ def health():
         "models": {
             "dota"          : dota_ready,
             "dota_source"   : dota_source,
-            "building"      : (BUILDING_DIR / "best.pt").exists(),
+            "building"      : BUILDING_WEIGHTS.exists(),
         },
     }
 

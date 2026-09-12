@@ -1,6 +1,7 @@
 import io
 import json
 import logging
+import os
 from typing import Optional
 from fastapi import FastAPI, File, UploadFile, Query, HTTPException, status
 from fastapi.responses import StreamingResponse
@@ -103,7 +104,10 @@ class UNet(nn.Module):
 # ----------------------------------------------------------------------
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 TILE_SIZE = 256
-WEIGHTS_PATH = "water_segmentation_weights.pth"
+WEIGHTS_PATH = os.getenv(
+    "SEGMENTATION_WEIGHTS_PATH",
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "pkls", "water_segmentation_weights.pth")),
+)
 
 # Exact statistical norms utilized during ImageNet tensor standardization
 MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
@@ -130,7 +134,9 @@ def load_segmentation_engine():
         logger.info(f"Successfully injected segmentation parameters onto engine execution targets: [{DEVICE}]")
     except FileNotFoundError:
         logger.error(f"Execution failed: Could not locate weight matrix map at baseline trajectory: '{WEIGHTS_PATH}'")
-        raise RuntimeException("Weights mapping profile target missing from runtime initialization.")
+        # Keep the HTTP process alive so /health reports the missing weights.
+        # Supplying the .pth file makes this service healthy.
+        model = None
     except Exception as exc:
         logger.error(f"Critical execution fault initializing runtime model layers: {str(exc)}")
         raise exc

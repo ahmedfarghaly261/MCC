@@ -18,7 +18,11 @@ os.environ["SSL_CERT_FILE"] = certifi.where()
 app = FastAPI(title="Panorama Stitching Service")
 
 # ── Load config ────────────────────────────────────────────────────
-with open("../pkls/panorama/pipeline_config.pkl", "rb") as f:
+CONFIG_PATH = os.getenv(
+    "PANORAMA_CONFIG_PATH",
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "pkls", "panorama", "pipeline_config.pkl")),
+)
+with open(CONFIG_PATH, "rb") as f:
     CONFIG = pickle.load(f)
 
 TILE_SIZE     = CONFIG["tile_size"]
