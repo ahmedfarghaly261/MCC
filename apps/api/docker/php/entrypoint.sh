@@ -66,6 +66,12 @@ sync_env_value REDIS_PASSWORD
 sync_env_value SATELLITE_API_URL
 sync_env_value COMMAND_API_URL
 sync_env_value DECODER_API_URL
+sync_env_value ANOMALY_API_URL
+sync_env_value ANOMALY_API_KEY
+sync_env_value ENHANCEMENT_API_URL
+sync_env_value OBJECT_DETECTION_API_URL
+sync_env_value PANORAMA_API_URL
+sync_env_value SEGMENTATION_API_URL
 sync_env_value APP_URL
 sync_env_value FRONTEND_URL
 sync_env_value SESSION_DRIVER
