@@ -56,9 +56,11 @@ services:
       ENHANCEMENT_API_URL: ${ENHANCEMENT_API_URL:-}
       OBJECT_DETECTION_API_URL: ${OBJECT_DETECTION_API_URL:-}
       PANORAMA_API_URL: ${PANORAMA_API_URL:-}
-      SATELLITE_API_URL: ${SATELLITE_API_URL:-http://docker.internal}
-      COMMAND_API_URL: ${COMMAND_API_URL:-ws://host.docker.internal:8050/ws/stream}
+      COMMAND_API_URL: ${COMMAND_API_URL:-ws://host.docker.internal:8050/ws/radio}
+      SATELLITE_API_URL: ${SATELLITE_API_URL:-http://host.docker.internal:8050}
       DECODER_API_URL: ${DECODER_API_URL:-http://simulator-decoder:8082}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     expose:
       - "8000"
     command: php artisan serve --host=0.0.0.0 --port=8000
@@ -98,15 +100,15 @@ services:
       CACHE_STORE: ${CACHE_STORE:-redis}
       QUEUE_CONNECTION: redis
       SESSION_DRIVER: ${SESSION_DRIVER:-redis}
-      #SATELLITE_API_URL: ${SATELLITE_API_URL:-http://simulator-telemetry:8080}
-      SATELLITE_API_URL: ${SATELLITE_API_URL:-http://docker.internal}
-      COMMAND_API_URL: ${COMMAND_API_URL:-ws://host.docker.internal:8050/ws/stream}
-      #COMMAND_API_URL: ${COMMAND_API_URL:-ws://simulator-command:8081/ws/radio}
+      COMMAND_API_URL: ${COMMAND_API_URL:-ws://host.docker.internal:8050/ws/radio}
+      SATELLITE_API_URL: ${SATELLITE_API_URL:-http://host.docker.internal:8050}
       DECODER_API_URL: ${DECODER_API_URL:-http://simulator-decoder:8082}
       BROADCAST_CONNECTION: reverb
       REVERB_HOST: reverb
       REVERB_PORT: 8080
       CONTAINER_ROLE: worker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     command: php artisan horizon
     volumes:
       - api-storage:/var/www/html/storage
@@ -184,7 +186,7 @@ services:
     restart: unless-stopped
     command: uvicorn decoder2:app --host 0.0.0.0 --port 8082
     environment:
-      SIMULATOR_API: http://docker.internal
+      SIMULATOR_API: http://host.docker.internal:8050
     ports:
       - "${SIMULATOR_DECODER_PORT:-8082}:8082"
     networks:
