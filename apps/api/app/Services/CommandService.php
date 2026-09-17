@@ -43,9 +43,6 @@ class CommandService
     /**
      * Formats the 9-field CSSP frame according to ICD Rev 2.0
      */
-    /**
-     * Formats the 9-field CSSP frame according to ICD Rev 3.2
-     */
     public function buildCsspFrame(Command $command, int $dest, array $data): string
     {
         $requiredFieldsByCommand = [
