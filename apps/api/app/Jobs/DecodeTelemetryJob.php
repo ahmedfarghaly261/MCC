@@ -43,11 +43,11 @@ class DecodeTelemetryJob implements ShouldQueue
             }
 
             $decodedData = $response->json();
-            if (strlen($this->rawHex) < 112) {
+            /* if (strlen($this->rawHex) < 112) {
                 Log::info("Skipping short frame (ACK/NACK): " . $this->rawHex);
                 CommandLog::where('id', $this->commandLogId)->update(['status' => 'received']);
                 return;
-            }
+            } */
 
             // 1. If it's just an ACK (0x02) or NACK (0x03), don't log telemetry, just update status
             if (isset($decodedData['type']) && in_array($decodedData['type'], ['ACK', 'NACK'])) {
