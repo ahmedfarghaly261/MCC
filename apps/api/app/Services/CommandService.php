@@ -136,7 +136,8 @@ class CommandService
 
         $crc = $this->calculateCRC16IBM($headerAndData);
 
-        return pack('C', self::FLAG) . $headerAndData . pack('nC', $crc, self::FLAG);
+      /*   return pack('C', self::FLAG) . $headerAndData . pack('nC', $crc, self::FLAG); */
+        return pack('C', self::FLAG) . $headerAndData . pack('vC', $crc, self::FLAG);
     }
 
     /**
