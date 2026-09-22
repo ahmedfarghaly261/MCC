@@ -1,0 +1,38 @@
+{
+  "P2759": {
+    "avg_inliers": 770.6929824561404,
+    "avg_confidence": 0.9238386154174805,
+    "valid_pairs": 114,
+    "total_pairs": 115,
+    "pair_success": 99.1304347826087,
+    "coverage": 99.7746190409974,
+    "avg_gradient": 43.517800109510404
+  },
+  "P1869": {
+    "avg_inliers": 857.7019230769231,
+    "avg_confidence": 0.9579715728759766,
+    "valid_pairs": 104,
+    "total_pairs": 104,
+    "pair_success": 100.0,
+    "coverage": 99.95918672544978,
+    "avg_gradient": 43.32101285278789
+  },
+  "P1382": {
+    "avg_inliers": 865.9423076923077,
+    "avg_confidence": 0.9878531694412231,
+    "valid_pairs": 104,
+    "total_pairs": 104,
+    "pair_success": 100.0,
+    "coverage": 94.35602503969167,
+    "avg_gradient": 22.223453770939447
+  },
+  "P1387": {
+    "avg_inliers": 884.4626865671642,
+    "avg_confidence": 0.9820551872253418,
+    "valid_pairs": 67,
+    "total_pairs": 67,
+    "pair_success": 100.0,
+    "coverage": 98.1024677153538,
+    "avg_gradient": 40.329385133693215
+  }
+}

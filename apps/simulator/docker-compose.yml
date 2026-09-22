@@ -18,12 +18,15 @@ services:
 
   image-sim:
     image: mcc-simulator:local
+    build:
+      context: .
+      dockerfile: Dockerfile
     pull_policy: never
     command: uvicorn image_simulator:app --host 0.0.0.0 --port 8084
     ports:
       - "8084:8084"
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8084/', timeout=3)"]
+      test: ["CMD", "python", "-c", "import json, urllib.request; data = json.load(urllib.request.urlopen('http://localhost:8084/images/stats', timeout=3)); raise SystemExit(0 if data.get('missing_images') == 0 else 1)"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -31,6 +34,9 @@ services:
 
   command-sim:
     image: mcc-simulator:local
+    build:
+      context: .
+      dockerfile: Dockerfile
     pull_policy: never
     command: uvicorn command2:app --host 0.0.0.0 --port 8081
     environment:
@@ -46,6 +52,9 @@ services:
 
   decoder:
     image: mcc-simulator:local
+    build:
+      context: .
+      dockerfile: Dockerfile
     pull_policy: never
     command: uvicorn decoder2:app --host 0.0.0.0 --port 8082
     environment:

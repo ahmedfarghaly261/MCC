@@ -20,6 +20,15 @@ class CommandSeeder extends Seeder
             'Broadcast' => '0xFF',
         ];
 
+        $allOnboardSubsystems = [
+            $subsystems['OBC'],
+            $subsystems['EPS'],
+            $subsystems['ADCS'],
+            $subsystems['PL'],
+            $subsystems['S-Band'],
+            $subsystems['UHF'],
+        ];
+
         $commands = [
             [
                 'name' => 'Hi',
@@ -56,7 +65,7 @@ class CommandSeeder extends Seeder
                 'cmd_id' => 0x04,
                 'description' => 'Check subsystem status',
                 'allowed_sources' => [$subsystems['OBC'], $subsystems['GCS']],
-                'allowed_destinations' => [$subsystems['Broadcast'], $subsystems['OBC'], $subsystems['EPS'], $subsystems['ADCS'], $subsystems['PL']],
+                'allowed_destinations' => $allOnboardSubsystems,
                 'expected_data_len' => 0,
                 'requires_ack' => true,
                 'required_data_fields' => [],
@@ -66,7 +75,7 @@ class CommandSeeder extends Seeder
                 'cmd_id' => 0x05,
                 'description' => 'Set satellite time',
                 'allowed_sources' => [$subsystems['OBC'], $subsystems['GCS']],
-                'allowed_destinations' => [$subsystems['Broadcast'], $subsystems['OBC'], $subsystems['EPS'], $subsystems['ADCS'], $subsystems['PL']],
+                'allowed_destinations' => $allOnboardSubsystems,
                 'expected_data_len' => 8,
                 'requires_ack' => true,
                 'required_data_fields' => ['timer_value'],
@@ -76,7 +85,7 @@ class CommandSeeder extends Seeder
                 'cmd_id' => 0x06,
                 'description' => 'Set subsystem mode of operation',
                 'allowed_sources' => [$subsystems['OBC'], $subsystems['GCS']],
-                'allowed_destinations' => [$subsystems['Broadcast'], $subsystems['OBC'], $subsystems['EPS'], $subsystems['ADCS'], $subsystems['PL']],
+                'allowed_destinations' => $allOnboardSubsystems,
                 'expected_data_len' => 1,
                 'requires_ack' => true,
                 'required_data_fields' => ['mode_id'],
@@ -86,7 +95,7 @@ class CommandSeeder extends Seeder
                 'cmd_id' => 0x07,
                 'description' => 'Get online subsystem telemetry',
                 'allowed_sources' => [$subsystems['OBC'], $subsystems['GCS']],
-                'allowed_destinations' => [$subsystems['OBC'], $subsystems['EPS'], $subsystems['ADCS'], $subsystems['PL']],
+                'allowed_destinations' => $allOnboardSubsystems,
                 'expected_data_len' => 0,
                 'requires_ack' => true,
                 'required_data_fields' => [],

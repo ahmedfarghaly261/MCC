@@ -36,23 +36,28 @@ return [
     ],
 
     'anomaly_api' => [
-        'url'     => env('ANOMALY_API_URL', 'http://host.docker.internal:8000'),
+        'url'     => env('ANOMALY_API_URL', 'http://ml-anomaly:8000'),
         'key'     => env('ANOMALY_API_KEY', 'change-me-in-production'),
         'timeout' => env('ANOMALY_API_TIMEOUT', 15),
     ],
 
     'enhancement_api' => [
-        'url'     => env('ENHANCEMENT_API_URL', 'http://host.docker.internal:8001'),
+        'url'     => env('ENHANCEMENT_API_URL', 'http://ml-enhancement:8000'),
         'timeout' => env('ENHANCEMENT_API_TIMEOUT', 15),
     ],
 
     'object_detection_api' => [
-        'url'     => env('OBJECT_DETECTION_API_URL', 'http://host.docker.internal:8002'),
+        'url'     => env('OBJECT_DETECTION_API_URL', 'http://ml-object-detection:8000'),
         'timeout' => env('OBJECT_DETECTION_API_TIMEOUT', 15),
     ],
 
     'panorama_api' => [
-        'url' => env('PANORAMA_API_URL', 'http://host.docker.internal:8003'), 
+        'url' => env('PANORAMA_API_URL', 'http://ml-panorama:8000'),
+    ],
+
+    'segmentation_api' => [
+        'url'     => env('SEGMENTATION_API_URL', 'http://ml-segmentation:8000'),
+        'timeout' => env('SEGMENTATION_API_TIMEOUT', 120),
     ],
 
     'satellite' => [
@@ -60,7 +65,7 @@ return [
         'timeout' => env('SATELLITE_API_TIMEOUT', 15),
     ],
 
-    'command' => [
+     'command' => [
         'url'     => env('COMMAND_API_URL', 'ws://host.docker.internal:8081/ws/radio'),
         'timeout' => env('COMMAND_API_TIMEOUT', 15),
     ],
@@ -69,4 +74,8 @@ return [
         'url'     => env('DECODER_API_URL', 'http://host.docker.internal:8082'),
         'timeout' => env('DECODER_API_TIMEOUT', 15),
     ],
+   
+    'camera_simulator' => [
+        'url' => env('CAMERA_SIMULATOR_URL', 'ws://simulator-command:8081/ws/radio'),
+    ]
 ];

@@ -32,19 +32,19 @@ class CommandService
     const TYPE_META_CHUNK = 0x4E;
 
     protected string $commandUrl;
+    protected string $cameraSimulatorUrl;
 
     public function __construct(
         private readonly TelemetryService $telemetryService
     ) {
         $this->commandUrl = config('services.command.url');
+        $this->cameraSimulatorUrl = config('services.camera_simulator.url');
     }
+
 
 
     /**
      * Formats the 9-field CSSP frame according to ICD Rev 2.0
-     */
-    /**
-     * Formats the 9-field CSSP frame according to ICD Rev 3.2
      */
     public function buildCsspFrame(Command $command, int $dest, array $data): string
     {
@@ -96,9 +96,7 @@ class CommandService
                             // 2. If it's a hex string like "0x01", convert it to decimal safely
                             elseif (is_string($rawValue) && str_starts_with(strtolower($rawValue), '0x')) {
                                 $modeValue = hexdec($rawValue);
-                            }
-
-                            elseif (is_string($rawValue) && !is_numeric($rawValue)) {
+                            } elseif (is_string($rawValue) && !is_numeric($rawValue)) {
                                 $modeValue = match (strtolower($rawValue)) {
                                     'initialization' => 1, // 0x01 
                                     'detumbling'     => 2, // 0x02 
@@ -115,8 +113,7 @@ class CommandService
 
                             if ($value instanceof PowerLine) {
                                 $powerValue = $value->value;
-                            }
-                            elseif (is_string($value) && str_starts_with(strtolower($value), '0x')) {
+                            } elseif (is_string($value) && str_starts_with(strtolower($value), '0x')) {
                                 $powerValue = hexdec($value);
                             }
 
@@ -139,7 +136,8 @@ class CommandService
 
         $crc = $this->calculateCRC16IBM($headerAndData);
 
-        return pack('C', self::FLAG) . $headerAndData . pack('nC', $crc, self::FLAG);
+        /*   return pack('C', self::FLAG) . $headerAndData . pack('nC', $crc, self::FLAG); */
+        return pack('C', self::FLAG) . $headerAndData . pack('vC', $crc, self::FLAG);
     }
 
     /**
@@ -199,10 +197,18 @@ class CommandService
         return $calculated === $received;
     }
 
+    protected const CAMERA_COMMANDS = ['CIMG', 'TIMG', 'GIMG', 'DIMG'];
+
     public function sendToGateway(string $binary, string $commandName): mixed
     {
         Log::info("MCC SENDING CSSP FRAME: " . bin2hex($binary));
-        $commandUrl = rtrim($this->commandUrl, '/');
+
+        // لو الأمر خاص بالكاميرا، ابعتيه للـ simulator بدل الجيت واي الحقيقي
+        $targetUrl = in_array($commandName, self::CAMERA_COMMANDS, true)
+            ? $this->cameraSimulatorUrl
+            : $this->commandUrl;
+
+        $commandUrl = rtrim($targetUrl, '/');
 
         if (str_starts_with($commandUrl, 'http://')) {
             $commandUrl = 'ws://' . substr($commandUrl, 7);
@@ -213,6 +219,7 @@ class CommandService
         if (!str_ends_with($commandUrl, '/ws/radio')) {
             $commandUrl .= '/ws/radio';
         }
+
 
         $timeout = ($commandName === 'GIMG') ? 1000 : 10;
 
