@@ -61,6 +61,7 @@ services:
       SEGMENTATION_API_URL: ${SEGMENTATION_API_URL:-http://ml-segmentation:8000}
       SATELLITE_API_URL: ${SATELLITE_API_URL:-http://host.docker.internal:8050}
       COMMAND_API_URL: ${COMMAND_API_URL:-ws://host.docker.internal:8050/ws/radio}
+      CAMERA_SIMULATOR_URL: ${CAMERA_SIMULATOR_URL:-ws://simulator-command:8081/ws/radio}
       DECODER_API_URL: ${DECODER_API_URL:-http://simulator-decoder:8082}
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -112,6 +113,7 @@ services:
       QUEUE_CONNECTION: redis
       SESSION_DRIVER: ${SESSION_DRIVER:-redis}
       COMMAND_API_URL: ${COMMAND_API_URL:-ws://host.docker.internal:8050/ws/radio}
+      CAMERA_SIMULATOR_URL: ${CAMERA_SIMULATOR_URL:-ws://simulator-command:8081/ws/radio}
       SATELLITE_API_URL: ${SATELLITE_API_URL:-http://host.docker.internal:8050}
       DECODER_API_URL: ${DECODER_API_URL:-http://simulator-decoder:8082}
       ANOMALY_API_URL: ${ANOMALY_API_URL:-http://ml-anomaly:8000}

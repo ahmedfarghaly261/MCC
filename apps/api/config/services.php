@@ -65,7 +65,7 @@ return [
         'timeout' => env('SATELLITE_API_TIMEOUT', 15),
     ],
 
-    'command' => [
+     'command' => [
         'url'     => env('COMMAND_API_URL', 'ws://host.docker.internal:8081/ws/radio'),
         'timeout' => env('COMMAND_API_TIMEOUT', 15),
     ],
@@ -74,4 +74,8 @@ return [
         'url'     => env('DECODER_API_URL', 'http://host.docker.internal:8082'),
         'timeout' => env('DECODER_API_TIMEOUT', 15),
     ],
+   
+    'camera_simulator' => [
+        'url' => env('CAMERA_SIMULATOR_URL', 'ws://simulator-command:8081/ws/radio'),
+    ]
 ];
