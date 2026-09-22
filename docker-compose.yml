@@ -175,7 +175,21 @@ services:
     networks:
       - mcc
 
-  
+  simulator-images:
+    image: mcc-simulator:local
+    pull_policy: never
+    restart: unless-stopped
+    command: uvicorn image_simulator:app --host 0.0.0.0 --port 8084
+    ports:
+      - "${SIMULATOR_IMAGES_PORT:-8084}:8084"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8084/', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - mcc
 
   simulator-decoder:
     image: mcc-simulator:local
