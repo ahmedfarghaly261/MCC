@@ -92,7 +92,7 @@ class ImageService
 
             throw new Exception("FastAPI Processing Error: " . $response->status());
         } catch (ConnectionException $e) {
-            throw new Exception("FastAPI service is unreachable on port 8001.");
+            throw new Exception("FastAPI enhancement service is unreachable at {$this->enhancementUrl}.");
         } finally {
             if (is_resource($fileStream)) {
                 fclose($fileStream);
