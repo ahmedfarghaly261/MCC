@@ -16,6 +16,8 @@ services:
 
   api:
     image: mcc-api:local
+    ports:
+      - "8000:8000"
     build:
       context: ./apps/api
       dockerfile: Dockerfile
@@ -57,8 +59,8 @@ services:
       OBJECT_DETECTION_API_URL: ${OBJECT_DETECTION_API_URL:-http://ml-object-detection:8000}
       PANORAMA_API_URL: ${PANORAMA_API_URL:-http://ml-panorama:8000}
       SEGMENTATION_API_URL: ${SEGMENTATION_API_URL:-http://ml-segmentation:8000}
-      SATELLITE_API_URL: ${SATELLITE_API_URL:-http://simulator-telemetry:8080}
-      COMMAND_API_URL: ${COMMAND_API_URL:-ws://simulator-command:8081/ws/radio}
+      SATELLITE_API_URL: ${SATELLITE_API_URL:-http://host.docker.internal:8050}
+      COMMAND_API_URL: ${COMMAND_API_URL:-ws://host.docker.internal:8050/ws/radio}
       DECODER_API_URL: ${DECODER_API_URL:-http://simulator-decoder:8082}
     extra_hosts:
       - "host.docker.internal:host-gateway"
